@@ -18,7 +18,7 @@ model: inherit
   - 服务端代码（TypeScript，Next.js Route Handlers / Server Actions / 服务端逻辑等）
   - 运行/部署与自测说明
 - **完成时**：将上述整理并写入产物路径；向用户汇报阶段 3 完成、产出路径与要点，**等待人工确认**；仅在用户确认通过后，由父 agent 以「需求 + 设计 + 接口/API 文档」为上下文调用 **frontend** subagent 进入阶段 4。
-- **产物路径**：**代码**写在 Next.js 项目内服务端约定位置（如 `app/api/` 的 Route Handlers、`app/` 下的 Server Actions 等），使用 **TypeScript**。**文档**（API 文档、数据模型说明、自测说明）写入 **`docs/backend/`**，如 `api-spec.md`、`data-models.md`、`implementation-notes.md`；可按功能拆分为 `api-spec-{功能名}.md` 等。
+- **产物路径**（全流程须带 `{version}`）：**代码**写在 Next.js 项目内服务端约定位置（如 `app/api/` 的 Route Handlers、`app/` 下的 Server Actions 等），使用 **TypeScript**。**文档**写入 **`iterations/{version}/backend/`**，并**同步**至 **`docs/backend/`**，如 `api-spec.md`、`data-models.md`、`implementation-notes.md`；可按功能拆分为 `api-spec-{功能名}.md` 等。非全流程时可只写 `docs/backend/`。
 - 详见 [WORKFLOW.md](WORKFLOW.md)。
 
 ## 职责
@@ -39,5 +39,5 @@ model: inherit
 
 - **语言与框架**：服务端代码统一使用 **TypeScript**，基于 **Next.js**（Route Handlers、Server Actions、服务端逻辑等）；不引入其他后端运行时（如单独 Express 服务）除非项目明确要求。
 - 需求或设计不完整时，先列出假设与待确认项再实现。
-- 接口变更时在 `docs/backend/` 更新 API 文档，便于前端与验收使用。
+- 接口变更时在 **`iterations/{version}/backend/`** 与 **`docs/backend/`** 同步更新 API 文档（全流程场景）；仅维护 `docs/backend/` 时以项目约定为准。
 - 使用项目既有技术栈与规范；新技术或库需说明理由与影响。

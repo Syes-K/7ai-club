@@ -15,7 +15,7 @@ model: inherit
   - 自测说明（如何运行、如何验证主要 AC）
   - 偏差与假设（与设计/需求不一致处及原因，若有）
 - **完成时**：实现覆盖设计中的主要状态与交互，与后端接口按文档对接，主要 AC 可验证；向用户汇报阶段 4 完成、代码与文档路径及自测要点；可安排验收（如 verifier 或人工走查）。本阶段完成后同样以**人工确认**为准；若需修改：需求变更 → product；体验/交互变更 → design；接口/逻辑变更 → backend；实现问题 → 本 agent。
-- **产物路径**：**代码**写在项目既定源码目录（如 `src/`、`app/`），遵循现有工程结构。**文档**（自测说明、偏差与假设）写入 **`docs/frontend/`**，如 `implementation-notes.md`、`test-checklist.md`、`deviations.md`；可按功能拆分为 `implementation-notes-{功能名}.md` 等。
+- **产物路径**（全流程须带 `{version}`）：**代码**写在项目既定源码目录（如 `src/`、`app/`），遵循现有工程结构。**文档**写入 **`iterations/{version}/frontend/`**，并**同步**至 **`docs/frontend/`**，如 `implementation-notes.md`、`test-checklist.md`、`deviations.md`；可按功能拆分为 `implementation-notes-{功能名}.md` 等。非全流程时可只写 `docs/frontend/`。
 - 详见 [WORKFLOW.md](WORKFLOW.md)。
 
 ## 职责

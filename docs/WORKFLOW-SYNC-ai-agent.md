@@ -2,6 +2,8 @@
 
 对应 [.cursor/agents/WORKFLOW.md](../.cursor/agents/WORKFLOW.md) 四阶段产物路径（需求已前置完成，本次从设计起）。
 
+**版本化全流程**：若按 [.cursor/rules/product-design-dev-workflow.mdc](../.cursor/rules/product-design-dev-workflow.mdc) 执行，文档主路径为 `iterations/{version}/product|design|backend|frontend/`，并与下表 `docs/...` **双写同步**。
+
 | 阶段 | 产物路径 | 说明 |
 |------|----------|------|
 | 1 需求 | `docs/product/prd-ai-agent.md`、`docs/product/user-stories-ai-agent.md` | 已有 |
