@@ -125,6 +125,69 @@ function UserIcon({ className }: { className?: string }) {
   );
 }
 
+function SendIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      className={className}
+      width="16"
+      height="16"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+    >
+      <path d="m22 2-7 20-4-9-9-4Z" />
+      <path d="M22 2 11 13" />
+    </svg>
+  );
+}
+
+function TrashIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      className={className}
+      width="16"
+      height="16"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+    >
+      <path d="M3 6h18" />
+      <path d="M8 6V4h8v2" />
+      <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" />
+    </svg>
+  );
+}
+
+function RefreshIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      className={className}
+      width="16"
+      height="16"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+    >
+      <path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
+      <path d="M3 3v5h5" />
+      <path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16" />
+      <path d="M16 21h5v-5" />
+    </svg>
+  );
+}
+
 export function ChatApp() {
   const [messages, setMessages] = useState<ChatMsg[]>([]);
   const [provider, setProvider] = useState<ChatProviderId>(
@@ -271,19 +334,47 @@ export function ChatApp() {
 
   return (
     <div className="flex h-full min-h-0 flex-1 flex-col bg-zinc-50 dark:bg-zinc-950">
-      <header className="flex shrink-0 items-center justify-between gap-3 border-b border-zinc-200 px-4 py-3 dark:border-zinc-800">
-        <div className="flex items-center gap-2">
+      <header className="flex shrink-0 flex-wrap items-center justify-between gap-3 border-b border-zinc-200 px-4 py-3 dark:border-zinc-800">
+        <div className="flex min-w-0 shrink-0 items-center gap-2">
           <BotIcon className="text-violet-600 dark:text-violet-400" />
           <h1 className="text-lg font-semibold tracking-tight">AI 对话</h1>
         </div>
-        <button
-          type="button"
-          onClick={() => void clear()}
-          disabled={busy || messages.length === 0}
-          className="rounded-lg px-3 py-1.5 text-sm text-zinc-600 hover:bg-zinc-200 disabled:opacity-40 dark:text-zinc-400 dark:hover:bg-zinc-800"
-        >
-          清空对话
-        </button>
+        <div className="flex min-w-0 flex-wrap items-center justify-end gap-2 sm:flex-nowrap">
+          <div className="flex min-w-0 max-w-full items-center gap-2 sm:max-w-[min(100%,14rem)]">
+            <label htmlFor={selectId} className="shrink-0 text-xs text-zinc-500">
+              模型
+            </label>
+            <select
+              id={selectId}
+              value={modelSelectValue}
+              disabled={busy}
+              onChange={(e) => onModelChange(e.target.value)}
+              className="min-w-0 flex-1 rounded-lg border border-zinc-300 bg-white px-2 py-1.5 text-sm outline-none ring-violet-500 focus-visible:ring-2 disabled:opacity-40 dark:border-zinc-600 dark:bg-zinc-950"
+            >
+              <optgroup label="DeepSeek">
+                <option value="deepseek">DeepSeek Chat（默认 deepseek-chat）</option>
+              </optgroup>
+              {ZHIPU_MODEL_GROUPS.map((g) => (
+                <optgroup key={g.label} label={`智谱 · ${g.label}`}>
+                  {g.models.map((opt) => (
+                    <option key={opt.id} value={`zhipu:${opt.id}`}>
+                      {opt.label} — {opt.hint}
+                    </option>
+                  ))}
+                </optgroup>
+              ))}
+            </select>
+          </div>
+          <button
+            type="button"
+            onClick={() => void clear()}
+            disabled={busy || messages.length === 0}
+            className="inline-flex shrink-0 items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm text-zinc-600 outline-none ring-violet-500 hover:bg-zinc-200 focus-visible:ring-2 disabled:opacity-40 dark:text-zinc-400 dark:hover:bg-zinc-800"
+          >
+            <TrashIcon className="shrink-0" />
+            清空对话
+          </button>
+        </div>
       </header>
 
       <div
@@ -300,7 +391,7 @@ export function ChatApp() {
                 开始对话
               </p>
               <p className="mt-2 max-w-sm text-sm text-zinc-500 dark:text-zinc-400">
-                选择模型后输入问题；支持多轮追问，回复以流式展示。快捷键：⌘/Ctrl +
+                在顶栏选择模型后输入问题；支持多轮追问，回复以流式展示。快捷键：⌘/Ctrl +
                 Enter 发送，Enter 换行。
               </p>
             </div>
@@ -342,8 +433,9 @@ export function ChatApp() {
                         type="button"
                         onClick={() => void retryLast()}
                         disabled={busy}
-                        className="rounded-lg bg-zinc-100 px-3 py-1 text-xs font-medium text-zinc-800 hover:bg-zinc-200 disabled:opacity-50 dark:bg-zinc-800 dark:text-zinc-100 dark:hover:bg-zinc-700"
+                        className="inline-flex items-center gap-1.5 rounded-lg bg-zinc-100 px-3 py-1 text-xs font-medium text-zinc-800 outline-none ring-violet-500 hover:bg-zinc-200 focus-visible:ring-2 disabled:opacity-50 dark:bg-zinc-800 dark:text-zinc-100 dark:hover:bg-zinc-700"
                       >
+                        <RefreshIcon className="shrink-0" />
                         重试
                       </button>
                     </div>
@@ -378,52 +470,26 @@ export function ChatApp() {
       </div>
 
       <footer className="shrink-0 border-t border-zinc-200 bg-white px-4 py-3 dark:border-zinc-800 dark:bg-zinc-900">
-        <div className="mx-auto flex max-w-3xl flex-col gap-2">
-          <div className="flex flex-wrap items-center gap-2">
-            <label htmlFor={selectId} className="text-xs text-zinc-500">
-              模型
-            </label>
-            <select
-              id={selectId}
-              value={modelSelectValue}
-              disabled={busy}
-              onChange={(e) => onModelChange(e.target.value)}
-              className="rounded-lg border border-zinc-300 bg-white px-2 py-1.5 text-sm dark:border-zinc-600 dark:bg-zinc-950"
-            >
-              <optgroup label="DeepSeek">
-                <option value="deepseek">DeepSeek Chat（默认 deepseek-chat）</option>
-              </optgroup>
-              {ZHIPU_MODEL_GROUPS.map((g) => (
-                <optgroup key={g.label} label={`智谱 · ${g.label}`}>
-                  {g.models.map((opt) => (
-                    <option key={opt.id} value={`zhipu:${opt.id}`}>
-                      {opt.label} — {opt.hint}
-                    </option>
-                  ))}
-                </optgroup>
-              ))}
-            </select>
-          </div>
-          <div className="flex gap-2">
-            <textarea
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyDown={onKeyDown}
-              disabled={busy}
-              rows={3}
-              placeholder="输入问题…（⌘/Ctrl + Enter 发送）"
-              className="min-h-[5rem] flex-1 resize-y rounded-xl border border-zinc-300 bg-zinc-50 px-3 py-2 text-sm outline-none ring-violet-500 focus:ring-2 disabled:opacity-60 dark:border-zinc-600 dark:bg-zinc-950"
-              aria-label="消息输入"
-            />
-            <button
-              type="button"
-              onClick={() => void send()}
-              disabled={busy || !input.trim()}
-              className="self-end rounded-xl bg-violet-600 px-4 py-2 text-sm font-medium text-white hover:bg-violet-700 disabled:opacity-40"
-            >
-              发送
-            </button>
-          </div>
+        <div className="mx-auto flex max-w-3xl gap-2">
+          <textarea
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            onKeyDown={onKeyDown}
+            disabled={busy}
+            rows={3}
+            placeholder="输入问题…（⌘/Ctrl + Enter 发送）"
+            className="min-h-[5rem] min-w-0 flex-1 resize-y rounded-xl border border-zinc-300 bg-zinc-50 px-3 py-2 text-sm outline-none ring-violet-500 focus:ring-2 disabled:opacity-60 dark:border-zinc-600 dark:bg-zinc-950"
+            aria-label="消息输入"
+          />
+          <button
+            type="button"
+            onClick={() => void send()}
+            disabled={busy || !input.trim()}
+            className="inline-flex shrink-0 items-center gap-1.5 self-end rounded-xl bg-violet-600 px-4 py-2 text-sm font-medium text-white outline-none ring-offset-2 ring-offset-white hover:bg-violet-700 focus-visible:ring-2 focus-visible:ring-violet-500 disabled:opacity-40 dark:ring-offset-zinc-900"
+          >
+            <SendIcon className="shrink-0 text-white" />
+            发送
+          </button>
         </div>
       </footer>
     </div>
