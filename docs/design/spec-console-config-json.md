@@ -43,7 +43,7 @@
 
 ## 2. `chatLoggingEnabled` 行为（设计定稿）
 
-- **`true`**：`logChat` 与现网一致（写 `.next/logs` + 控制台）。
+- **`true`**：`logChat` 与现网一致（写 `.logs` + 控制台）。
 - **`false`**：**既不写文件，也不在控制台输出** `logChat` 内容（与 PRD「绑定同时关闭」一致），避免「关文件仍刷屏」。
 
 ---

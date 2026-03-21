@@ -1,6 +1,7 @@
 import { appendFile, mkdir } from "node:fs/promises";
 import path from "node:path";
 import { getAppConfig } from "@/lib/config";
+import { chatLogRootDir } from "./log-dir";
 
 type LogLevel = "info" | "warn" | "error";
 
@@ -38,7 +39,7 @@ function normalizePayload(payload: LogPayload): LogPayload {
 }
 
 async function appendLogLine(line: string) {
-  const logsDir = path.join(process.cwd(), ".next", "logs");
+  const logsDir = chatLogRootDir();
   await mkdir(logsDir, { recursive: true });
   const fileName = getHourFileName(new Date());
   const filePath = path.join(logsDir, fileName);

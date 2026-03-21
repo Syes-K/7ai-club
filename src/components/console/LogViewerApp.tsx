@@ -1,0 +1,492 @@
+"use client";
+
+import {
+  ProFormDateTimeRangePicker,
+  ProFormSelect,
+  ProFormText,
+  ProTable,
+  QueryFilter,
+} from "@ant-design/pro-components";
+import type {
+  ActionType,
+  ProColumns,
+  ProFormInstance,
+} from "@ant-design/pro-components";
+import { CopyOutlined } from "@ant-design/icons";
+import { App, Button, Space, Tag, Typography } from "antd";
+import dayjs, { type Dayjs } from "dayjs";
+import "dayjs/locale/zh-cn";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { UNSET_LEVEL_SENTINEL } from "@/lib/logs/chat-log-types";
+import { fieldLabelZh } from "@/lib/logs/log-field-labels";
+import { LogDetailDrawer } from "./LogDetailDrawer";
+
+dayjs.locale("zh-cn");
+
+type LogQueryResponse = {
+  items: Record<string, unknown>[];
+  total: number;
+  page: number;
+  pageSize: number;
+  scanTruncated: boolean;
+  scannedLines: number;
+};
+
+type FacetsResponse = {
+  levels: string[];
+  events: string[];
+  scanTruncated: boolean;
+  scannedLines: number;
+};
+
+type CommittedFilters = {
+  startLocal: string;
+  endLocal: string;
+  levels: string[];
+  events: string[];
+  requestId: string;
+  keyword: string;
+};
+
+function pad2(n: number) {
+  return String(n).padStart(2, "0");
+}
+
+function toDatetimeLocalValue(d: Date): string {
+  return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}T${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
+}
+
+function defaultStartLocal(): string {
+  const d = new Date();
+  d.setHours(0, 0, 0, 0);
+  return toDatetimeLocalValue(d);
+}
+
+function defaultEndLocal(): string {
+  const d = new Date();
+  d.setSeconds(0, 0);
+  return toDatetimeLocalValue(d);
+}
+
+function defaultCommitted(): CommittedFilters {
+  return {
+    startLocal: defaultStartLocal(),
+    endLocal: defaultEndLocal(),
+    levels: [],
+    events: [],
+    requestId: "",
+    keyword: "",
+  };
+}
+
+function localInputToIso(s: string): string | null {
+  const t = new Date(s).getTime();
+  if (!Number.isFinite(t)) return null;
+  return new Date(t).toISOString();
+}
+
+function formatTsCell(ts: unknown): string {
+  if (typeof ts !== "string" || !ts.trim()) return "—";
+  const ms = Date.parse(ts);
+  if (!Number.isFinite(ms)) return "无效时间";
+  return new Date(ms).toLocaleString(undefined, {
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
+function truncateRequestId(id: string): string {
+  if (id.length <= 16) return id;
+  return `${id.slice(0, 8)}…${id.slice(-4)}`;
+}
+
+const LEVEL_OPTIONS = [
+  { label: "info", value: "info" },
+  { label: "warn", value: "warn" },
+  { label: "error", value: "error" },
+  { label: "未标注", value: UNSET_LEVEL_SENTINEL },
+];
+
+function buildParams(c: CommittedFilters, p: number, ps: number) {
+  const startIso = localInputToIso(c.startLocal);
+  const endIso = localInputToIso(c.endLocal);
+  if (!startIso || !endIso) return null;
+  const params = new URLSearchParams();
+  params.set("start", startIso);
+  params.set("end", endIso);
+  for (const lv of c.levels) {
+    params.append("level", lv);
+  }
+  for (const ev of c.events) {
+    if (ev.trim()) params.append("event", ev.trim());
+  }
+  if (c.requestId.trim()) params.set("requestId", c.requestId.trim());
+  if (c.keyword.trim()) params.set("keyword", c.keyword.trim());
+  params.set("page", String(p));
+  params.set("pageSize", String(ps));
+  return params;
+}
+
+function committedFromForm(values: {
+  timeRange?: [Dayjs, Dayjs];
+  levels?: string[];
+  events?: string[];
+  requestId?: string;
+  keyword?: string;
+}): CommittedFilters {
+  const [a, b] = values.timeRange ?? [];
+  const startLocal = a
+    ? a.format("YYYY-MM-DDTHH:mm")
+    : defaultStartLocal();
+  const endLocal = b ? b.format("YYYY-MM-DDTHH:mm") : defaultEndLocal();
+  return {
+    startLocal,
+    endLocal,
+    levels: Array.isArray(values.levels) ? values.levels : [],
+    events: Array.isArray(values.events) ? values.events : [],
+    requestId: typeof values.requestId === "string" ? values.requestId : "",
+    keyword: typeof values.keyword === "string" ? values.keyword : "",
+  };
+}
+
+export function LogViewerApp() {
+  const { message } = App.useApp();
+  const actionRef = useRef<ActionType>(null);
+  const filterFormRef = useRef<ProFormInstance>(null);
+  const committedRef = useRef<CommittedFilters>(defaultCommitted());
+  const [queryVersion, setQueryVersion] = useState(1);
+  const [facets, setFacets] = useState<FacetsResponse | null>(null);
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [drawerRecord, setDrawerRecord] = useState<Record<
+    string,
+    unknown
+  > | null>(null);
+  const returnFocusRef = useRef<HTMLElement | null>(null);
+  const [tableMeta, setTableMeta] = useState<{
+    scanTruncated: boolean;
+    scannedLines: number;
+  } | null>(null);
+
+  const fetchFacetsFor = useCallback(async (c: CommittedFilters) => {
+    const startIso = localInputToIso(c.startLocal);
+    const endIso = localInputToIso(c.endLocal);
+    if (!startIso || !endIso) return;
+    const u = new URL("/api/console/logs/facets", window.location.origin);
+    u.searchParams.set("start", startIso);
+    u.searchParams.set("end", endIso);
+    const res = await fetch(u.toString());
+    if (!res.ok) return;
+    const j = (await res.json()) as FacetsResponse;
+    setFacets(j);
+  }, []);
+
+  useEffect(() => {
+    void fetchFacetsFor(committedRef.current);
+  }, [queryVersion, fetchFacetsFor]);
+
+  const bumpQuery = useCallback(() => {
+    setQueryVersion((v) => v + 1);
+  }, []);
+
+  const eventOptions = useMemo(
+    () =>
+      (facets?.events ?? []).map((e) => ({
+        label: e,
+        value: e,
+      })),
+    [facets?.events]
+  );
+
+  const columns: ProColumns<Record<string, unknown>>[] = useMemo(
+    () => [
+      {
+        title: fieldLabelZh("ts"),
+        dataIndex: "ts",
+        width: 160,
+        ellipsis: true,
+        search: false,
+        render: (_, row) => formatTsCell(row.ts),
+      },
+      {
+        title: fieldLabelZh("level"),
+        dataIndex: "level",
+        width: 100,
+        search: false,
+        render: (_, row) => {
+          const level =
+            typeof row.level === "string" && row.level ? row.level : null;
+          if (!level) return "—";
+          const color =
+            level === "error"
+              ? "red"
+              : level === "warn"
+                ? "orange"
+                : level === "info"
+                  ? "blue"
+                  : "default";
+          return <Tag color={color}>{level}</Tag>;
+        },
+      },
+      {
+        title: fieldLabelZh("event"),
+        dataIndex: "event",
+        width: 180,
+        ellipsis: true,
+        search: false,
+        render: (_, row) =>
+          typeof row.event === "string" ? row.event : "—",
+      },
+      {
+        title: fieldLabelZh("requestId"),
+        dataIndex: "requestId",
+        ellipsis: true,
+        search: false,
+        render: (_, row) => {
+          const rid =
+            typeof row.requestId === "string" ? row.requestId : "";
+          if (!rid) return "—";
+          return (
+            <Space size={4}>
+              <Typography.Text
+                copyable={{ text: rid, icon: <CopyOutlined /> }}
+                ellipsis={{ tooltip: rid }}
+              >
+                {rid}
+              </Typography.Text>
+            </Space>
+          );
+        },
+      },
+      {
+        title: fieldLabelZh("provider"),
+        dataIndex: "provider",
+        width: 100,
+        search: false,
+        responsive: ["md"],
+        render: (_, row) =>
+          typeof row.provider === "string" ? row.provider : "—",
+      },
+      {
+        title: fieldLabelZh("model"),
+        dataIndex: "model",
+        width: 120,
+        search: false,
+        responsive: ["lg"],
+        render: (_, row) =>
+          typeof row.model === "string" ? row.model : "—",
+      },
+      {
+        title: "操作",
+        valueType: "option",
+        width: 80,
+        search: false,
+        render: (_, row) => [
+          <Button
+            key="view"
+            type="link"
+            size="small"
+            onClick={(e) => {
+              returnFocusRef.current = e.currentTarget;
+              setDrawerRecord(row);
+              setDrawerOpen(true);
+            }}
+          >
+            查看
+          </Button>,
+        ],
+      },
+    ],
+    []
+  );
+
+  return (
+    <div className="mx-auto max-w-7xl px-4 py-6">
+      <Typography.Paragraph type="secondary" className="!mb-4 text-xs">
+        筛选依据为每条日志的 <Typography.Text code>ts</Typography.Text>{" "}
+        （UTC）；展示为本地时间。闭区间{" "}
+        <Typography.Text code>[start, end]</Typography.Text>。多个 event
+        为「或」；与 level、时间、requestId、关键词为「且」。请使用下方「查询」提交条件。
+      </Typography.Paragraph>
+
+      <QueryFilter<{
+        timeRange: [Dayjs, Dayjs];
+        levels?: string[];
+        events?: string[];
+        requestId?: string;
+        keyword?: string;
+      }>
+        defaultCollapsed={false}
+        labelWidth={112}
+        initialValues={{
+          timeRange: [
+            dayjs(defaultCommitted().startLocal, "YYYY-MM-DDTHH:mm"),
+            dayjs(defaultCommitted().endLocal, "YYYY-MM-DDTHH:mm"),
+          ],
+          levels: [],
+          events: [],
+          requestId: "",
+          keyword: "",
+        }}
+        formRef={filterFormRef}
+        onFinish={async (values) => {
+          committedRef.current = committedFromForm(values);
+          bumpQuery();
+          return true;
+        }}
+        onReset={() => {
+          const d = defaultCommitted();
+          committedRef.current = d;
+          filterFormRef.current?.setFieldsValue({
+            timeRange: [
+              dayjs(d.startLocal, "YYYY-MM-DDTHH:mm"),
+              dayjs(d.endLocal, "YYYY-MM-DDTHH:mm"),
+            ],
+            levels: [],
+            events: [],
+            requestId: "",
+            keyword: "",
+          });
+          bumpQuery();
+        }}
+        submitter={{
+          searchConfig: { submitText: "查询" },
+          resetButtonProps: { children: "重置并查询" },
+        }}
+      >
+        <ProFormDateTimeRangePicker
+          name="timeRange"
+          label="时间范围"
+          rules={[{ required: true, message: "请选择时间范围" }]}
+          fieldProps={{
+            format: "YYYY-MM-DD HH:mm",
+            showTime: { format: "HH:mm" },
+          }}
+        />
+        <ProFormSelect
+          name="levels"
+          label={fieldLabelZh("level")}
+          mode="multiple"
+          placeholder="不选表示不限"
+          options={LEVEL_OPTIONS}
+        />
+        <ProFormSelect
+          name="events"
+          label={fieldLabelZh("event")}
+          mode="tags"
+          placeholder="可选列表或手动输入，多值为「或」"
+          fieldProps={{
+            options: eventOptions,
+            tokenSeparators: [","],
+          }}
+        />
+        <ProFormText
+          name="requestId"
+          label={fieldLabelZh("requestId")}
+          placeholder="前缀匹配"
+          fieldProps={{ style: { fontFamily: "monospace" } }}
+        />
+        <ProFormText
+          name="keyword"
+          label={fieldLabelZh("keyword")}
+          placeholder="整行 JSON 子串"
+        />
+      </QueryFilter>
+
+      <ProTable<Record<string, unknown>>
+        size="small"
+        bordered={true}
+        actionRef={actionRef}
+        rowKey={(record, index) => `${String(record.ts)}-${index}`}
+        search={false}
+        params={{ queryVersion }}
+        columns={columns}
+        options={false}
+        pagination={{
+          defaultPageSize: 20,
+          pageSizeOptions: [20, 50, 100],
+          showSizeChanger: true,
+        }}
+        toolBarRender={() => [
+          tableMeta ? (
+            <Typography.Text key="meta" type="secondary" className="text-xs">
+              已扫行 {tableMeta.scannedLines}
+              {tableMeta.scanTruncated ? "（已达扫描上限，结果可能不全）" : ""}
+            </Typography.Text>
+          ) : null,
+        ]}
+        request={async (params) => {
+          const c = committedRef.current;
+          const p = buildParams(
+            c,
+            params.current ?? 1,
+            params.pageSize ?? 20
+          );
+          if (!p) {
+            message.error("时间格式无效");
+            return { data: [], success: false, total: 0 };
+          }
+          try {
+            const u = new URL("/api/console/logs", window.location.origin);
+            u.search = p.toString();
+            const res = await fetch(u.toString());
+            const j = (await res.json().catch(() => ({}))) as LogQueryResponse & {
+              error?: string;
+              code?: string;
+            };
+            if (!res.ok) {
+              message.error(
+                typeof j.error === "string" ? j.error : "暂时无法读取日志"
+              );
+              setTableMeta(null);
+              return { data: [], success: false, total: 0 };
+            }
+            const data: LogQueryResponse = {
+              items: Array.isArray(j.items) ? j.items : [],
+              total: typeof j.total === "number" ? j.total : 0,
+              page: typeof j.page === "number" ? j.page : params.current ?? 1,
+              pageSize:
+                typeof j.pageSize === "number"
+                  ? j.pageSize
+                  : params.pageSize ?? 20,
+              scanTruncated: Boolean(j.scanTruncated),
+              scannedLines:
+                typeof j.scannedLines === "number" ? j.scannedLines : 0,
+            };
+            setTableMeta({
+              scanTruncated: data.scanTruncated,
+              scannedLines: data.scannedLines,
+            });
+            return {
+              data: data.items,
+              success: true,
+              total: data.total,
+            };
+          } catch {
+            message.error("网络错误");
+            setTableMeta(null);
+            return { data: [], success: false, total: 0 };
+          }
+        }}
+        onRow={(record) => ({
+          onClick: (e) => {
+            const el = e.target as HTMLElement;
+            if (el.closest("button,a,.ant-typography-copy")) return;
+            setDrawerRecord(record);
+            setDrawerOpen(true);
+          },
+          style: { cursor: "pointer" },
+        })}
+      />
+
+      <LogDetailDrawer
+        open={drawerOpen}
+        record={drawerRecord}
+        onClose={() => setDrawerOpen(false)}
+        returnFocusRef={returnFocusRef}
+      />
+    </div>
+  );
+}

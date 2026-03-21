@@ -9,7 +9,7 @@
 
 | 文件 | 变更 |
 |------|------|
-| `src/lib/chat/logger.ts` | 新增日志模块：按小时写入 `.next/logs/*.log`，同时输出控制台 |
+| `src/lib/chat/logger.ts` | 新增日志模块：按小时写入 `.logs/*.log`，同时输出控制台 |
 | `src/app/api/chat/route.ts` | 接入 API 层事件日志与流式结果日志（含 `responsePreview`） |
 | `src/lib/chat/providers.ts` | 接入 provider 层调用开始/成功/失败日志 |
 
@@ -38,7 +38,7 @@
 ## 3. 验证结果
 
 - `npm run build` 通过。
-- 触发对话请求后，`.next/logs/` 下生成小时文件并持续追加 JSON 行。
+- 触发对话请求后，`.logs/` 下生成小时文件并持续追加 JSON 行。
 
 ---
 

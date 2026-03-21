@@ -23,6 +23,9 @@
 # misc
 .DS_Store
 
+# chat JSONL logs (not under .next)
+/.logs/
+
 # local SQLite (chat persistence)
 .data/
 *.pem

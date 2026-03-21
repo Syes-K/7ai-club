@@ -42,7 +42,7 @@
 
 ### 验收标准（AC）
 
-- [ ] `chatLoggingEnabled === false` 时，`logChat` **不**再向 `.next/logs` 写入文件。
+- [ ] `chatLoggingEnabled === false` 时，`logChat` **不**再向 `.logs` 写入文件。
 - [ ] 行为是否在同时关闭 `console` 输出，与实现说明一致并在本故事验收。
 
 ---

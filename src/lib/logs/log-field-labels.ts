@@ -1,0 +1,42 @@
+/** 聊天落盘日志 JSON 字段键 → 中文标签（仅用于 UI，不改变 JSON / 查询参数键名） */
+export const FIELD_LABEL_ZH: Record<string, string> = {
+  ts: "时间",
+  level: "级别",
+  event: "事件",
+  requestId: "请求 ID",
+  keyword: "关键词",
+  provider: "模型服务商",
+  model: "模型",
+  messageCount: "消息条数",
+  messages: "消息列表",
+  mode: "模式",
+  error: "错误信息",
+  sessionId: "会话 ID",
+  status: "HTTP 状态码",
+  detail: "响应片段",
+  chunkCount: "流式分块数",
+  totalChars: "累计字符数",
+  responsePreview: "回复预览",
+  elapsedMs: "耗时（毫秒）",
+  persistedCount: "已持久化条数",
+  persistedMessageCount: "持久化消息条数",
+  maxMessagesInContext: "最大上下文条数",
+  exitsWindow: "超出上下文窗口",
+  summaryMessageCountAtRefresh: "上次摘要时消息数",
+  refreshEvery: "摘要刷新间隔（条）",
+  willRefresh: "将刷新摘要",
+  hint: "说明",
+  originalLen: "原文长度",
+  summaryLen: "摘要长度",
+  name: "名称",
+  message: "消息",
+  stack: "堆栈",
+  lastRole: "末条消息角色",
+  retryLast: "重试末条",
+  contextSummaryEnabled: "上下文摘要已启用",
+  contextSummaryPrepended: "已注入上下文摘要",
+};
+
+export function fieldLabelZh(key: string): string {
+  return FIELD_LABEL_ZH[key] ?? `其它 · ${key}`;
+}

@@ -14,7 +14,7 @@
 
 ### 2.1 日志写入路径与切分
 
-- 日志目录：`<projectRoot>/.next/logs/`
+- 日志目录：`<projectRoot>/.logs/`
 - 文件命名：`YYYY-MM-DD-HH.log`
 - 写入格式：JSON Lines（每行一个 JSON）
 
