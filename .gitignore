@@ -22,6 +22,9 @@
 
 # misc
 .DS_Store
+
+# local SQLite (chat persistence)
+.data/
 *.pem
 
 # Python

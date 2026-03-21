@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { getAppConfig } from "@/lib/config";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -12,10 +13,15 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-export const metadata: Metadata = {
-  title: "AI 对话",
-  description: "智谱 / DeepSeek 流式对话（Next.js）",
-};
+export const dynamic = "force-dynamic";
+
+export async function generateMetadata(): Promise<Metadata> {
+  const { appDisplayName } = getAppConfig();
+  return {
+    title: appDisplayName,
+    description: "智谱 / DeepSeek 流式对话（Next.js）",
+  };
+}
 
 export default function RootLayout({
   children,

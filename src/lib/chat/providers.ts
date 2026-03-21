@@ -1,5 +1,5 @@
-import type { ChatMessage } from "./types";
 import { DEEPSEEK_DEFAULT_MODEL } from "./constants";
+import type { ChatMessage } from "./types";
 import { logChat } from "./logger";
 
 const ZHIPU_URL = "https://open.bigmodel.cn/api/paas/v4/chat/completions";
@@ -96,11 +96,12 @@ export async function fetchDeepseekSseStream(
     throw new Error("服务端未配置 DEEPSEEK_API_KEY");
   }
 
+  const deepseekModel = DEEPSEEK_DEFAULT_MODEL;
   const ctx: ProviderLogContext = {
     requestId,
     messageCount: messages.length,
     provider: "deepseek",
-    model: DEEPSEEK_DEFAULT_MODEL,
+    model: deepseekModel,
     messages: messages.map((m) => ({ role: m.role, content: m.content })),
   };
   logProviderStart(ctx);
@@ -113,7 +114,7 @@ export async function fetchDeepseekSseStream(
       Authorization: `Bearer ${key}`,
     },
     body: JSON.stringify({
-      model: DEEPSEEK_DEFAULT_MODEL,
+      model: deepseekModel,
       messages: toOpenAIMessages(messages),
       stream: true,
     }),

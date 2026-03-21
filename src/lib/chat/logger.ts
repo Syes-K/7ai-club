@@ -1,5 +1,6 @@
 import { appendFile, mkdir } from "node:fs/promises";
 import path from "node:path";
+import { getAppConfig } from "@/lib/config";
 
 type LogLevel = "info" | "warn" | "error";
 
@@ -49,6 +50,10 @@ export async function logChat(
   event: string,
   payload: LogPayload
 ) {
+  if (!getAppConfig().chatLoggingEnabled) {
+    return;
+  }
+
   const now = new Date();
   const line =
     JSON.stringify({
@@ -64,6 +69,8 @@ export async function logChat(
   try {
     await appendLogLine(line);
   } catch (e) {
-    console.error("[chat] log_write_failed", serializeError(e));
+    if (getAppConfig().chatLoggingEnabled) {
+      console.error("[chat] log_write_failed", serializeError(e));
+    }
   }
 }

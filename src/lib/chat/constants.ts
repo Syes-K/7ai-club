@@ -1,4 +1,10 @@
-/** 多轮上下文：最多携带的「用户+助手」轮次数（含当前轮由调用方决定） */
-export const MAX_MESSAGES_IN_CONTEXT = 40;
+import { FALLBACK_DEFAULTS } from "@/lib/config/defaults";
 
+/**
+ * @deprecated 服务端请用 `getAppConfig().maxMessagesInContext`
+ */
+export const MAX_MESSAGES_IN_CONTEXT =
+  FALLBACK_DEFAULTS.maxMessagesInContext;
+
+/** DeepSeek 请求使用的固定 model id（不提供配置项） */
 export const DEEPSEEK_DEFAULT_MODEL = "deepseek-chat";

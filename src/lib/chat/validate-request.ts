@@ -1,16 +1,40 @@
+import { getAppConfig } from "@/lib/config";
 import { ZHIPU_MODEL_IDS } from "./zhipu-models";
 import type { ChatMessage, ChatProviderId } from "./types";
-import { DEFAULT_CHAT_ROUTE } from "./route-key";
-import { MAX_MESSAGES_IN_CONTEXT } from "./constants";
 
-export type ChatApiBody = {
-  messages: ChatMessage[];
-  provider: ChatProviderId;
-  model?: string;
-};
+export type ChatApiBody =
+  | {
+      variant: "legacy";
+      messages: ChatMessage[];
+      provider: ChatProviderId;
+      model?: string;
+    }
+  | {
+      variant: "session";
+      sessionId: string;
+      provider: ChatProviderId;
+      model?: string;
+      retryLast: boolean;
+      /** retryLast 为 false 时必有；为 true 时为 undefined */
+      content: string | undefined;
+    };
 
 function isChatRole(r: string): r is ChatMessage["role"] {
   return r === "user" || r === "assistant" || r === "system";
+}
+
+function validateZhipuModel(
+  raw: Record<string, unknown>
+): { ok: true; model: string } | { ok: false; error: string } {
+  const cfg = getAppConfig();
+  const model =
+    typeof raw.model === "string" && raw.model.length > 0
+      ? raw.model
+      : cfg.defaultModel;
+  if (!ZHIPU_MODEL_IDS.includes(model)) {
+    return { ok: false, error: `不支持的智谱模型: ${model}` };
+  }
+  return { ok: true, model };
 }
 
 export function parseAndValidateChatBody(
@@ -25,9 +49,60 @@ export function parseAndValidateChatBody(
     return { ok: false, error: "provider 须为 zhipu 或 deepseek" };
   }
 
+  const sessionIdRaw = o.sessionId;
+  const hasSessionId =
+    typeof sessionIdRaw === "string" && sessionIdRaw.trim().length > 0;
+
+  if (hasSessionId) {
+    if (o.messages !== undefined) {
+      return { ok: false, error: "不可同时使用 sessionId 与 messages" };
+    }
+    const sessionId = (sessionIdRaw as string).trim();
+    const retryLast = o.retryLast === true;
+    const contentRaw = typeof o.content === "string" ? o.content.trim() : "";
+
+    if (retryLast) {
+      if (contentRaw.length > 0) {
+        return { ok: false, error: "retryLast 为 true 时不应提供 content" };
+      }
+    } else if (!contentRaw) {
+      return {
+        ok: false,
+        error: "须提供非空 content，或设置 retryLast: true",
+      };
+    }
+
+    if (provider === "zhipu") {
+      const m = validateZhipuModel(o);
+      if (!m.ok) return m;
+      return {
+        ok: true,
+        data: {
+          variant: "session",
+          sessionId,
+          provider: "zhipu",
+          model: m.model,
+          retryLast,
+          content: retryLast ? undefined : contentRaw,
+        },
+      };
+    }
+
+    return {
+      ok: true,
+      data: {
+        variant: "session",
+        sessionId,
+        provider: "deepseek",
+        retryLast,
+        content: retryLast ? undefined : contentRaw,
+      },
+    };
+  }
+
   const messagesRaw = o.messages;
   if (!Array.isArray(messagesRaw) || messagesRaw.length === 0) {
-    return { ok: false, error: "messages 须为非空数组" };
+    return { ok: false, error: "messages 须为非空数组，或提供 sessionId" };
   }
 
   const messages: ChatMessage[] = [];
@@ -47,18 +122,24 @@ export function parseAndValidateChatBody(
     messages.push({ role, content });
   }
 
-  const sliced = messages.slice(-MAX_MESSAGES_IN_CONTEXT);
+  const sliced = messages.slice(-getAppConfig().maxMessagesInContext);
 
   if (provider === "zhipu") {
-    const model =
-      typeof o.model === "string" && o.model.length > 0
-        ? o.model
-        : DEFAULT_CHAT_ROUTE.model!;
-    if (!ZHIPU_MODEL_IDS.includes(model)) {
-      return { ok: false, error: `不支持的智谱模型: ${model}` };
-    }
-    return { ok: true, data: { messages: sliced, provider: "zhipu", model } };
+    const m = validateZhipuModel(o);
+    if (!m.ok) return m;
+    return {
+      ok: true,
+      data: {
+        variant: "legacy",
+        messages: sliced,
+        provider: "zhipu",
+        model: m.model,
+      },
+    };
   }
 
-  return { ok: true, data: { messages: sliced, provider: "deepseek" } };
+  return {
+    ok: true,
+    data: { variant: "legacy", messages: sliced, provider: "deepseek" },
+  };
 }
