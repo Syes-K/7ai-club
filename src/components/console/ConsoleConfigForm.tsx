@@ -124,7 +124,97 @@ export function ConsoleConfigForm({
               }}
               className="w-full rounded-xl border border-zinc-300 bg-zinc-50 px-3 py-2 text-sm dark:border-zinc-600 dark:bg-zinc-950"
             />
-            <p className="mt-1 text-xs text-zinc-500">服务端裁剪多轮历史时使用（1～200）</p>
+            <p className="mt-1 text-xs text-zinc-500">
+              参与模型调用的最近若干条完整对话（user/assistant）条数上限。
+            </p>
+          </div>
+
+          <div className="flex items-start gap-3">
+            <input
+              id="context-summary-enabled"
+              type="checkbox"
+              checked={cfg.contextSummaryEnabled}
+              onChange={(e) =>
+                setCfg((c) => ({
+                  ...c,
+                  contextSummaryEnabled: e.target.checked,
+                }))
+              }
+              className="mt-1 h-4 w-4 rounded border-zinc-300 text-violet-600 focus:ring-violet-500"
+            />
+            <label
+              htmlFor="context-summary-enabled"
+              className="text-sm text-zinc-700 dark:text-zinc-300"
+            >
+              启用上下文摘要（长对话时压缩窗口外历史）
+            </label>
+          </div>
+          <p className="text-xs text-zinc-500 dark:text-zinc-400">
+            默认关闭。勾选后须点击页面底部「保存」才会写入配置；未启用时日志里{" "}
+            <code className="rounded bg-zinc-200 px-1 dark:bg-zinc-800">
+              contextSummaryEnabled
+            </code>{" "}
+            为 false，不会产生摘要调用与{" "}
+            <code className="rounded bg-zinc-200 px-1 dark:bg-zinc-800">
+              context_summary.*
+            </code>{" "}
+            日志。对话列表仍显示全部历史；摘要仅影响发往模型的上下文。
+          </p>
+
+          <div>
+            <label
+              htmlFor="context-summary-max-chars"
+              className="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300"
+            >
+              摘要最大字符数
+            </label>
+            <input
+              id="context-summary-max-chars"
+              type="number"
+              min={200}
+              max={8000}
+              value={cfg.contextSummaryMaxChars}
+              onChange={(e) => {
+                const v = parseInt(e.target.value, 10);
+                setCfg((c) => ({
+                  ...c,
+                  contextSummaryMaxChars: Number.isFinite(v)
+                    ? Math.min(8000, Math.max(200, v))
+                    : c.contextSummaryMaxChars,
+                }));
+              }}
+              className="w-full rounded-xl border border-zinc-300 bg-zinc-50 px-3 py-2 text-sm dark:border-zinc-600 dark:bg-zinc-950"
+            />
+            <p className="mt-1 text-xs text-zinc-500">写入模型前截断（200～8000）</p>
+          </div>
+
+          <div>
+            <label
+              htmlFor="context-summary-refresh-every"
+              className="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300"
+            >
+              摘要更新间隔（条）
+            </label>
+            <input
+              id="context-summary-refresh-every"
+              type="number"
+              min={1}
+              max={200}
+              value={cfg.contextSummaryRefreshEvery}
+              onChange={(e) => {
+                const v = parseInt(e.target.value, 10);
+                setCfg((c) => ({
+                  ...c,
+                  contextSummaryRefreshEvery: Number.isFinite(v)
+                    ? Math.min(200, Math.max(1, v))
+                    : c.contextSummaryRefreshEvery,
+                }));
+              }}
+              className="w-full rounded-xl border border-zinc-300 bg-zinc-50 px-3 py-2 text-sm dark:border-zinc-600 dark:bg-zinc-950"
+            />
+            <p className="mt-1 text-xs text-zinc-500">
+              自上次成功摘要以来，持久化消息至少增加多少条再刷新；数值越大调用越少、摘要越可能滞后。
+            </p>
           </div>
 
           <div>

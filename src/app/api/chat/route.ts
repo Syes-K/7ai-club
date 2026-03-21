@@ -1,7 +1,13 @@
+import {
+  buildMessagesWithContextSummary,
+  messagesIncludeContextSummary,
+  refreshContextSummaryFullRewrite,
+  shouldRefreshContextSummary,
+} from "@/lib/chat/context-summary";
 import { parseAndValidateChatBody } from "@/lib/chat/validate-request";
 import { logChat } from "@/lib/chat/logger";
 import { createChatCompletionSseStream } from "@/lib/chat/run-chat-stream";
-import { getChatStore, storedToChatMessages } from "@/lib/chat/store";
+import { getChatStore } from "@/lib/chat/store";
 import { DEEPSEEK_DEFAULT_MODEL } from "@/lib/chat/constants";
 import { getAppConfig } from "@/lib/config";
 
@@ -87,8 +93,12 @@ export async function POST(req: Request) {
   }
 
   const rows = store.listMessages(sessionId);
-  const messages = storedToChatMessages(rows).slice(
-    -getAppConfig().maxMessagesInContext
+  const appCfg = getAppConfig();
+  const messages = buildMessagesWithContextSummary(
+    rows,
+    store,
+    sessionId,
+    appCfg
   );
 
   await logChat("info", "api.request_received", {
@@ -99,7 +109,22 @@ export async function POST(req: Request) {
     provider,
     model: model ?? DEEPSEEK_DEFAULT_MODEL,
     messageCount: messages.length,
+    persistedMessageCount: rows.length,
+    contextSummaryEnabled: appCfg.contextSummaryEnabled,
+    contextSummaryPrepended: messagesIncludeContextSummary(messages),
   });
+
+  const K = appCfg.maxMessagesInContext;
+  if (!appCfg.contextSummaryEnabled && rows.length > K) {
+    await logChat("info", "context_summary.disabled_in_config", {
+      requestId,
+      sessionId,
+      persistedMessageCount: rows.length,
+      maxMessagesInContext: K,
+      hint:
+        "摘要功能未启用：请在 /console 勾选「启用上下文摘要」并点击「保存」。当前 app-config.json 中 contextSummaryEnabled 为 false 时不会出现摘要相关日志。",
+    });
+  }
 
   const stream = createChatCompletionSseStream({
     messages,
@@ -109,6 +134,48 @@ export async function POST(req: Request) {
     startedAt,
     afterSuccess: async (fullText) => {
       store.appendMessage(sessionId, "assistant", fullText);
+      const cfg = getAppConfig();
+      const rowsAfter = store.listMessages(sessionId);
+      const n = rowsAfter.length;
+      const { summaryMessageCountAtRefresh } =
+        store.getSessionContextSummary(sessionId);
+      const K = cfg.maxMessagesInContext;
+      const willRefresh = shouldRefreshContextSummary(
+        n,
+        K,
+        summaryMessageCountAtRefresh,
+        cfg.contextSummaryRefreshEvery,
+        cfg.contextSummaryEnabled
+      );
+      if (cfg.contextSummaryEnabled) {
+        const gap = n - summaryMessageCountAtRefresh;
+        await logChat("info", "context_summary.eval", {
+          requestId,
+          sessionId,
+          persistedCount: n,
+          maxMessagesInContext: K,
+          exitsWindow: n > K,
+          summaryMessageCountAtRefresh,
+          refreshEvery: cfg.contextSummaryRefreshEvery,
+          willRefresh,
+          hint:
+            n <= K
+              ? `摘要：当前会话 ${n} 条，持久化条数须大于「最大上下文条数」(${K}) 才会生成/注入摘要`
+              : willRefresh
+                ? `摘要：将调用模型整段重写窗口外内容`
+                : `摘要：未达刷新间隔（自上次计数已新增 ${gap} 条，需 ≥ ${cfg.contextSummaryRefreshEvery} 条）`,
+        });
+      }
+      if (willRefresh) {
+        await refreshContextSummaryFullRewrite({
+          sessionId,
+          store,
+          requestId,
+          provider,
+          model,
+          config: cfg,
+        });
+      }
     },
   });
 

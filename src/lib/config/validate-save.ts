@@ -52,6 +52,37 @@ export function validateAppConfigForSave(
     return { ok: false, error: "appDisplayName 无效" };
   }
 
+  const cse = o.contextSummaryEnabled;
+  if (typeof cse !== "boolean") {
+    return { ok: false, error: "contextSummaryEnabled 须为布尔值" };
+  }
+
+  const csm = o.contextSummaryMaxChars;
+  if (
+    typeof csm !== "number" ||
+    !Number.isInteger(csm) ||
+    csm < 200 ||
+    csm > 8000
+  ) {
+    return {
+      ok: false,
+      error: "contextSummaryMaxChars 须为 200～8000 的整数",
+    };
+  }
+
+  const csr = o.contextSummaryRefreshEvery;
+  if (
+    typeof csr !== "number" ||
+    !Number.isInteger(csr) ||
+    csr < 1 ||
+    csr > 200
+  ) {
+    return {
+      ok: false,
+      error: "contextSummaryRefreshEvery 须为 1～200 的整数",
+    };
+  }
+
   return {
     ok: true,
     config: {
@@ -60,6 +91,9 @@ export function validateAppConfigForSave(
       defaultModel,
       chatLoggingEnabled: log,
       appDisplayName,
+      contextSummaryEnabled: cse,
+      contextSummaryMaxChars: csm,
+      contextSummaryRefreshEvery: csr,
     },
   };
 }

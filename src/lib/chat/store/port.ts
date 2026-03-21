@@ -27,6 +27,17 @@ export interface ChatStore {
     content: string
   ): { id: string };
   clearMessages(sessionId: string): void;
+  /** 会话级上下文摘要（模型用）；与 `summaryMessageCountAtRefresh` 成对使用 */
+  getSessionContextSummary(sessionId: string): {
+    summary: string | null;
+    /** 上次成功生成摘要时的持久化消息条数；0 表示从未成功摘要 */
+    summaryMessageCountAtRefresh: number;
+  };
+  setSessionContextSummary(
+    sessionId: string,
+    summary: string | null,
+    messageCountAtRefresh: number
+  ): void;
   /** 删除会话及其消息（级联） */
   deleteSession(sessionId: string): boolean;
   /** 会话尚无标题时，用首条用户话节选设置标题 */

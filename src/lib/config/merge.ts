@@ -43,11 +43,39 @@ export function mergeAppConfigPartial(partial: unknown): AppConfig {
     appDisplayName = o.appDisplayName.trim().slice(0, 40);
   }
 
+  const contextSummaryEnabled =
+    typeof o.contextSummaryEnabled === "boolean"
+      ? o.contextSummaryEnabled
+      : d.contextSummaryEnabled;
+
+  let contextSummaryMaxChars = d.contextSummaryMaxChars;
+  if (
+    typeof o.contextSummaryMaxChars === "number" &&
+    Number.isInteger(o.contextSummaryMaxChars) &&
+    o.contextSummaryMaxChars >= 200 &&
+    o.contextSummaryMaxChars <= 8000
+  ) {
+    contextSummaryMaxChars = o.contextSummaryMaxChars;
+  }
+
+  let contextSummaryRefreshEvery = d.contextSummaryRefreshEvery;
+  if (
+    typeof o.contextSummaryRefreshEvery === "number" &&
+    Number.isInteger(o.contextSummaryRefreshEvery) &&
+    o.contextSummaryRefreshEvery >= 1 &&
+    o.contextSummaryRefreshEvery <= 200
+  ) {
+    contextSummaryRefreshEvery = o.contextSummaryRefreshEvery;
+  }
+
   return {
     maxMessagesInContext: max,
     defaultProvider,
     defaultModel,
     chatLoggingEnabled,
     appDisplayName,
+    contextSummaryEnabled,
+    contextSummaryMaxChars,
+    contextSummaryRefreshEvery,
   };
 }
