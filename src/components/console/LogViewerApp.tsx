@@ -297,23 +297,7 @@ export function LogViewerApp({
   );
 
   return (
-    <div className="mx-auto max-w-7xl px-4 py-6">
-      <Typography.Paragraph type="secondary" className="!mb-4 text-xs">
-        日期、小时由服务端按服务器本地时区解释，与落盘文件{" "}
-        <code className="rounded border border-neutral-200 bg-neutral-100 px-1 font-mono text-[0.9em] dark:border-neutral-600 dark:bg-neutral-800">
-          YYYY-MM-DD-HH.log
-        </code>{" "}
-        一致；小时不选则查该日全天，选了则该整点小时。每条日志的{" "}
-        <code className="rounded border border-neutral-200 bg-neutral-100 px-1 font-mono text-[0.9em] dark:border-neutral-600 dark:bg-neutral-800">
-          ts
-        </code>{" "}
-        为 UTC；表格「时间」列按{" "}
-        <code className="rounded border border-neutral-200 bg-neutral-100 px-1 font-mono text-[0.9em] dark:border-neutral-600 dark:bg-neutral-800">
-          本机时区
-        </code>{" "}
-        显示为「YYYY-MM-DD HH:mm:ss」。多个 event 为「或」，与 level、时间、requestId、关键词为「且」。请点「查询」提交。
-      </Typography.Paragraph>
-
+    <div className="mx-auto max-w-7xl px-4 py-2">
       <QueryFilter<{
         logDate: Dayjs;
         logHour?: number | null;

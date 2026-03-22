@@ -6,7 +6,7 @@ import { storedToChatMessages } from "./store/port";
 import type { ChatMessage, ChatProviderId } from "./types";
 
 function buildContextSummarySystemPrompt(maxChars: number): string {
-  return `你是对话摘要助手。用户将提供一段较早的多轮对话文本。请用简洁中文压缩为一段连续摘要，保留：关键事实、专有名词、用户约束与已达成共识的决策。不要编造。不要使用 markdown 标题。
+  return `你是对话摘要助手。用户将提供当前会话的全部多轮对话（与后续对话请求里单独传入的「最近若干条原文」在内容上会有重叠，属预期行为）。请用简洁中文压缩为一段连续摘要，保留：关键事实、专有名词、用户约束与已达成共识的决策。不要编造。不要使用 markdown 标题。
 
 【长度】输出正文总长度必须不超过 ${maxChars} 个字符（与常见语言中字符串的字符长度计数一致，含标点与空格）。若难以在限制内覆盖全部细节，请优先保留最关键信息，并自然收尾，避免像在句子中途被截断。不要输出字数统计或任何与摘要正文无关的说明。`;
 }
@@ -59,7 +59,7 @@ export function shouldRefreshContextSummary(
   return n - summaryMessageCountAtRefresh >= refreshEvery;
 }
 
-/** 整段重写：以当前窗口外全部消息为输入生成摘要（PRD §2.1.1） */
+/** 整段重写：以当前会话全部持久化消息为输入生成摘要（与尾窗重叠，避免摘要边界与尾窗滑动错位导致的信息空洞） */
 export async function refreshContextSummaryFullRewrite(params: {
   sessionId: string;
   store: ChatStore;
@@ -76,8 +76,7 @@ export async function refreshContextSummaryFullRewrite(params: {
     store.setSessionContextSummary(sessionId, null, 0);
     return;
   }
-  const prefixRows = rows.slice(0, n - K);
-  let prefixText = prefixRows
+  let dialogueText = rows
     .map((r) =>
       r.role === "user"
         ? `用户: ${r.content}`
@@ -86,19 +85,19 @@ export async function refreshContextSummaryFullRewrite(params: {
           : `系统: ${r.content}`
     )
     .join("\n\n");
-  const MAX_PREFIX_CHARS = 120_000;
-  if (prefixText.length > MAX_PREFIX_CHARS) {
+  const MAX_DIALOGUE_CHARS = 120_000;
+  if (dialogueText.length > MAX_DIALOGUE_CHARS) {
     await logChat("warn", "context_summary.prefix_truncated", {
       requestId,
       sessionId,
-      originalLen: prefixText.length,
+      originalLen: dialogueText.length,
     });
-    prefixText = prefixText.slice(-MAX_PREFIX_CHARS);
+    dialogueText = dialogueText.slice(-MAX_DIALOGUE_CHARS);
   }
   const maxChars = config.contextSummaryMaxChars;
   const messages: ChatMessage[] = [
     { role: "system", content: buildContextSummarySystemPrompt(maxChars) },
-    { role: "user", content: prefixText },
+    { role: "user", content: dialogueText },
   ];
   const maxTokens = Math.min(
     4096,

@@ -162,7 +162,7 @@ export async function POST(req: Request) {
             n <= K
               ? `摘要：当前会话 ${n} 条，持久化条数须大于「最大上下文条数」(${K}) 才会生成/注入摘要`
               : willRefresh
-                ? `摘要：将调用模型整段重写窗口外内容`
+                ? `摘要：将调用模型整段重写（全量持久化消息为输入）`
                 : `摘要：未达刷新间隔（自上次计数已新增 ${gap} 条，需 ≥ ${cfg.contextSummaryRefreshEvery} 条）`,
         });
       }

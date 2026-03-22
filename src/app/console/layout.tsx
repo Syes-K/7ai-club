@@ -1,4 +1,4 @@
-import { ConsoleChrome } from "@/components/console/ConsoleChrome";
+import { ConsoleProShell } from "@/components/console/ConsoleProShell";
 import { ConsoleAntdProvider } from "./ConsoleAntdProvider";
 
 export default function ConsoleLayout({
@@ -8,10 +8,7 @@ export default function ConsoleLayout({
 }) {
   return (
     <ConsoleAntdProvider>
-      <div className="flex min-h-[100dvh] flex-col bg-zinc-50 dark:bg-zinc-950">
-        <ConsoleChrome />
-        {children}
-      </div>
+      <ConsoleProShell>{children}</ConsoleProShell>
     </ConsoleAntdProvider>
   );
 }
