@@ -3,6 +3,6 @@ build/
 coverage/
 .logs/
 .next/
-.data/
+data/
 .node_modules/
 package-lock.json

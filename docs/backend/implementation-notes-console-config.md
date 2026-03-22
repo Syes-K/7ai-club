@@ -9,7 +9,7 @@
 | 路径 | 说明 |
 |------|------|
 | `src/lib/config/defaults.ts` | `AppConfig` 类型与 `FALLBACK_DEFAULTS` |
-| `src/lib/config/paths.ts` | `APP_CONFIG_PATH` / `.data/app-config.json` |
+| `src/lib/config/paths.ts` | `APP_CONFIG_PATH` / `data/app-config.json` |
 | `src/lib/config/merge.ts` | 磁盘部分 JSON 与默认合并（容错） |
 | `src/lib/config/read-write.ts` | `getAppConfig`、`readAppConfigWithMeta`、原子写 |
 | `src/lib/config/validate-save.ts` | `PUT` 严格校验 |

@@ -122,7 +122,7 @@
 
 | 变量 | 说明 |
 |------|------|
-| `CHAT_SQLITE_PATH` | SQLite 文件绝对或相对路径；未设置时使用 `process.cwd()/.data/chat.sqlite` |
+| `CHAT_SQLITE_PATH` | SQLite 文件绝对或相对路径；未设置时使用 `process.cwd()/data/chat.sqlite` |
 
 ---
 

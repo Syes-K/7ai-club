@@ -71,7 +71,7 @@
 
 | 变量 | 说明 |
 |------|------|
-| `APP_CONFIG_PATH` | 配置文件绝对或相对路径；未设置时为 `<cwd>/.data/app-config.json` |
+| `APP_CONFIG_PATH` | 配置文件绝对或相对路径；未设置时为 `<cwd>/data/app-config.json` |
 
 ---
 

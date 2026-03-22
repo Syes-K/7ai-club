@@ -16,7 +16,7 @@
 | 字段 | 默认值 | 说明 |
 |------|--------|------|
 | `contextSummaryEnabled` | `false` | 是否启用摘要 |
-| `contextSummaryMaxChars` | `4000` | 摘要写入模型前最大字符数 |
+| `contextSummaryMaxChars` | `4000` | 摘要**生成**时传入系统提示的目标最大字符数（约束模型在篇幅内压缩；提示中要求篇幅紧张时优先要点并自然收尾）；**不在**持久化 `context_summary` 或注入 `messages` 时按本值对摘要正文截取 |
 | `contextSummaryRefreshEvery` | `8` | 自上次将 `summary_message_count_at_refresh` 更新为某 `n` 后，至少再增加多少条持久化消息才再次尝试摘要 |
 
 定义：`src/lib/config/defaults.ts`；合并：`merge.ts`；保存校验：`validate-save.ts`。
@@ -25,4 +25,4 @@
 
 ## 3. 摘要语义（与 PRD §2.1.1 一致）
 
-- 采用 **整段重写**：每次刷新时，输入为**当前窗口外全部消息**（第 `1…(n−K)` 条）拼接文本，经独立摘要调用写入 `context_summary`，并将 `summary_message_count_at_refresh = n`。
+- 采用 **整段重写**：每次刷新时，输入为**当前窗口外全部消息**（第 `1…(n−K)` 条）拼接文本，经独立摘要调用写入 `context_summary`，并将 `summary_message_count_at_refresh = n`。落库正文为模型输出经 `trim()` 后的全文；若仍长于 `contextSummaryMaxChars`，**不**在服务端截断。

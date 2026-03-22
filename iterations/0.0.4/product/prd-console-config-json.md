@@ -31,7 +31,7 @@
 ### 2.1 做（In Scope）
 
 - **路由**：`GET /console` 管理页（Next.js App Router 页面）。
-- **存储**：单文件 JSON，路径可由环境变量指定，默认建议 **`项目根/.data/app-config.json`**（与 SQLite 同目录体系，已 `.gitignore` 的 `.data` 可复用）。
+- **存储**：单文件 JSON，路径可由环境变量指定，默认建议 **`项目根/data/app-config.json`**（与 SQLite 同目录体系，已 `.gitignore` 的 `data` 可复用）。
 - **配置项（首版建议）**：
 
 | 键（示例） | 类型 | 说明 |
@@ -55,7 +55,7 @@
 
 ### 2.3 依赖与假设
 
-- Next.js 16、Node runtime；与现有 SQLite 会话存储**独立文件**，可同目录 `.data/`。
+- Next.js 16、Node runtime；与现有 SQLite 会话存储**独立文件**，可同目录 `data/`。
 
 ---
 

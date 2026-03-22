@@ -19,8 +19,8 @@
 | 项 | 说明 |
 |----|------|
 | `next.config.ts` | `serverExternalPackages: ["better-sqlite3"]`，避免打包器错误解析原生模块 |
-| `CHAT_SQLITE_PATH` | 可选；默认 `<cwd>/.data/chat.sqlite` |
-| `.gitignore` | 忽略 `.data/` |
+| `CHAT_SQLITE_PATH` | 可选；默认 `<cwd>/data/chat.sqlite` |
+| `.gitignore` | 忽略 `data/` |
 
 ---
 

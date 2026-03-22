@@ -18,7 +18,7 @@
 1. 从存储读取当前会话全部消息，按时间序。
 2. 取 **最近 K 条** `ChatMessage`（`K = getAppConfig().maxMessagesInContext`）。
 3. 若 **`contextSummaryEnabled`** 为 `true` 且持久化条数 **`n > K`**：  
-   - 读取会话的 `context_summary`；若非空，则在消息列表前插入 **一条** `role: system`，正文为固定前缀 + 摘要（见 `src/lib/chat/context-summary.ts` 中 `CONTEXT_SUMMARY_MODEL_PREFIX`），摘要按 `contextSummaryMaxChars` 截断。  
+   - 读取会话的 `context_summary`；若非空，则在消息列表前插入 **一条** `role: system`，正文为固定前缀 + 摘要全文（见 `src/lib/chat/context-summary.ts` 中 `CONTEXT_SUMMARY_MODEL_PREFIX`）。**不在服务层**按 `contextSummaryMaxChars` 对摘要正文截取。  
    - 若摘要为空或功能关闭：仅最近 K 条（与旧版一致）。
 4. **legacy** 模式不变（仍仅按 `maxMessagesInContext` 裁剪 body 内 `messages`）。
 
@@ -32,7 +32,8 @@
    - `summary_message_count_at_refresh <= 0`（尚未因摘要逻辑更新过计数），或  
    - `n - summary_message_count_at_refresh >= contextSummaryRefreshEvery`  
    则调用 **整段重写**摘要（见 `data-models.md` / `implementation-notes-chat-context-summary.md`）。  
-4. 摘要 API **失败**时：记录日志；将 `summary_message_count_at_refresh` 更新为当前 `n` 以**退避**重试频率，并**保留**已有摘要正文（若有）。
+4. **整段重写成功时**：将模型返回文本 `trim()` 后写入 `context_summary`。`contextSummaryMaxChars` 通过摘要调用的系统提示（`buildContextSummarySystemPrompt`）约束模型在目标长度内输出；若模型仍超长，**不在服务层**截取，全文落库。  
+5. 摘要 API **失败**时：记录日志；将 `summary_message_count_at_refresh` 更新为当前 `n` 以**退避**重试频率，并**保留**已有摘要正文（若有）。
 
 ---
 

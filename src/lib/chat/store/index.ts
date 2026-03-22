@@ -16,7 +16,7 @@ export function getChatStore(): ChatStore {
   }
   const dbPath =
     process.env.CHAT_SQLITE_PATH?.trim() ||
-    path.join(process.cwd(), ".data", "chat.sqlite");
+    path.join(process.cwd(), "data", "chat.sqlite");
   const store = new SqliteChatStore(dbPath);
   globalForStore.__homeChatStore = store;
   return store;

@@ -5,7 +5,11 @@ import type { ChatStore, StoredMessage } from "./store/port";
 import { storedToChatMessages } from "./store/port";
 import type { ChatMessage, ChatProviderId } from "./types";
 
-const SUMMARY_SYSTEM = `你是对话摘要助手。用户将提供一段较早的多轮对话文本。请用简洁中文压缩为一段连续摘要，保留：关键事实、专有名词、用户约束与已达成共识的决策。不要编造。不要使用 markdown 标题。`;
+function buildContextSummarySystemPrompt(maxChars: number): string {
+  return `你是对话摘要助手。用户将提供一段较早的多轮对话文本。请用简洁中文压缩为一段连续摘要，保留：关键事实、专有名词、用户约束与已达成共识的决策。不要编造。不要使用 markdown 标题。
+
+【长度】输出正文总长度必须不超过 ${maxChars} 个字符（与常见语言中字符串的字符长度计数一致，含标点与空格）。若难以在限制内覆盖全部细节，请优先保留最关键信息，并自然收尾，避免像在句子中途被截断。不要输出字数统计或任何与摘要正文无关的说明。`;
+}
 
 /** 与 `spec-chat-context-summary.md` §2 一致 */
 export const CONTEXT_SUMMARY_MODEL_PREFIX = `以下是本对话更早内容的摘要，供你理解上下文（用户界面上的消息列表中仍有完整原文可供其查阅）：\n`;
@@ -37,10 +41,8 @@ export function buildMessagesWithContextSummary(
   if (!s) {
     return tail;
   }
-  const maxChars = config.contextSummaryMaxChars;
-  const clipped = s.length > maxChars ? s.slice(0, maxChars) : s;
   return [
-    { role: "system", content: `${CONTEXT_SUMMARY_MODEL_PREFIX}${clipped}` },
+    { role: "system", content: `${CONTEXT_SUMMARY_MODEL_PREFIX}${s}` },
     ...tail,
   ];
 }
@@ -93,13 +95,14 @@ export async function refreshContextSummaryFullRewrite(params: {
     });
     prefixText = prefixText.slice(-MAX_PREFIX_CHARS);
   }
+  const maxChars = config.contextSummaryMaxChars;
   const messages: ChatMessage[] = [
-    { role: "system", content: SUMMARY_SYSTEM },
+    { role: "system", content: buildContextSummarySystemPrompt(maxChars) },
     { role: "user", content: prefixText },
   ];
   const maxTokens = Math.min(
     4096,
-    Math.ceil(config.contextSummaryMaxChars / 2) + 512
+    Math.ceil(maxChars / 2) + 512
   );
   try {
     const text = await fetchChatCompletionText({
@@ -110,15 +113,13 @@ export async function refreshContextSummaryFullRewrite(params: {
       maxTokens,
     });
     const trimmed = text.trim();
-    const maxChars = config.contextSummaryMaxChars;
-    const clipped =
-      trimmed.length > maxChars ? trimmed.slice(0, maxChars) : trimmed;
-    store.setSessionContextSummary(sessionId, clipped, n);
+    store.setSessionContextSummary(sessionId, trimmed, n);
     await logChat("info", "context_summary.refreshed", {
       requestId,
       sessionId,
       messageCount: n,
-      summaryLen: clipped.length,
+      summary: trimmed,
+      summaryLen: trimmed.length,
     });
   } catch (e) {
     const message = e instanceof Error ? e.message : String(e);

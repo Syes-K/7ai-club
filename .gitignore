@@ -27,7 +27,7 @@
 /.logs/
 
 # local SQLite (chat persistence)
-.data/
+data/
 *.pem
 
 # Python
