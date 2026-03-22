@@ -1,26 +1,17 @@
 import { chatLogRepository, type ChatLogQuery } from "@/lib/logs";
+import { resolveLogQueryTimeRange } from "@/lib/logs/log-query-range";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
-
-function parseIsoMs(v: string | null): number | null {
-  if (!v?.trim()) return null;
-  const t = Date.parse(v.trim());
-  if (!Number.isFinite(t)) return null;
-  return t;
-}
-
-function defaultRangeMs(): { startMs: number; endMs: number } {
-  const endMs = Date.now();
-  return { startMs: endMs - 60 * 60 * 1000, endMs };
-}
 
 /**
  * GET /api/console/logs
  * 查询聊天落盘日志（JSONL）。访问控制由部署侧限制 /console 暴露面；本接口不做独立密钥门禁。
  *
  * Query:
- * - start, end: ISO8601，闭区间；均可缺省，缺省时为「当前时刻往前 1 小时」
+ * - 时间窗（二选一，与 `src/lib/logs/log-query-range.ts` 一致）：
+ *   - `start` + `end`：ISO8601，闭区间；成对省略时用默认「当前时刻往前 1 小时」
+ *   - `date`（YYYY-MM-DD）+ 可选 `hour`（0～23）：不传 `hour` 表示该本地日历日全天；与 `start`/`end` 互斥
  * - level: 可重复；不传或空表示不限；可传 __UNSET__ 表示仅未标注 level
  * - event: 可重复，条间 OR
  * - requestId: 前缀匹配
@@ -32,25 +23,11 @@ export async function GET(req: Request) {
   const url = new URL(req.url);
   const sp = url.searchParams;
 
-  let startMs = parseIsoMs(sp.get("start"));
-  let endMs = parseIsoMs(sp.get("end"));
-  if (startMs === null && endMs === null) {
-    const d = defaultRangeMs();
-    startMs = d.startMs;
-    endMs = d.endMs;
-  } else if (startMs === null || endMs === null) {
-    return Response.json(
-      { error: "start 与 end 须同时提供或同时省略", code: "LOG_QUERY_RANGE" },
-      { status: 400 }
-    );
+  const range = resolveLogQueryTimeRange(sp);
+  if (!range.ok) {
+    return range.response;
   }
-
-  if (endMs < startMs) {
-    return Response.json(
-      { error: "结束时间不能早于开始时间", code: "LOG_QUERY_RANGE" },
-      { status: 400 }
-    );
-  }
+  const { startMs, endMs } = range;
 
   const levels = sp.getAll("level").map((s) => s.trim()).filter(Boolean);
   const events = sp.getAll("event").map((s) => s.trim()).filter(Boolean);

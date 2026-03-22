@@ -7,6 +7,7 @@
 | `src/lib/logs/chat-log-types.ts` | `ChatLogRepository` 接口与查询类型 |
 | `src/lib/chat/log-dir.ts` | 统一日志根路径 `<cwd>/.logs` |
 | `src/lib/logs/chat-log-file-repository.ts` | 文件 JSONL 实现：读 `.logs/`，按小时文件与请求时间窗求交后扫描 |
+| `src/lib/logs/log-query-range.ts` | 解析查询时间窗：ISO `start`/`end` **或** `date`/`hour`（服务器本地日历日），与 `GET /api/console/logs`、`facets` 共用 |
 | `src/lib/logs/index.ts` | 导出默认 `chatLogRepository`（可在此切换实现） |
 | `src/app/api/console/logs/route.ts` | `GET` 分页查询 |
 | `src/app/api/console/logs/facets/route.ts` | `GET` level/event 汇总 |
@@ -28,6 +29,7 @@
 
 1. `GET /api/console/logs`（可省略 `start`/`end` 用默认窗）：应 **200**（有日志时 `total`≥0）；**无** 403 门禁。
 2. 带 `start`/`end` 缩窄窗口 + `event` 重复参数，检查 OR 语义。
+3. `date=YYYY-MM-DD`（不传 `hour`）与 `date=...&hour=14`：时间窗与服务器本地日历一致；与 `start`/`end` 同传应 **400**。
 
 ## 5. 文档路径
 

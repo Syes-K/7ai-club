@@ -1,7 +1,7 @@
 "use client";
 
 import {
-  ProFormDateTimeRangePicker,
+  ProFormDatePicker,
   ProFormSelect,
   ProFormText,
   ProTable,
@@ -40,38 +40,24 @@ type FacetsResponse = {
 };
 
 type CommittedFilters = {
-  startLocal: string;
-  endLocal: string;
+  /** 日历日 YYYY-MM-DD，与 API `date` 一致；由服务端按服务器本地时区解释 */
+  dateStr: string;
+  /** `null`：当日全天；`0`～`23`：该整点小时（服务器本地） */
+  hour: number | null;
   levels: string[];
   events: string[];
   requestId: string;
   keyword: string;
 };
 
-function pad2(n: number) {
-  return String(n).padStart(2, "0");
+function defaultDateStr(): string {
+  return dayjs().format("YYYY-MM-DD");
 }
 
-function toDatetimeLocalValue(d: Date): string {
-  return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}T${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
-}
-
-function defaultStartLocal(): string {
-  const d = new Date();
-  d.setHours(0, 0, 0, 0);
-  return toDatetimeLocalValue(d);
-}
-
-function defaultEndLocal(): string {
-  const d = new Date();
-  d.setSeconds(0, 0);
-  return toDatetimeLocalValue(d);
-}
-
-function defaultCommitted(): CommittedFilters {
+function committedDefaultsForDate(dateStr: string): CommittedFilters {
   return {
-    startLocal: defaultStartLocal(),
-    endLocal: defaultEndLocal(),
+    dateStr,
+    hour: null,
     levels: [],
     events: [],
     requestId: "",
@@ -79,28 +65,30 @@ function defaultCommitted(): CommittedFilters {
   };
 }
 
-function localInputToIso(s: string): string | null {
-  const t = new Date(s).getTime();
-  if (!Number.isFinite(t)) return null;
-  return new Date(t).toISOString();
+function formValueToDateStr(logDate: unknown): string {
+  if (logDate == null || (typeof logDate === "string" && logDate.trim() === "")) {
+    return defaultDateStr();
+  }
+  const parsed = dayjs(logDate as Parameters<typeof dayjs>[0]);
+  return parsed.isValid() ? parsed.format("YYYY-MM-DD") : defaultDateStr();
 }
+
+/** 与日志 ts（UTC ISO）一致，固定 UTC + zh-CN，避免 SSR 与浏览器 locale/时区导致水合不一致 */
+const TS_CELL_UTC = new Intl.DateTimeFormat("zh-CN", {
+  timeZone: "UTC",
+  year: "numeric",
+  month: "2-digit",
+  day: "2-digit",
+  hour: "2-digit",
+  minute: "2-digit",
+  hour12: false,
+});
 
 function formatTsCell(ts: unknown): string {
   if (typeof ts !== "string" || !ts.trim()) return "—";
   const ms = Date.parse(ts);
   if (!Number.isFinite(ms)) return "无效时间";
-  return new Date(ms).toLocaleString(undefined, {
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-}
-
-function truncateRequestId(id: string): string {
-  if (id.length <= 16) return id;
-  return `${id.slice(0, 8)}…${id.slice(-4)}`;
+  return TS_CELL_UTC.format(ms);
 }
 
 const LEVEL_OPTIONS = [
@@ -110,13 +98,17 @@ const LEVEL_OPTIONS = [
   { label: "未标注", value: UNSET_LEVEL_SENTINEL },
 ];
 
+const HOUR_OPTIONS = Array.from({ length: 24 }, (_, i) => ({
+  label: `${String(i).padStart(2, "0")}:00`,
+  value: i,
+}));
+
 function buildParams(c: CommittedFilters, p: number, ps: number) {
-  const startIso = localInputToIso(c.startLocal);
-  const endIso = localInputToIso(c.endLocal);
-  if (!startIso || !endIso) return null;
+  const d = c.dateStr.trim();
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(d)) return null;
   const params = new URLSearchParams();
-  params.set("start", startIso);
-  params.set("end", endIso);
+  params.set("date", d);
+  if (c.hour !== null) params.set("hour", String(c.hour));
   for (const lv of c.levels) {
     params.append("level", lv);
   }
@@ -131,20 +123,25 @@ function buildParams(c: CommittedFilters, p: number, ps: number) {
 }
 
 function committedFromForm(values: {
-  timeRange?: [Dayjs, Dayjs];
+  logDate?: Dayjs | string | Date;
+  logHour?: number | null;
   levels?: string[];
   events?: string[];
   requestId?: string;
   keyword?: string;
 }): CommittedFilters {
-  const [a, b] = values.timeRange ?? [];
-  const startLocal = a
-    ? a.format("YYYY-MM-DDTHH:mm")
-    : defaultStartLocal();
-  const endLocal = b ? b.format("YYYY-MM-DDTHH:mm") : defaultEndLocal();
+  const dateStr = formValueToDateStr(values.logDate);
+
+  let hour: number | null = null;
+  const rawH = values.logHour;
+  if (rawH !== undefined && rawH !== null) {
+    const h = typeof rawH === "number" ? rawH : Number(rawH);
+    if (Number.isInteger(h) && h >= 0 && h <= 23) hour = h;
+  }
+
   return {
-    startLocal,
-    endLocal,
+    dateStr,
+    hour,
     levels: Array.isArray(values.levels) ? values.levels : [],
     events: Array.isArray(values.events) ? values.events : [],
     requestId: typeof values.requestId === "string" ? values.requestId : "",
@@ -152,11 +149,18 @@ function committedFromForm(values: {
   };
 }
 
-export function LogViewerApp() {
+export function LogViewerApp({
+  initialDateStr,
+}: {
+  /** 由服务端页面传入的默认日历日，保证 SSR 与水合时与表单 initialValues 一致 */
+  initialDateStr: string;
+}) {
   const { message } = App.useApp();
   const actionRef = useRef<ActionType>(null);
   const filterFormRef = useRef<ProFormInstance>(null);
-  const committedRef = useRef<CommittedFilters>(defaultCommitted());
+  const committedRef = useRef<CommittedFilters>(
+    committedDefaultsForDate(initialDateStr)
+  );
   const [queryVersion, setQueryVersion] = useState(1);
   const [facets, setFacets] = useState<FacetsResponse | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -171,12 +175,11 @@ export function LogViewerApp() {
   } | null>(null);
 
   const fetchFacetsFor = useCallback(async (c: CommittedFilters) => {
-    const startIso = localInputToIso(c.startLocal);
-    const endIso = localInputToIso(c.endLocal);
-    if (!startIso || !endIso) return;
+    const d = c.dateStr.trim();
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(d)) return;
     const u = new URL("/api/console/logs/facets", window.location.origin);
-    u.searchParams.set("start", startIso);
-    u.searchParams.set("end", endIso);
+    u.searchParams.set("date", d);
+    if (c.hour !== null) u.searchParams.set("hour", String(c.hour));
     const res = await fetch(u.toString());
     if (!res.ok) return;
     const j = (await res.json()) as FacetsResponse;
@@ -305,14 +308,17 @@ export function LogViewerApp() {
   return (
     <div className="mx-auto max-w-7xl px-4 py-6">
       <Typography.Paragraph type="secondary" className="!mb-4 text-xs">
-        筛选依据为每条日志的 <Typography.Text code>ts</Typography.Text>{" "}
-        （UTC）；展示为本地时间。闭区间{" "}
-        <Typography.Text code>[start, end]</Typography.Text>。多个 event
-        为「或」；与 level、时间、requestId、关键词为「且」。请使用下方「查询」提交条件。
+        日期、小时由服务端按服务器本地时区解释，与落盘文件{" "}
+        <Typography.Text code>YYYY-MM-DD-HH.log</Typography.Text>{" "}
+        一致；小时不选则查该日全天，选了则该整点小时。每条日志的{" "}
+        <Typography.Text code>ts</Typography.Text> 为 UTC；表格「时间」列按{" "}
+        <Typography.Text code>UTC</Typography.Text> 展示以便 SSR 与水合一致。多个 event
+        为「或」，与 level、时间、requestId、关键词为「且」。请点「查询」提交。
       </Typography.Paragraph>
 
       <QueryFilter<{
-        timeRange: [Dayjs, Dayjs];
+        logDate: Dayjs;
+        logHour?: number | null;
         levels?: string[];
         events?: string[];
         requestId?: string;
@@ -321,10 +327,8 @@ export function LogViewerApp() {
         defaultCollapsed={false}
         labelWidth={112}
         initialValues={{
-          timeRange: [
-            dayjs(defaultCommitted().startLocal, "YYYY-MM-DDTHH:mm"),
-            dayjs(defaultCommitted().endLocal, "YYYY-MM-DDTHH:mm"),
-          ],
+          logDate: dayjs(initialDateStr, "YYYY-MM-DD"),
+          logHour: undefined,
           levels: [],
           events: [],
           requestId: "",
@@ -334,36 +338,44 @@ export function LogViewerApp() {
         onFinish={async (values) => {
           committedRef.current = committedFromForm(values);
           bumpQuery();
+          // ProTable 在部分环境下不会因 params 变化自动触发 request，需显式拉数
+          void actionRef.current?.reload(true);
           return true;
         }}
         onReset={() => {
-          const d = defaultCommitted();
+          const d = committedDefaultsForDate(defaultDateStr());
           committedRef.current = d;
           filterFormRef.current?.setFieldsValue({
-            timeRange: [
-              dayjs(d.startLocal, "YYYY-MM-DDTHH:mm"),
-              dayjs(d.endLocal, "YYYY-MM-DDTHH:mm"),
-            ],
+            logDate: dayjs(d.dateStr, "YYYY-MM-DD"),
+            logHour: undefined,
             levels: [],
             events: [],
             requestId: "",
             keyword: "",
           });
           bumpQuery();
+          void actionRef.current?.reload(true);
         }}
         submitter={{
           searchConfig: { submitText: "查询" },
           resetButtonProps: { children: "重置并查询" },
         }}
       >
-        <ProFormDateTimeRangePicker
-          name="timeRange"
-          label="时间范围"
-          rules={[{ required: true, message: "请选择时间范围" }]}
+        <ProFormDatePicker
+          name="logDate"
+          label="日期"
+          rules={[{ required: true, message: "请选择日期" }]}
           fieldProps={{
-            format: "YYYY-MM-DD HH:mm",
-            showTime: { format: "HH:mm" },
+            format: "YYYY-MM-DD",
+            style: { width: "100%" },
           }}
+        />
+        <ProFormSelect
+          name="logHour"
+          label="小时"
+          placeholder="不选表示当天全天"
+          allowClear
+          options={HOUR_OPTIONS}
         />
         <ProFormSelect
           name="levels"
@@ -399,7 +411,7 @@ export function LogViewerApp() {
         size="small"
         bordered={true}
         actionRef={actionRef}
-        rowKey={(record, index) => `${String(record.ts)}-${index}`}
+        rowKey={(record) => `${String(record.ts)}-${record.requestId}-${record.event}`}
         search={false}
         params={{ queryVersion }}
         columns={columns}
@@ -425,7 +437,7 @@ export function LogViewerApp() {
             params.pageSize ?? 20
           );
           if (!p) {
-            message.error("时间格式无效");
+            message.error("日期格式无效");
             return { data: [], success: false, total: 0 };
           }
           try {

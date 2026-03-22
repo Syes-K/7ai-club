@@ -46,16 +46,6 @@ export function ConsoleChrome() {
           </Link>
         </nav>
       </header>
-
-      <div className="mx-auto max-w-7xl px-4 pt-3">
-        <div
-          className="rounded-lg bg-amber-50 px-4 py-2 text-sm text-amber-900 dark:bg-amber-950/40 dark:text-amber-200"
-          role="status"
-        >
-          注意：Console 无登录验证，配置与日志可能含敏感信息；请勿将 /console
-          暴露到公网，建议仅内网或通过网关鉴权后访问。
-        </div>
-      </div>
     </>
   );
 }
