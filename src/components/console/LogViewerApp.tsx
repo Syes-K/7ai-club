@@ -73,22 +73,12 @@ function formValueToDateStr(logDate: unknown): string {
   return parsed.isValid() ? parsed.format("YYYY-MM-DD") : defaultDateStr();
 }
 
-/** 与日志 ts（UTC ISO）一致，固定 UTC + zh-CN，避免 SSR 与浏览器 locale/时区导致水合不一致 */
-const TS_CELL_UTC = new Intl.DateTimeFormat("zh-CN", {
-  timeZone: "UTC",
-  year: "numeric",
-  month: "2-digit",
-  day: "2-digit",
-  hour: "2-digit",
-  minute: "2-digit",
-  hour12: false,
-});
-
+/** 日志 ts 为 UTC ISO；按本机时区格式化为 YYYY-MM-DD HH:mm:ss（与 dayjs 默认行为一致） */
 function formatTsCell(ts: unknown): string {
   if (typeof ts !== "string" || !ts.trim()) return "—";
-  const ms = Date.parse(ts);
-  if (!Number.isFinite(ms)) return "无效时间";
-  return TS_CELL_UTC.format(ms);
+  const d = dayjs(ts);
+  if (!d.isValid()) return "无效时间";
+  return d.format("YYYY-MM-DD HH:mm:ss");
 }
 
 const LEVEL_OPTIONS = [
@@ -208,9 +198,10 @@ export function LogViewerApp({
       {
         title: fieldLabelZh("ts"),
         dataIndex: "ts",
-        width: 160,
+        width: 180,
         ellipsis: true,
         search: false,
+        dataType: "date",
         render: (_, row) => formatTsCell(row.ts),
       },
       {
@@ -309,11 +300,18 @@ export function LogViewerApp({
     <div className="mx-auto max-w-7xl px-4 py-6">
       <Typography.Paragraph type="secondary" className="!mb-4 text-xs">
         日期、小时由服务端按服务器本地时区解释，与落盘文件{" "}
-        <Typography.Text code>YYYY-MM-DD-HH.log</Typography.Text>{" "}
+        <code className="rounded border border-neutral-200 bg-neutral-100 px-1 font-mono text-[0.9em] dark:border-neutral-600 dark:bg-neutral-800">
+          YYYY-MM-DD-HH.log
+        </code>{" "}
         一致；小时不选则查该日全天，选了则该整点小时。每条日志的{" "}
-        <Typography.Text code>ts</Typography.Text> 为 UTC；表格「时间」列按{" "}
-        <Typography.Text code>UTC</Typography.Text> 展示以便 SSR 与水合一致。多个 event
-        为「或」，与 level、时间、requestId、关键词为「且」。请点「查询」提交。
+        <code className="rounded border border-neutral-200 bg-neutral-100 px-1 font-mono text-[0.9em] dark:border-neutral-600 dark:bg-neutral-800">
+          ts
+        </code>{" "}
+        为 UTC；表格「时间」列按{" "}
+        <code className="rounded border border-neutral-200 bg-neutral-100 px-1 font-mono text-[0.9em] dark:border-neutral-600 dark:bg-neutral-800">
+          本机时区
+        </code>{" "}
+        显示为「YYYY-MM-DD HH:mm:ss」。多个 event 为「或」，与 level、时间、requestId、关键词为「且」。请点「查询」提交。
       </Typography.Paragraph>
 
       <QueryFilter<{
@@ -324,6 +322,8 @@ export function LogViewerApp({
         requestId?: string;
         keyword?: string;
       }>
+        /* 固定栅格列宽：避免 SSR 默认宽度 1024 与客户端视口不一致导致 QueryFilter 水合 mismatch（col-8 vs col-6） */
+        span={6}
         defaultCollapsed={false}
         labelWidth={112}
         initialValues={{
