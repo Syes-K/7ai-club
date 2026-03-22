@@ -44,8 +44,10 @@ function logProviderSuccess(ctx: ProviderLogContext, status: number, elapsedMs: 
 export async function fetchZhipuSseStream(
   messages: ChatMessage[],
   model: string,
-  requestId = "unknown"
+  requestId = "unknown",
+  options?: { skipChatLog?: boolean }
 ): Promise<ReadableStream<Uint8Array>> {
+  const skipLog = options?.skipChatLog === true;
   const key = process.env.ZHIPU_API_KEY;
   if (!key) {
     throw new Error("服务端未配置 ZHIPU_API_KEY");
@@ -58,7 +60,7 @@ export async function fetchZhipuSseStream(
     model,
     messages: messages.map((m) => ({ role: m.role, content: m.content })),
   };
-  logProviderStart(ctx);
+  if (!skipLog) logProviderStart(ctx);
   const startedAt = Date.now();
 
   const res = await fetch(ZHIPU_URL, {
@@ -76,21 +78,23 @@ export async function fetchZhipuSseStream(
 
   if (!res.ok) {
     const text = await res.text();
-    logProviderError(ctx, res.status, text || res.statusText);
+    if (!skipLog) logProviderError(ctx, res.status, text || res.statusText);
     throw new Error(
       `智谱 API 错误 ${res.status}: ${text.slice(0, 500) || res.statusText}`
     );
   }
 
   if (!res.body) throw new Error("智谱响应无 body");
-  logProviderSuccess(ctx, res.status, Date.now() - startedAt);
+  if (!skipLog) logProviderSuccess(ctx, res.status, Date.now() - startedAt);
   return res.body;
 }
 
 export async function fetchDeepseekSseStream(
   messages: ChatMessage[],
-  requestId = "unknown"
+  requestId = "unknown",
+  options?: { skipChatLog?: boolean }
 ): Promise<ReadableStream<Uint8Array>> {
+  const skipLog = options?.skipChatLog === true;
   const key = process.env.DEEPSEEK_API_KEY;
   if (!key) {
     throw new Error("服务端未配置 DEEPSEEK_API_KEY");
@@ -104,7 +108,7 @@ export async function fetchDeepseekSseStream(
     model: deepseekModel,
     messages: messages.map((m) => ({ role: m.role, content: m.content })),
   };
-  logProviderStart(ctx);
+  if (!skipLog) logProviderStart(ctx);
   const startedAt = Date.now();
 
   const res = await fetch(DEEPSEEK_URL, {
@@ -122,14 +126,14 @@ export async function fetchDeepseekSseStream(
 
   if (!res.ok) {
     const text = await res.text();
-    logProviderError(ctx, res.status, text || res.statusText);
+    if (!skipLog) logProviderError(ctx, res.status, text || res.statusText);
     throw new Error(
       `DeepSeek API 错误 ${res.status}: ${text.slice(0, 500) || res.statusText}`
     );
   }
 
   if (!res.body) throw new Error("DeepSeek 响应无 body");
-  logProviderSuccess(ctx, res.status, Date.now() - startedAt);
+  if (!skipLog) logProviderSuccess(ctx, res.status, Date.now() - startedAt);
   return res.body;
 }
 

@@ -16,9 +16,19 @@ export function createChatCompletionSseStream(params: {
   startedAt: number;
   /** 流式正常结束后调用，用于持久化 assistant；抛错会记录日志但不改写已发送的 SSE */
   afterSuccess?: (fullText: string) => Promise<void>;
+  /** 为 true 时不写聊天落盘日志（用于 `/api/debug` 等） */
+  skipChatLog?: boolean;
 }): ReadableStream<Uint8Array> {
-  const { messages, provider, model, requestId, startedAt, afterSuccess } =
-    params;
+  const {
+    messages,
+    provider,
+    model,
+    requestId,
+    startedAt,
+    afterSuccess,
+    skipChatLog,
+  } = params;
+  const noLog = skipChatLog === true;
   const encoder = new TextEncoder();
 
   return new ReadableStream<Uint8Array>({
@@ -28,10 +38,11 @@ export function createChatCompletionSseStream(params: {
       };
 
       try {
+        const fetchOpts = noLog ? { skipChatLog: true as const } : undefined;
         const upstream =
           provider === "zhipu"
-            ? await fetchZhipuSseStream(messages, model!, requestId)
-            : await fetchDeepseekSseStream(messages, requestId);
+            ? await fetchZhipuSseStream(messages, model!, requestId, fetchOpts)
+            : await fetchDeepseekSseStream(messages, requestId, fetchOpts);
 
         let chunkCount = 0;
         let totalChars = 0;
@@ -44,35 +55,41 @@ export function createChatCompletionSseStream(params: {
           send({ type: "delta", text });
         }
         send({ type: "done" });
-        await logChat("info", "api.stream_completed", {
-          requestId,
-          provider,
-          model: model ?? DEEPSEEK_DEFAULT_MODEL,
-          chunkCount,
-          totalChars,
-          responsePreview: fullText.slice(0, 4000),
-          elapsedMs: Date.now() - startedAt,
-        });
+        if (!noLog) {
+          await logChat("info", "api.stream_completed", {
+            requestId,
+            provider,
+            model: model ?? DEEPSEEK_DEFAULT_MODEL,
+            chunkCount,
+            totalChars,
+            responsePreview: fullText.slice(0, 4000),
+            elapsedMs: Date.now() - startedAt,
+          });
+        }
         if (afterSuccess) {
           try {
             await afterSuccess(fullText);
           } catch (e) {
             const message = e instanceof Error ? e.message : String(e);
-            await logChat("error", "api.persist_failed", {
-              requestId,
-              error: message,
-            });
+            if (!noLog) {
+              await logChat("error", "api.persist_failed", {
+                requestId,
+                error: message,
+              });
+            }
           }
         }
       } catch (e) {
         const message = e instanceof Error ? e.message : "未知错误";
-        await logChat("error", "api.stream_failed", {
-          requestId,
-          provider,
-          model: model ?? DEEPSEEK_DEFAULT_MODEL,
-          elapsedMs: Date.now() - startedAt,
-          error: message,
-        });
+        if (!noLog) {
+          await logChat("error", "api.stream_failed", {
+            requestId,
+            provider,
+            model: model ?? DEEPSEEK_DEFAULT_MODEL,
+            elapsedMs: Date.now() - startedAt,
+            error: message,
+          });
+        }
         send({ type: "error", message });
       } finally {
         controller.close();
