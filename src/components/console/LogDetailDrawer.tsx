@@ -365,7 +365,7 @@ function LogMessagesDebugPanel({
           </Button>,
         ]}
         width="min(560px, 92vw)"
-        destroyOnClose
+        destroyOnHidden
       >
         <p className="mb-3 text-xs leading-relaxed text-zinc-500 dark:text-zinc-400">
           调用{" "}

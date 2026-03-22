@@ -48,7 +48,6 @@ export class SqliteChatStore implements ChatStore {
     const dir = path.dirname(dbFilePath);
     fs.mkdirSync(dir, { recursive: true });
     this.db = new Database(dbFilePath);
-    this.db.pragma("journal_mode = WAL");
     migrate(this.db);
   }
 
