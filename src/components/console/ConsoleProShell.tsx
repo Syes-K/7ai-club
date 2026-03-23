@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  BookOutlined,
   CommentOutlined,
   FileSearchOutlined,
   SettingOutlined,
@@ -14,6 +15,7 @@ const PAGE_TITLE: Record<string, string> = {
   "/console": "应用配置",
   "/console/prompts": "提示词管理",
   "/console/logs": "日志",
+  "/console/knowledge": "知识库",
 };
 
 export function ConsoleProShell({
@@ -43,6 +45,11 @@ export function ConsoleProShell({
           icon: <CommentOutlined />,
         },
         {
+          path: "/console/knowledge",
+          name: "知识库",
+          icon: <BookOutlined />,
+        },
+        {
           path: "/console/logs",
           name: "日志",
           icon: <FileSearchOutlined />,
@@ -52,7 +59,10 @@ export function ConsoleProShell({
     []
   );
 
-  const pageTitle = PAGE_TITLE[pathname] ?? "";
+  const pageTitle =
+    pathname.startsWith("/console/knowledge/") && pathname !== "/console/knowledge"
+      ? "知识库详情"
+      : (PAGE_TITLE[pathname] ?? "");
 
   if (!layoutReady) {
     return (

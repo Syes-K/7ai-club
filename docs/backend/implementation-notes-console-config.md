@@ -31,6 +31,10 @@
 | `src/app/layout.tsx` | `generateMetadata` + `dynamic = force-dynamic`，`title` 用 `appDisplayName` |
 | `src/app/api/console/config/route.ts` | `GET` / `PUT` |
 | `src/app/api/config/public/route.ts` | 客户端可读子集 |
+| `src/lib/knowledge/embed.ts` | 可选 `embeddingApiBaseUrl` / `embeddingModel`（`getAppConfig()`），环境变量优先 |
+| `src/components/console/ConsoleConfigForm.tsx` | 「知识库 Embedding」可选字段 |
+| `src/lib/knowledge/pipeline.ts` | `knowledgeChunkSize/knowledgeChunkOverlap` 参与 `chunkText()` |
+| `src/components/console/ConsoleConfigForm.tsx` | 「知识库分块」可选字段 |
 
 ---
 

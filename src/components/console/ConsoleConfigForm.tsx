@@ -272,6 +272,156 @@ export function ConsoleConfigForm({
               </p>
             )}
           </div>
+
+          <div className="border-t border-zinc-200 pt-4 dark:border-zinc-700">
+            <h3 className="mb-2 text-sm font-semibold text-zinc-800 dark:text-zinc-200">
+              知识库 Embedding（可选）
+            </h3>
+            <p className="mb-3 text-xs text-zinc-500 dark:text-zinc-400">
+              与「默认智谱模型」同属应用配置，写入{" "}
+              <code className="rounded bg-zinc-200 px-1 dark:bg-zinc-800">
+                app-config.json
+              </code>
+              。留空则使用环境变量{" "}
+              <code className="rounded bg-zinc-200 px-1 dark:bg-zinc-800">
+                KNOWLEDGE_EMBEDDING_BASE_URL
+              </code>{" "}
+              /{" "}
+              <code className="rounded bg-zinc-200 px-1 dark:bg-zinc-800">
+                KNOWLEDGE_EMBEDDING_MODEL
+              </code>
+              ；环境变量**优先**于下方两项。API Key 仍只认{" "}
+              <code className="rounded bg-zinc-200 px-1 dark:bg-zinc-800">
+                KNOWLEDGE_EMBEDDING_API_KEY
+              </code>
+              。
+            </p>
+            <div className="space-y-3">
+              <div>
+                <label
+                  htmlFor="embedding-api-base-url"
+                  className="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300"
+                >
+                  Embedding API 根 URL
+                </label>
+                <input
+                  id="embedding-api-base-url"
+                  type="url"
+                  placeholder="https://api.openai.com/v1"
+                  value={cfg.embeddingApiBaseUrl ?? ""}
+                  onChange={(e) => {
+                    const v = e.target.value;
+                    setCfg((c) => ({
+                      ...c,
+                      embeddingApiBaseUrl: v === "" ? null : v,
+                    }));
+                  }}
+                  className="w-full rounded-xl border border-zinc-300 bg-zinc-50 px-3 py-2 font-mono text-sm dark:border-zinc-600 dark:bg-zinc-950"
+                />
+                <p className="mt-1 text-xs text-zinc-500">
+                  OpenAI 兼容接口根路径，请求会拼接 <code className="rounded bg-zinc-100 px-1 dark:bg-zinc-800">/embeddings</code>
+                </p>
+              </div>
+              <div>
+                <label
+                  htmlFor="embedding-model"
+                  className="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300"
+                >
+                  Embedding 模型 id
+                </label>
+                <input
+                  id="embedding-model"
+                  type="text"
+                  placeholder="text-embedding-3-small"
+                  value={cfg.embeddingModel ?? ""}
+                  onChange={(e) => {
+                    const v = e.target.value;
+                    setCfg((c) => ({
+                      ...c,
+                      embeddingModel: v === "" ? null : v,
+                    }));
+                  }}
+                  className="w-full rounded-xl border border-zinc-300 bg-zinc-50 px-3 py-2 font-mono text-sm dark:border-zinc-600 dark:bg-zinc-950"
+                />
+              </div>
+            </div>
+
+            <div className="border-t border-zinc-200 mt-6 pt-4 dark:border-zinc-700">
+              <h3 className="mb-2 text-sm font-semibold text-zinc-800 dark:text-zinc-200">
+                知识库分块
+              </h3>
+              <div className="space-y-4">
+                <div>
+                  <label
+                    htmlFor="knowledge-chunk-size"
+                    className="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300"
+                  >
+                    chunkSize（块长）
+                  </label>
+                  <input
+                    id="knowledge-chunk-size"
+                    type="number"
+                    min={64}
+                    max={4096}
+                    value={cfg.knowledgeChunkSize}
+                    onChange={(e) => {
+                      const v = parseInt(e.target.value, 10);
+                      setCfg((c) => {
+                        const next =
+                          Number.isFinite(v) && Number.isInteger(v)
+                            ? Math.min(4096, Math.max(64, v))
+                            : c.knowledgeChunkSize;
+                        // overlap 需要保证 overlap < chunkSize
+                        const nextOverlap = Math.min(
+                          c.knowledgeChunkOverlap,
+                          Math.max(0, next - 1)
+                        );
+                        return {
+                          ...c,
+                          knowledgeChunkSize: next,
+                          knowledgeChunkOverlap: nextOverlap,
+                        };
+                      });
+                    }}
+                    className="w-full rounded-xl border border-zinc-300 bg-zinc-50 px-3 py-2 text-sm dark:border-zinc-600 dark:bg-zinc-950"
+                  />
+                  <p className="mt-1 text-xs text-zinc-500">
+                    用于滑动窗口分块粒度，越大单块越长。
+                  </p>
+                </div>
+                <div>
+                  <label
+                    htmlFor="knowledge-chunk-overlap"
+                    className="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300"
+                  >
+                    overlap（相邻冗余）
+                  </label>
+                  <input
+                    id="knowledge-chunk-overlap"
+                    type="number"
+                    min={0}
+                    max={Math.max(0, cfg.knowledgeChunkSize - 1)}
+                    value={cfg.knowledgeChunkOverlap}
+                    onChange={(e) => {
+                      const v = parseInt(e.target.value, 10);
+                      setCfg((c) => {
+                        const max = Math.max(0, c.knowledgeChunkSize - 1);
+                        const next =
+                          Number.isFinite(v) && Number.isInteger(v)
+                            ? Math.min(max, Math.max(0, v))
+                            : c.knowledgeChunkOverlap;
+                        return { ...c, knowledgeChunkOverlap: next };
+                      });
+                    }}
+                    className="w-full rounded-xl border border-zinc-300 bg-zinc-50 px-3 py-2 text-sm dark:border-zinc-600 dark:bg-zinc-950"
+                  />
+                  <p className="mt-1 text-xs text-zinc-500">
+                    相邻分片保留重叠内容；overlap 越大上下文冗余越多。
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 

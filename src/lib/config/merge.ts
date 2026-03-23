@@ -68,6 +68,42 @@ export function mergeAppConfigPartial(partial: unknown): AppConfig {
     contextSummaryRefreshEvery = o.contextSummaryRefreshEvery;
   }
 
+  let embeddingApiBaseUrl = d.embeddingApiBaseUrl;
+  if (o.embeddingApiBaseUrl === null) {
+    embeddingApiBaseUrl = null;
+  } else if (typeof o.embeddingApiBaseUrl === "string") {
+    const t = o.embeddingApiBaseUrl.trim();
+    embeddingApiBaseUrl = t ? t.slice(0, 512) : null;
+  }
+
+  let embeddingModel = d.embeddingModel;
+  if (o.embeddingModel === null) {
+    embeddingModel = null;
+  } else if (typeof o.embeddingModel === "string") {
+    const t = o.embeddingModel.trim();
+    embeddingModel = t ? t.slice(0, 200) : null;
+  }
+
+  let knowledgeChunkSize = d.knowledgeChunkSize;
+  if (
+    typeof o.knowledgeChunkSize === "number" &&
+    Number.isInteger(o.knowledgeChunkSize) &&
+    o.knowledgeChunkSize >= 64 &&
+    o.knowledgeChunkSize <= 4096
+  ) {
+    knowledgeChunkSize = o.knowledgeChunkSize;
+  }
+
+  let knowledgeChunkOverlap = d.knowledgeChunkOverlap;
+  if (
+    typeof o.knowledgeChunkOverlap === "number" &&
+    Number.isInteger(o.knowledgeChunkOverlap) &&
+    o.knowledgeChunkOverlap >= 0 &&
+    o.knowledgeChunkOverlap < knowledgeChunkSize
+  ) {
+    knowledgeChunkOverlap = o.knowledgeChunkOverlap;
+  }
+
   return {
     maxMessagesInContext: max,
     defaultProvider,
@@ -77,5 +113,9 @@ export function mergeAppConfigPartial(partial: unknown): AppConfig {
     contextSummaryEnabled,
     contextSummaryMaxChars,
     contextSummaryRefreshEvery,
+    embeddingApiBaseUrl,
+    embeddingModel,
+    knowledgeChunkSize,
+    knowledgeChunkOverlap,
   };
 }

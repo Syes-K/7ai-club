@@ -1,6 +1,7 @@
 import { ZHIPU_MODEL_IDS } from "@/lib/chat/zhipu-models";
 import type { ChatProviderId } from "@/lib/chat/types";
 import type { AppConfig } from "./defaults";
+import { FALLBACK_DEFAULTS } from "./defaults";
 
 export function validateAppConfigForSave(
   body: unknown
@@ -83,6 +84,76 @@ export function validateAppConfigForSave(
     };
   }
 
+  let embeddingApiBaseUrl: string | null = null;
+  const ebu = o.embeddingApiBaseUrl;
+  if (ebu !== undefined && ebu !== null) {
+    if (typeof ebu !== "string") {
+      return { ok: false, error: "embeddingApiBaseUrl 须为字符串或 null" };
+    }
+    const t = ebu.trim();
+    if (t) {
+      if (!/^https?:\/\//i.test(t)) {
+        return {
+          ok: false,
+          error: "embeddingApiBaseUrl 须以 http:// 或 https:// 开头，或留空",
+        };
+      }
+      if (t.length > 512) {
+        return { ok: false, error: "embeddingApiBaseUrl 过长（最多 512 字符）" };
+      }
+      embeddingApiBaseUrl = t;
+    }
+  }
+
+  let embeddingModel: string | null = null;
+  const em = o.embeddingModel;
+  if (em !== undefined && em !== null) {
+    if (typeof em !== "string") {
+      return { ok: false, error: "embeddingModel 须为字符串或 null" };
+    }
+    const t = em.trim();
+    if (t) {
+      if (t.length > 200) {
+        return { ok: false, error: "embeddingModel 过长（最多 200 字符）" };
+      }
+      embeddingModel = t;
+    }
+  }
+
+  let knowledgeChunkSize = FALLBACK_DEFAULTS.knowledgeChunkSize;
+  const kcs = o.knowledgeChunkSize;
+  if (kcs !== undefined) {
+    if (
+      typeof kcs !== "number" ||
+      !Number.isInteger(kcs) ||
+      kcs < 64 ||
+      kcs > 4096
+    ) {
+      return {
+        ok: false,
+        error: "knowledgeChunkSize 须为 64～4096 的整数",
+      };
+    }
+    knowledgeChunkSize = kcs;
+  }
+
+  let knowledgeChunkOverlap = FALLBACK_DEFAULTS.knowledgeChunkOverlap;
+  const kco = o.knowledgeChunkOverlap;
+  if (kco !== undefined) {
+    if (
+      typeof kco !== "number" ||
+      !Number.isInteger(kco) ||
+      kco < 0 ||
+      kco >= knowledgeChunkSize
+    ) {
+      return {
+        ok: false,
+        error: `knowledgeChunkOverlap 须为 0～${knowledgeChunkSize - 1} 的整数`,
+      };
+    }
+    knowledgeChunkOverlap = kco;
+  }
+
   return {
     ok: true,
     config: {
@@ -94,6 +165,10 @@ export function validateAppConfigForSave(
       contextSummaryEnabled: cse,
       contextSummaryMaxChars: csm,
       contextSummaryRefreshEvery: csr,
+      embeddingApiBaseUrl,
+      embeddingModel,
+      knowledgeChunkSize,
+      knowledgeChunkOverlap,
     },
   };
 }

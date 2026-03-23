@@ -141,6 +141,7 @@
 - 接口契约清晰，可供前端对接
 - 业务规则与需求/设计一致
 - 代码为 TypeScript，基于 Next.js，可构建、可启动，有基本自测说明
+- **服务端代码含必要注释**（中文为主、说明非显而易见逻辑与边界；细则见 [.cursor/agents/backend.md](backend.md)「代码注释」）
 
 **产物路径**
 - **代码**：Next.js 项目内服务端约定位置（如 `app/api/`、Server Actions 等），使用 TypeScript。
