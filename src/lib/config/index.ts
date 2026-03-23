@@ -1,6 +1,6 @@
 export type { AppConfig } from "./defaults";
 export { FALLBACK_DEFAULTS } from "./defaults";
-export { getAppConfigFilePath } from "./paths";
+export { getAppConfigFilePath, getPromptTemplatesFilePath } from "./paths";
 export {
   getAppConfig,
   readAppConfigWithMeta,

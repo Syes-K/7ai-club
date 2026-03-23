@@ -1,26 +1,44 @@
 import type { AppConfig } from "@/lib/config/defaults";
+import {
+  contextSummaryInjectUsesContentPlaceholder,
+  getPromptTemplatesMerged,
+  renderPromptTemplate,
+  renderTemplateString,
+} from "@/lib/prompt-templates";
 import { fetchChatCompletionText } from "./providers";
 import { logChat } from "./logger";
 import type { ChatStore, StoredMessage } from "./store/port";
 import { storedToChatMessages } from "./store/port";
 import type { ChatMessage, ChatProviderId } from "./types";
 
-function buildContextSummarySystemPrompt(maxChars: number): string {
-  return `你是对话摘要助手。用户将提供当前会话的全部多轮对话（与后续对话请求里单独传入的「最近若干条原文」在内容上会有重叠，属预期行为）。请用简洁中文压缩为一段连续摘要，保留：关键事实、专有名词、用户约束与已达成共识的决策。不要编造。不要使用 markdown 标题。
-
-【长度】输出正文总长度必须不超过 ${maxChars} 个字符（与常见语言中字符串的字符长度计数一致，含标点与空格）。若难以在限制内覆盖全部细节，请优先保留最关键信息，并自然收尾，避免像在句子中途被截断。不要输出字数统计或任何与摘要正文无关的说明。`;
+function contextSummaryInjectDetectionPrefix(): string {
+  const t = getPromptTemplatesMerged().contextSummaryInjectPrefix;
+  if (contextSummaryInjectUsesContentPlaceholder(t)) {
+    return renderTemplateString(t, { content: "" });
+  }
+  return renderTemplateString(t, {});
 }
 
-/** 与 `spec-chat-context-summary.md` §2 一致 */
-export const CONTEXT_SUMMARY_MODEL_PREFIX = `以下是本对话更早内容的摘要，供你理解上下文（用户界面上的消息列表中仍有完整原文可供其查阅）：\n`;
+function buildContextSummaryInjectMessageBody(summary: string): string {
+  const t = getPromptTemplatesMerged().contextSummaryInjectPrefix;
+  if (contextSummaryInjectUsesContentPlaceholder(t)) {
+    return renderTemplateString(t, { content: summary });
+  }
+  return renderTemplateString(t, {}) + summary;
+}
+
+function buildContextSummarySystemPrompt(maxChars: number): string {
+  return renderPromptTemplate("contextSummarySystem", { maxChars });
+}
 
 export function messagesIncludeContextSummary(
   messages: ChatMessage[]
 ): boolean {
+  const prefix = contextSummaryInjectDetectionPrefix();
   return (
     messages.length > 0 &&
     messages[0].role === "system" &&
-    messages[0].content.startsWith(CONTEXT_SUMMARY_MODEL_PREFIX)
+    messages[0].content.startsWith(prefix)
   );
 }
 
@@ -42,7 +60,7 @@ export function buildMessagesWithContextSummary(
     return tail;
   }
   return [
-    { role: "system", content: `${CONTEXT_SUMMARY_MODEL_PREFIX}${s}` },
+    { role: "system", content: buildContextSummaryInjectMessageBody(s) },
     ...tail,
   ];
 }

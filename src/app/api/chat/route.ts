@@ -110,6 +110,7 @@ export async function POST(req: Request) {
     model: model ?? DEEPSEEK_DEFAULT_MODEL,
     messageCount: messages.length,
     persistedMessageCount: rows.length,
+    content,
     contextSummaryEnabled: appCfg.contextSummaryEnabled,
     contextSummaryPrepended: messagesIncludeContextSummary(messages),
   });

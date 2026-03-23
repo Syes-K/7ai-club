@@ -1,6 +1,10 @@
 "use client";
 
-import { FileSearchOutlined, SettingOutlined } from "@ant-design/icons";
+import {
+  CommentOutlined,
+  FileSearchOutlined,
+  SettingOutlined,
+} from "@ant-design/icons";
 import { PageContainer, ProLayout } from "@ant-design/pro-components";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -8,6 +12,7 @@ import { useEffect, useMemo, useState, type ReactNode } from "react";
 
 const PAGE_TITLE: Record<string, string> = {
   "/console": "应用配置",
+  "/console/prompts": "提示词管理",
   "/console/logs": "日志",
 };
 
@@ -33,6 +38,11 @@ export function ConsoleProShell({
           icon: <SettingOutlined />,
         },
         {
+          path: "/console/prompts",
+          name: "提示词管理",
+          icon: <CommentOutlined />,
+        },
+        {
           path: "/console/logs",
           name: "日志",
           icon: <FileSearchOutlined />,
@@ -53,7 +63,6 @@ export function ConsoleProShell({
   return (
     <div className="min-h-[100dvh]">
       <ProLayout
-        enableDarkTheme={true}
         layout="mix"
         title="后台管理"
         logo={false}
