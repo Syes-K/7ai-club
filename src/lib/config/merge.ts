@@ -104,6 +104,36 @@ export function mergeAppConfigPartial(partial: unknown): AppConfig {
     knowledgeChunkOverlap = o.knowledgeChunkOverlap;
   }
 
+  let intentConfidenceThreshold = d.intentConfidenceThreshold;
+  if (
+    typeof o.intentConfidenceThreshold === "number" &&
+    Number.isFinite(o.intentConfidenceThreshold) &&
+    o.intentConfidenceThreshold >= 0 &&
+    o.intentConfidenceThreshold <= 1
+  ) {
+    intentConfidenceThreshold = o.intentConfidenceThreshold;
+  }
+
+  let intentSearchTopN = d.intentSearchTopN;
+  if (
+    typeof o.intentSearchTopN === "number" &&
+    Number.isInteger(o.intentSearchTopN) &&
+    o.intentSearchTopN >= 1 &&
+    o.intentSearchTopN <= 20
+  ) {
+    intentSearchTopN = o.intentSearchTopN;
+  }
+
+  let intentScoreThreshold = d.intentScoreThreshold;
+  if (
+    typeof o.intentScoreThreshold === "number" &&
+    Number.isFinite(o.intentScoreThreshold) &&
+    o.intentScoreThreshold >= -1 &&
+    o.intentScoreThreshold <= 1
+  ) {
+    intentScoreThreshold = o.intentScoreThreshold;
+  }
+
   return {
     maxMessagesInContext: max,
     defaultProvider,
@@ -117,5 +147,8 @@ export function mergeAppConfigPartial(partial: unknown): AppConfig {
     embeddingModel,
     knowledgeChunkSize,
     knowledgeChunkOverlap,
+    intentConfidenceThreshold,
+    intentSearchTopN,
+    intentScoreThreshold,
   };
 }

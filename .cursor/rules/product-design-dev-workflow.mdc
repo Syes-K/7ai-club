@@ -65,14 +65,16 @@ alwaysApply: true
 1. **阶段 0 - 版本确认**：与用户确认或约定 `{version}`（见上文「需求版本号」）；必要时创建 `iterations/{version}/` 及各阶段子目录。
 2. **阶段 1 - 需求**：调用 `/product`，传入 `version`、业务目标/场景/雏形需求；**文档**写入 `iterations/{version}/product/` 并同步 `docs/product/`；**等待用户确认** → 确认通过后进入阶段 2。
 3. **阶段 2 - 设计**：调用 `/design`，传入 `version` + 阶段 1 的完整产出；**文档**写入 `iterations/{version}/design/` 并同步 `docs/design/`；**等待用户确认** → 确认通过后进入阶段 3。
-4. **阶段 3 - 服务端开发**：调用 `/backend`，传入 `version` + 阶段 1 + 阶段 2 产出；**代码**写入项目服务端目录；**文档**写入 `iterations/{version}/backend/` 并同步 `docs/backend/`；**等待用户确认** → 确认通过后进入阶段 4。
-5. **阶段 4 - 前端开发**：调用 `/frontend`，传入 `version` + 阶段 1 + 阶段 2 + 阶段 3 的 API/接口文档；**代码**写入项目前端目录；**文档**写入 `iterations/{version}/frontend/` 并同步 `docs/frontend/`；就绪后向用户汇报，以用户确认为准完成流程。
+4. **阶段 3A - 服务端文档先行（Backend）**：首次调用 `/backend`，传入 `version` + 阶段 1 + 阶段 2 产出；**仅输出服务端文档，不写代码**（API 设计、数据模型、实现计划/风险），文档写入 `iterations/{version}/backend/` 并同步 `docs/backend/`；**等待用户确认**。
+5. **阶段 3B - 服务端代码开发（Backend）**：仅在用户明确确认阶段 3A 后，再次调用 `/backend` 基于已确认文档实现；**代码**写入项目服务端目录，并更新/补充 `iterations/{version}/backend/` 与 `docs/backend/` 的实现与自测说明；**等待用户确认** → 确认通过后进入阶段 4。
+6. **阶段 4 - 前端开发**：调用 `/frontend`，传入 `version` + 阶段 1 + 阶段 2 + **阶段 3B 最终确认**的 API/接口文档；**代码**写入项目前端目录；**文档**写入 `iterations/{version}/frontend/` 并同步 `docs/frontend/`；就绪后向用户汇报，以用户确认为准完成流程。
 
 ## 产物路径（各阶段文档写入位置）
 
 - **Product**：`iterations/{version}/product/` + 同步 `docs/product/`（如 `prd.md`、`requirements.md`、`user-stories-{功能名}.md`）
 - **Design**：`iterations/{version}/design/` + 同步 `docs/design/`（如 `design-spec.md`、`spec-{功能名}.md`）
-- **Backend**：代码在 Next.js 项目内（如 `app/api/`、Server Actions）；**文档**在 `iterations/{version}/backend/` + 同步 `docs/backend/`（如 `api-spec.md`、`data-models.md`）
+- **Backend（3A 文档）**：仅文档在 `iterations/{version}/backend/` + 同步 `docs/backend/`（如 `api-spec.md`、`data-models.md`、`implementation-plan.md`）
+- **Backend（3B 代码）**：代码在 Next.js 项目内（如 `app/api/`、Server Actions）；并补充实现/自测文档到 `iterations/{version}/backend/` + 同步 `docs/backend/`
 - **Frontend**：代码在项目前端目录（如 `src/`）；**文档**在 `iterations/{version}/frontend/` + 同步 `docs/frontend/`（如 `implementation-notes.md`、`deviations.md`）
 
 下游阶段读取上游产出时，优先从 **`iterations/{version}/`** 下对应子目录读取。
@@ -82,6 +84,7 @@ alwaysApply: true
 - 每一阶段**完成后**，将文档写入 `iterations/{version}/...` 并同步 `docs/...`，按**人工确认门控**停步；**仅在用户下一条消息中明确确认后**再调用下一阶段（同条回复内不得连拨下一阶段）。
 - 调用下一阶段时在 prompt 中**显式包含** `{version}`、上一阶段产出路径或关键内容，避免 subagent 缺少上下文。
 - 若下游 subagent 指出上游不完整，先输出待确认项，再决定回溯到 product、design 或 backend 或由用户补充。
+- **服务端专属门控**：`/backend` 第一次调用只允许产出文档（3A，禁止代码变更）；必须等待用户在新消息中明确确认后，才可进行第二次 `/backend` 调用写代码（3B）。
 
 ## 详细说明
 

@@ -154,6 +154,36 @@ export function validateAppConfigForSave(
     knowledgeChunkOverlap = kco;
   }
 
+  const ict = o.intentConfidenceThreshold;
+  if (
+    typeof ict !== "number" ||
+    !Number.isFinite(ict) ||
+    ict < 0 ||
+    ict > 1
+  ) {
+    return { ok: false, error: "intentConfidenceThreshold 须为 0～1 的数字" };
+  }
+
+  const itn = o.intentSearchTopN;
+  if (
+    typeof itn !== "number" ||
+    !Number.isInteger(itn) ||
+    itn < 1 ||
+    itn > 20
+  ) {
+    return { ok: false, error: "intentSearchTopN 须为 1～20 的整数" };
+  }
+
+  const ist = o.intentScoreThreshold;
+  if (
+    typeof ist !== "number" ||
+    !Number.isFinite(ist) ||
+    ist < -1 ||
+    ist > 1
+  ) {
+    return { ok: false, error: "intentScoreThreshold 须为 -1～1 的数字" };
+  }
+
   return {
     ok: true,
     config: {
@@ -169,6 +199,9 @@ export function validateAppConfigForSave(
       embeddingModel,
       knowledgeChunkSize,
       knowledgeChunkOverlap,
+      intentConfidenceThreshold: ict,
+      intentSearchTopN: itn,
+      intentScoreThreshold: ist,
     },
   };
 }

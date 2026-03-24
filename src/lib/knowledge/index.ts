@@ -12,6 +12,7 @@ export { readEmbeddingConfig, embedTexts, EMBED_BATCH_MAX } from "./embed";
 export {
   reindexEntry,
   searchKnowledgeBase,
+  searchKnowledgeEntries,
   createEntryAndIndex,
   updateEntryAndIndex,
   updateEntryMetaOnly,

@@ -32,6 +32,12 @@ export type AppConfig = {
    */
   knowledgeChunkSize: number;
   knowledgeChunkOverlap: number;
+  /** 意图识别命中阈值（0~1） */
+  intentConfidenceThreshold: number;
+  /** 知识检索返回条数（1~20） */
+  intentSearchTopN: number;
+  /** 知识检索分值阈值（-1~1） */
+  intentScoreThreshold: number;
 };
 
 export const FALLBACK_DEFAULTS: AppConfig = {
@@ -47,4 +53,7 @@ export const FALLBACK_DEFAULTS: AppConfig = {
   embeddingModel: null,
   knowledgeChunkSize: 512,
   knowledgeChunkOverlap: 64,
+  intentConfidenceThreshold: 0.7,
+  intentSearchTopN: 3,
+  intentScoreThreshold: 0.5,
 };

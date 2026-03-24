@@ -5,6 +5,7 @@ import { ZHIPU_MODEL_GROUPS } from "@/lib/chat/zhipu-models";
 import type { ChatProviderId } from "@/lib/chat/types";
 import type { AppConfig } from "@/lib/config/defaults";
 import { FALLBACK_DEFAULTS } from "@/lib/config/defaults";
+import { Tooltip } from "antd";
 
 type Props = {
   initialConfig: AppConfig;
@@ -127,6 +128,110 @@ export function ConsoleConfigForm({
             <p className="mt-1 text-xs text-zinc-500">
               参与模型调用的最近若干条完整对话（user/assistant）条数上限。
             </p>
+          </div>
+
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+            <div>
+              <label
+                htmlFor="intent-confidence-threshold"
+                className="mb-1 flex items-center gap-1 text-sm font-medium text-zinc-700 dark:text-zinc-300"
+              >
+                意图命中阈值
+                <Tooltip title="用于判定“是否命中某个意图”（0~1）。适用场景：误命中较多时调高（如 0.7→0.8）；漏命中较多时调低（如 0.7→0.6）。影响：阈值越高进入知识库链路越保守；阈值越低进入知识库链路越积极。">
+                  <span
+                    aria-label="意图命中阈值说明"
+                    className="inline-flex h-4 w-4 cursor-help items-center justify-center rounded-full border border-zinc-300 text-[10px] text-zinc-500 dark:border-zinc-600"
+                  >
+                    ?
+                  </span>
+                </Tooltip>
+              </label>
+              <input
+                id="intent-confidence-threshold"
+                type="number"
+                min={0}
+                max={1}
+                step={0.01}
+                value={cfg.intentConfidenceThreshold}
+                onChange={(e) => {
+                  const v = Number(e.target.value);
+                  setCfg((c) => ({
+                    ...c,
+                    intentConfidenceThreshold: Number.isFinite(v)
+                      ? Math.min(1, Math.max(0, v))
+                      : c.intentConfidenceThreshold,
+                  }));
+                }}
+                className="w-full rounded-xl border border-zinc-300 bg-zinc-50 px-3 py-2 text-sm dark:border-zinc-600 dark:bg-zinc-950"
+              />
+            </div>
+            <div>
+              <label
+                htmlFor="intent-search-topn"
+                className="mb-1 flex items-center gap-1 text-sm font-medium text-zinc-700 dark:text-zinc-300"
+              >
+                意图检索 TopN
+                <Tooltip title="用于控制知识检索返回给模型的候选片段数量（TopN，建议 1~5，默认 3）。适用场景：回答信息不足时可增大（如 3→5）；回答噪声变多或成本上升时可减小（如 3→2）。影响：TopN 越大信息更全但噪声与 token 成本可能上升；TopN 越小信息更聚焦但可能漏掉关键片段。">
+                  <span
+                    aria-label="意图检索 TopN 说明"
+                    className="inline-flex h-4 w-4 cursor-help items-center justify-center rounded-full border border-zinc-300 text-[10px] text-zinc-500 dark:border-zinc-600"
+                  >
+                    ?
+                  </span>
+                </Tooltip>
+              </label>
+              <input
+                id="intent-search-topn"
+                type="number"
+                min={1}
+                max={20}
+                value={cfg.intentSearchTopN}
+                onChange={(e) => {
+                  const v = parseInt(e.target.value, 10);
+                  setCfg((c) => ({
+                    ...c,
+                    intentSearchTopN: Number.isFinite(v)
+                      ? Math.min(20, Math.max(1, v))
+                      : c.intentSearchTopN,
+                  }));
+                }}
+                className="w-full rounded-xl border border-zinc-300 bg-zinc-50 px-3 py-2 text-sm dark:border-zinc-600 dark:bg-zinc-950"
+              />
+            </div>
+            <div>
+              <label
+                htmlFor="intent-score-threshold"
+                className="mb-1 flex items-center gap-1 text-sm font-medium text-zinc-700 dark:text-zinc-300"
+              >
+                意图检索分值阈值
+                <Tooltip title="用于过滤低相关检索结果（仅保留 score 大于等于该阈值的片段，范围 -1~1）。适用场景：知识片段杂、相关性差时调高（如 0.5→0.6）；常出现“命中意图但检索为空”时可调低（如 0.5→0.4）。影响：阈值越高结果更干净但更易空检索；阈值越低召回更充分但可能混入弱相关内容。">
+                  <span
+                    aria-label="意图检索分值阈值说明"
+                    className="inline-flex h-4 w-4 cursor-help items-center justify-center rounded-full border border-zinc-300 text-[10px] text-zinc-500 dark:border-zinc-600"
+                  >
+                    ?
+                  </span>
+                </Tooltip>
+              </label>
+              <input
+                id="intent-score-threshold"
+                type="number"
+                min={-1}
+                max={1}
+                step={0.01}
+                value={cfg.intentScoreThreshold}
+                onChange={(e) => {
+                  const v = Number(e.target.value);
+                  setCfg((c) => ({
+                    ...c,
+                    intentScoreThreshold: Number.isFinite(v)
+                      ? Math.min(1, Math.max(-1, v))
+                      : c.intentScoreThreshold,
+                  }));
+                }}
+                className="w-full rounded-xl border border-zinc-300 bg-zinc-50 px-3 py-2 text-sm dark:border-zinc-600 dark:bg-zinc-950"
+              />
+            </div>
           </div>
 
           <div className="flex items-start gap-3">

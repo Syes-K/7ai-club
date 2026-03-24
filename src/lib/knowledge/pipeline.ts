@@ -9,6 +9,7 @@ import {
   getKnowledgeStore,
   numberArrayToFloat32Buffer,
   searchChunksInBase,
+  searchChunksInEntries,
 } from "./store/sqlite-store";
 import type { KnowledgeEntry, SearchHit } from "./types";
 
@@ -87,6 +88,26 @@ export async function searchKnowledgeBase(
   const qv = vectors[0];
   const store = getKnowledgeStore();
   return searchChunksInBase(store, baseId, qv, topK);
+}
+
+/** 按知识库条目白名单检索，供意图路由命中后的聚合检索使用。 */
+export async function searchKnowledgeEntries(
+  entryIds: string[],
+  query: string,
+  topK: number
+): Promise<SearchHit[]> {
+  const trimmed = query.trim();
+  if (!trimmed || entryIds.length === 0) return [];
+
+  const cfg = readEmbeddingConfig();
+  if (!cfg.ok) {
+    throw new Error(cfg.error);
+  }
+
+  const vectors = await embedTexts([trimmed], cfg.config);
+  const qv = vectors[0];
+  const store = getKnowledgeStore();
+  return searchChunksInEntries(store, entryIds, qv, topK);
 }
 
 /** 插入条目后立即完整走一遍 reindexEntry。 */

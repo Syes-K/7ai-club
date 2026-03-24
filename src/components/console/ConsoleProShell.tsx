@@ -4,6 +4,7 @@ import {
   BookOutlined,
   CommentOutlined,
   FileSearchOutlined,
+  NodeIndexOutlined,
   SettingOutlined,
 } from "@ant-design/icons";
 import { PageContainer, ProLayout } from "@ant-design/pro-components";
@@ -16,6 +17,7 @@ const PAGE_TITLE: Record<string, string> = {
   "/console/prompts": "提示词管理",
   "/console/logs": "日志",
   "/console/knowledge": "知识库",
+  "/console/intent-routing/config": "意图配置",
 };
 
 export function ConsoleProShell({
@@ -48,6 +50,11 @@ export function ConsoleProShell({
           path: "/console/knowledge",
           name: "知识库",
           icon: <BookOutlined />,
+        },
+        {
+          path: "/console/intent-routing/config",
+          name: "意图配置",
+          icon: <NodeIndexOutlined />,
         },
         {
           path: "/console/logs",

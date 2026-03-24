@@ -11,7 +11,9 @@
            ↓ 人工确认 ✓
 [设计] → design 产出设计说明/交互与状态
            ↓ 人工确认 ✓
-[服务端] → backend 产出 API/数据模型/服务端代码
+[服务端-文档] → backend 产出 API/数据模型/实现计划（不写代码）
+           ↓ 人工确认 ✓
+[服务端-代码] → backend 基于已确认文档实现服务端代码
            ↓ 人工确认 ✓
 [前端] → frontend 产出可运行前端
 ```
@@ -120,7 +122,7 @@
 
 ---
 
-## 阶段 3：服务端开发（Backend）
+## 阶段 3A：服务端文档先行（Backend）
 
 **Subagent**：`/backend`
 
@@ -131,25 +133,53 @@
 - 阶段 2 的「设计说明」
 - 可选：数据库、部署与接口规范
 
-**产出物（交给前端）**
+**产出物（供确认与后续编码）**
 - **API 设计/接口文档**：路径、方法、请求/响应体、错误码
 - **数据模型或 schema 说明**：若涉及存储（TS 类型等）
-- **服务端代码**：TypeScript，Next.js API 实现（Route Handlers、Server Actions 等）、业务逻辑、持久化
-- **运行/部署与自测说明**
+- **实现计划/风险说明**：模块拆分、边界条件、潜在风险
 
 **完成标准**
-- 接口契约清晰，可供前端对接
+- 接口契约清晰，且可直接指导后续编码
+- 业务规则与需求/设计一致
+- 文档中已覆盖关键边界、失败场景与实现风险
+- **本阶段禁止改动业务代码**（仅允许文档变更）
+
+**产物路径**
+- **文档**：API 文档、数据模型说明、实现计划写入 **`iterations/{version}/backend/`**，并**同步**至 `docs/backend/`，如 `api-spec.md`、`data-models.md`、`implementation-plan.md`；可按功能拆分为 `api-spec-{功能名}.md`。
+
+**交接**
+- 产出物整理并写入上述路径。
+- **等待人工确认**：向用户说明阶段 3A 已完成、产出路径与要点，请用户确认或提出修改意见。
+- **仅在用户确认通过后**，父 agent 才可再次调用 **backend** subagent 进入阶段 3B（代码开发）。
+
+---
+
+## 阶段 3B：服务端代码开发（Backend）
+
+**Subagent**：`/backend`
+
+**输入**
+- 阶段 1 的「需求与故事」
+- 阶段 2 的「设计说明」
+- 阶段 3A 已确认的 API/数据模型/实现计划文档
+
+**产出物（交给前端）**
+- **服务端代码**：TypeScript，Next.js API 实现（Route Handlers、Server Actions 等）、业务逻辑、持久化
+- **文档更新**：根据实际实现回写/修订 API 文档、补充实现与自测说明
+
+**完成标准**
+- 接口契约与代码实现一致，可供前端稳定对接
 - 业务规则与需求/设计一致
 - 代码为 TypeScript，基于 Next.js，可构建、可启动，有基本自测说明
 - **服务端代码含必要注释**（中文为主、说明非显而易见逻辑与边界；细则见 [.cursor/agents/backend.md](backend.md)「代码注释」）
 
 **产物路径**
 - **代码**：Next.js 项目内服务端约定位置（如 `app/api/`、Server Actions 等），使用 TypeScript。
-- **文档**：API 文档、数据模型说明、自测说明写入 **`iterations/{version}/backend/`**，并**同步**至 `docs/backend/`，如 `api-spec.md`、`data-models.md`、`implementation-notes.md`；可按功能拆分为 `api-spec-{功能名}.md`。
+- **文档**：实现后的 API 文档、数据模型说明、自测说明写入 **`iterations/{version}/backend/`**，并**同步**至 `docs/backend/`，如 `api-spec.md`、`data-models.md`、`implementation-notes.md`。
 
 **交接**
 - 产出物整理并写入上述路径。
-- **等待人工确认**：向用户说明阶段 3 已完成、产出路径与要点，请用户确认或提出修改意见；**仅在用户确认通过后**，父 agent 才将需求 + 设计说明 + 接口/API 文档作为上下文调用 **frontend** subagent 进入阶段 4。
+- **等待人工确认**：向用户说明阶段 3B 已完成、产出路径与要点，请用户确认或提出修改意见；**仅在用户确认通过后**，父 agent 才将需求 + 设计说明 + 阶段 3B 最终 API 文档作为上下文调用 **frontend** subagent 进入阶段 4。
 
 ---
 
@@ -189,9 +219,10 @@
 0. **版本与目录**：全流程开始前与用户确认 **`{version}`**（格式 `0.0.1`）；可按 `iterations/` 下已有版本给出默认建议下一 PATCH。创建并使用 `iterations/{version}/product|design|backend|frontend/`；各阶段文档**双写**至 `docs/<阶段>/`。
 1. **人工确认门控**：每一阶段结束后**本条回复即停**：汇报产出路径 + 要点，并写明「请确认是否进入下一阶段」；**下一用户消息**明确许可（如「通过，进入设计」）后，才调用下一阶段 subagent。模糊词如仅说「继续」且未点名阶段时，先说明门控并请用户明确。若用户要求修改，则在本阶段或回溯上游后再确认。细则与例外见 **product-design-dev-workflow.mdc**。
 2. **串行执行**：按 需求 → 设计 → 服务端开发 → 前端开发 顺序调用 subagent，避免跳过上游。
-3. **传递上下文**：每次调用下一阶段时，将上一阶段的产出物完整传入 prompt（或附文件引用）。
-4. **回溯**：若下游发现上游不完整，可先让当前 subagent 输出「待确认项」，再决定是回溯到 product/design 还是由人工补充后继续。
-5. **并行**：仅当任务无依赖时可并行（例如多个独立功能的需求可并行 product，但设计依赖需求、backend 依赖设计、frontend 依赖 backend 与设计，故各开发阶段通常串行）。
+3. **服务端二次调用约束**：第一次调用 backend 仅允许文档产出（3A），不得写代码；用户确认 3A 后，第二次调用 backend 才进入代码实现（3B）。
+4. **传递上下文**：每次调用下一阶段时，将上一阶段的产出物完整传入 prompt（或附文件引用）。
+5. **回溯**：若下游发现上游不完整，可先让当前 subagent 输出「待确认项」，再决定是回溯到 product/design 还是由人工补充后继续。
+6. **并行**：仅当任务无依赖时可并行（例如多个独立功能的需求可并行 product，但设计依赖需求、backend 依赖设计、frontend 依赖 backend 与设计，故各开发阶段通常串行）。
 
 ---
 
@@ -201,5 +232,6 @@
 |------|--------|----------|------------------|
 | Product | 需求摘要、功能范围、用户故事、待设计项 | `iterations/{version}/product/` + 同步 `docs/product/` | Design 优先读迭代目录下文档 |
 | Design | 流程/页面/状态/交互说明、与需求对应关系 | `iterations/{version}/design/` + 同步 `docs/design/` | Backend 读设计 + 需求目录做 API 与实现 |
-| Backend | API 文档、数据模型、服务端代码、自测说明 | 代码：项目服务端目录；文档：`iterations/{version}/backend/` + 同步 `docs/backend/` | Frontend 按 API 文档对接实现 |
+| Backend(3A) | API 文档、数据模型、实现计划（不含代码） | `iterations/{version}/backend/` + 同步 `docs/backend/` | 待用户确认后进入 Backend(3B) |
+| Backend(3B) | 服务端代码、API 回写、自测说明 | 代码：项目服务端目录；文档：`iterations/{version}/backend/` + 同步 `docs/backend/` | Frontend 按 3B 最终 API 文档对接实现 |
 | Frontend | 代码、自测说明、偏差与假设 | 代码：项目源码目录；文档：`iterations/{version}/frontend/` + 同步 `docs/frontend/` | 验收与迭代 |

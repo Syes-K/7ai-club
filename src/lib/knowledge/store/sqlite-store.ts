@@ -365,6 +365,47 @@ export class KnowledgeSqliteStore {
       embedding: bufferToFloat32Array(Buffer.from(r.embedding)),
     }));
   }
+
+  /** 按 entryId 集合列出块（含向量），用于意图路由的多条目聚合检索。 */
+  listChunksWithEmbeddingsForEntries(entryIds: string[]): {
+    chunkId: string;
+    entryId: string;
+    chunkIndex: number;
+    text: string;
+    charStart: number;
+    charEnd: number;
+    embedding: Float32Array;
+  }[] {
+    if (entryIds.length === 0) return [];
+    const placeholders = entryIds.map(() => "?").join(", ");
+    const rows = this.db
+      .prepare(
+        `SELECT c.id AS chunkId, c.entry_id AS entryId, c.chunk_index AS chunkIndex,
+                c.text AS text, c.char_start AS charStart, c.char_end AS charEnd, c.embedding AS embedding
+         FROM knowledge_chunks c
+         INNER JOIN knowledge_entries e ON e.id = c.entry_id
+         WHERE c.entry_id IN (${placeholders})
+           AND e.index_status = 'ready'`
+      )
+      .all(...entryIds) as {
+      chunkId: string;
+      entryId: string;
+      chunkIndex: number;
+      text: string;
+      charStart: number;
+      charEnd: number;
+      embedding: Buffer;
+    }[];
+    return rows.map((r) => ({
+      chunkId: r.chunkId,
+      entryId: r.entryId,
+      chunkIndex: r.chunkIndex,
+      text: r.text,
+      charStart: r.charStart,
+      charEnd: r.charEnd,
+      embedding: bufferToFloat32Array(Buffer.from(r.embedding)),
+    }));
+  }
 }
 
 const globalForKb = globalThis as unknown as {
@@ -389,6 +430,32 @@ export function searchChunksInBase(
   topK: number
 ): SearchHit[] {
   const rows = store.listChunksWithEmbeddingsForBase(baseId);
+  if (rows.length === 0) return [];
+  const scored = rows.map((r) => {
+    const vec = Array.from(r.embedding);
+    const score = dot(queryVector, vec);
+    return {
+      chunkId: r.chunkId,
+      entryId: r.entryId,
+      chunkIndex: r.chunkIndex,
+      text: r.text,
+      charStart: r.charStart,
+      charEnd: r.charEnd,
+      score,
+    };
+  });
+  scored.sort((a, b) => b.score - a.score);
+  return scored.slice(0, Math.max(1, topK));
+}
+
+/** 与 searchChunksInBase 相同评分策略，但作用域是 entryId 白名单。 */
+export function searchChunksInEntries(
+  store: KnowledgeSqliteStore,
+  entryIds: string[],
+  queryVector: number[],
+  topK: number
+): SearchHit[] {
+  const rows = store.listChunksWithEmbeddingsForEntries(entryIds);
   if (rows.length === 0) return [];
   const scored = rows.map((r) => {
     const vec = Array.from(r.embedding);
