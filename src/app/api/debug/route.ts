@@ -1,5 +1,6 @@
 import { createChatCompletionSseStream } from "@/lib/chat/run-chat-stream";
 import { parseAndValidateDebugChatBody } from "@/lib/chat/validate-debug-request";
+import { normalizeChatRouteModel } from "@/lib/provider/route";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -28,7 +29,7 @@ export async function POST(req: Request) {
   const stream = createChatCompletionSseStream({
     messages,
     provider,
-    model: provider === "zhipu" ? model : undefined,
+    model: normalizeChatRouteModel(provider, model),
     requestId,
     startedAt,
     skipChatLog: true,

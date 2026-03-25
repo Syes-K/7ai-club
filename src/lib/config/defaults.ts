@@ -1,10 +1,10 @@
-import type { ChatProviderId } from "@/lib/chat/types";
+import type { ChatProviderId } from "@/lib/provider/types";
 
 /** 内置默认值（与 JSON 合并；文件缺失或损坏时回退） */
 export type AppConfig = {
   maxMessagesInContext: number;
   defaultProvider: ChatProviderId;
-  /** 智谱 model id，须在 ZHIPU_MODEL_IDS 内 */
+  /** 默认 model id（须在 MODEL_IDS 内） */
   defaultModel: string;
   chatLoggingEnabled: boolean;
   appDisplayName: string;

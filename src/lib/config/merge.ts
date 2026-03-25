@@ -1,4 +1,4 @@
-import { ZHIPU_MODEL_IDS } from "@/lib/chat/zhipu-models";
+import { MODEL_IDS } from "@/lib/provider/models";
 import type { AppConfig } from "./defaults";
 import { FALLBACK_DEFAULTS } from "./defaults";
 
@@ -28,7 +28,7 @@ export function mergeAppConfigPartial(partial: unknown): AppConfig {
   let defaultModel = d.defaultModel;
   if (
     typeof o.defaultModel === "string" &&
-    ZHIPU_MODEL_IDS.includes(o.defaultModel.trim())
+    MODEL_IDS.includes(o.defaultModel.trim())
   ) {
     defaultModel = o.defaultModel.trim();
   }

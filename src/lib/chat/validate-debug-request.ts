@@ -1,6 +1,7 @@
 import { getAppConfig } from "@/lib/config";
-import { ZHIPU_MODEL_IDS } from "@/lib/chat/zhipu-models";
-import type { ChatMessage, ChatProviderId } from "./types";
+import type { ChatMessage } from "@/lib/chat/types";
+import type { ChatProviderId } from "@/lib/provider/types";
+import { DEEPSEEK_DEFAULT_MODEL } from "@/lib/provider/constants";
 
 export type DebugChatBody = {
   messages: ChatMessage[];
@@ -20,9 +21,18 @@ export function parseAndValidateDebugChatBody(
     return { ok: false, error: "请求体须为 JSON 对象" };
   }
   const o = raw as Record<string, unknown>;
-  const provider = o.provider;
-  if (provider !== "zhipu" && provider !== "deepseek") {
-    return { ok: false, error: "provider 须为 zhipu 或 deepseek" };
+  const providerRaw = o.provider;
+  const modelRaw =
+    typeof o.model === "string" && o.model.trim() ? o.model.trim() : undefined;
+
+  let provider: ChatProviderId | undefined;
+  if (providerRaw === "zhipu" || providerRaw === "deepseek") {
+    provider = providerRaw;
+  } else if (modelRaw) {
+    // 不传 provider 时：根据 model id 推导提供商
+    provider = modelRaw === DEEPSEEK_DEFAULT_MODEL ? "deepseek" : "zhipu";
+  } else {
+    return { ok: false, error: "provider 或 model 须提供" };
   }
 
   const messagesRaw = o.messages;
@@ -53,12 +63,7 @@ export function parseAndValidateDebugChatBody(
   if (provider === "zhipu") {
     const cfg = getAppConfig();
     const model =
-      typeof o.model === "string" && o.model.trim().length > 0
-        ? o.model.trim()
-        : cfg.defaultModel;
-    if (!ZHIPU_MODEL_IDS.includes(model)) {
-      return { ok: false, error: `不支持的智谱模型: ${model}` };
-    }
+      modelRaw ?? cfg.defaultModel;
     return {
       ok: true,
       data: { messages: sliced, provider: "zhipu", model },
@@ -67,3 +72,4 @@ export function parseAndValidateDebugChatBody(
 
   return { ok: true, data: { messages: sliced, provider: "deepseek" } };
 }
+

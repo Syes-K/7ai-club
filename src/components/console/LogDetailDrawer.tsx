@@ -2,9 +2,9 @@
 
 import { BugOutlined } from "@ant-design/icons";
 import { fieldLabelZh } from "@/lib/logs/log-field-labels";
-import { ZHIPU_MODEL_GROUPS } from "@/lib/chat/zhipu-models";
+import { MODEL_GROUPS } from "@/lib/provider/models";
 import { consumeChatSseStream } from "@/lib/chat/sse-consume";
-import type { ChatProviderId } from "@/lib/chat/types";
+import { DEEPSEEK_DEFAULT_MODEL } from "@/lib/provider/constants";
 import {
   buildLogDebugMessages,
   DEFAULT_LOG_DEBUG_INSTRUCTION,
@@ -237,11 +237,6 @@ function DetailBody({ record }: { record: Record<string, unknown> }) {
   );
 }
 
-const PROVIDER_OPTIONS: { label: string; value: ChatProviderId }[] = [
-  { label: "DeepSeek", value: "deepseek" },
-  { label: "智谱", value: "zhipu" },
-];
-
 function LogMessagesDebugPanel({
   messagesPayload,
   record,
@@ -253,8 +248,7 @@ function LogMessagesDebugPanel({
   const [publicCfg, setPublicCfg] = useState<Awaited<
     ReturnType<typeof fetchPublicAppConfig>
   > | null>(null);
-  const [provider, setProvider] = useState<ChatProviderId>("deepseek");
-  const [zhipuModel, setZhipuModel] = useState(
+  const [currentModel, setCurrentModel] = useState(
     FALLBACK_DEFAULTS.defaultModel
   );
   const [instruction, setInstruction] = useState("");
@@ -272,25 +266,25 @@ function LogMessagesDebugPanel({
     FALLBACK_DEFAULTS.maxMessagesInContext;
 
   useEffect(() => {
-    const p = record.provider;
-    const nextP: ChatProviderId =
-      p === "zhipu" || p === "deepseek" ? p : "deepseek";
-    setProvider(nextP);
     const def =
       publicCfg?.defaultModel ?? FALLBACK_DEFAULTS.defaultModel;
+    const p = record.provider;
     const m = record.model;
     const fromLog =
-      typeof m === "string" &&
-      ZHIPU_MODEL_GROUPS.flatMap((g) => g.models).some((x) => x.id === m)
-        ? m
-        : def;
-    setZhipuModel(fromLog);
+      p === "deepseek"
+        ? DEEPSEEK_DEFAULT_MODEL
+        : typeof m === "string" &&
+          MODEL_GROUPS.flatMap((g) => g.models).some((x) => x.id === m)
+          ? m
+          : def;
+    setCurrentModel(fromLog);
     setInstruction("");
   }, [record, publicCfg]);
 
-  const zhipuOptions = useMemo(
+  const modelSelectValue = currentModel;
+  const modelOptions = useMemo(
     () =>
-      ZHIPU_MODEL_GROUPS.flatMap((g) =>
+      MODEL_GROUPS.flatMap((g) =>
         g.models.map((m) => ({
           label: `${g.label} · ${m.label}`,
           value: m.id,
@@ -317,9 +311,8 @@ function LogMessagesDebugPanel({
     setStreaming(true);
     try {
       const body: Record<string, unknown> = {
-        provider,
         messages,
-        ...(provider === "zhipu" ? { model: zhipuModel } : {}),
+        model: currentModel,
       };
       const res = await fetch("/api/debug", {
         method: "POST",
@@ -340,7 +333,7 @@ function LogMessagesDebugPanel({
     } finally {
       setStreaming(false);
     }
-  }, [instruction, maxK, message, messagesPayload, provider, zhipuModel]);
+  }, [instruction, maxK, message, messagesPayload, currentModel]);
 
   return (
     <>
@@ -376,24 +369,18 @@ function LogMessagesDebugPanel({
         </p>
         <Space direction="vertical" className="w-full" size="middle">
           <Space wrap className="w-full">
-            <Select<ChatProviderId>
-              className="min-w-[8.5rem]"
+            <Select<string>
+              className="min-w-[14rem]"
               size="small"
-              value={provider}
-              options={PROVIDER_OPTIONS}
-              onChange={setProvider}
+              showSearch
+              optionFilterProp="label"
+              value={modelSelectValue}
+              options={modelOptions}
+              onChange={(v) => {
+                const val = String(v);
+                setCurrentModel(val);
+              }}
             />
-            {provider === "zhipu" ? (
-              <Select
-                className="min-w-[14rem]"
-                size="small"
-                showSearch
-                optionFilterProp="label"
-                value={zhipuModel}
-                options={zhipuOptions}
-                onChange={setZhipuModel}
-              />
-            ) : null}
           </Space>
           <Input.TextArea
             size="small"

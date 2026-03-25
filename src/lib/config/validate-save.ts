@@ -1,5 +1,5 @@
-import { ZHIPU_MODEL_IDS } from "@/lib/chat/zhipu-models";
-import type { ChatProviderId } from "@/lib/chat/types";
+import { MODEL_IDS } from "@/lib/provider/models";
+import type { ChatProviderId } from "@/lib/provider/types";
 import type { AppConfig } from "./defaults";
 import { FALLBACK_DEFAULTS } from "./defaults";
 
@@ -35,8 +35,8 @@ export function validateAppConfigForSave(
     return { ok: false, error: "defaultModel 须为非空字符串" };
   }
   const defaultModel = dm.trim();
-  if (!ZHIPU_MODEL_IDS.includes(defaultModel)) {
-    return { ok: false, error: `defaultModel 不是已支持的智谱模型: ${defaultModel}` };
+  if (!MODEL_IDS.includes(defaultModel)) {
+    return { ok: false, error: `defaultModel 不是已支持的模型: ${defaultModel}` };
   }
 
   const log = o.chatLoggingEnabled;

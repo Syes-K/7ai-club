@@ -1,5 +1,6 @@
-import { ZHIPU_MODEL_IDS } from "@/lib/chat/zhipu-models";
+import { MODEL_IDS } from "@/lib/provider/models";
 import { INTENT_ROUTING_DEFAULTS } from "./defaults";
+import { validateChatRouteProviderAndModel } from "@/lib/provider/validate-chat-route";
 import type {
   IntentRoutingConfig,
   IntentRoutingFieldError,
@@ -72,24 +73,13 @@ export function validateIntentRoutingConfig(
       message: "chatRoute 缺失或格式错误",
     });
   }
-  const provider = chatRouteObj?.provider;
-  if (provider !== "zhipu" && provider !== "deepseek") {
-    fieldErrors.push({
-      field: "chatRoute.provider",
-      code: "CFG_ROUTE_BROKEN",
-      message: "chatRoute.provider 须为 zhipu 或 deepseek",
-    });
-  }
-  const modelRaw = chatRouteObj?.model;
-  const model =
-    typeof modelRaw === "string" && modelRaw.trim() ? modelRaw.trim() : undefined;
-  if (provider === "zhipu" && model && !ZHIPU_MODEL_IDS.includes(model)) {
-    fieldErrors.push({
-      field: "chatRoute.model",
-      code: "CFG_ROUTE_BROKEN",
-      message: `chatRoute.model 不是已支持的智谱模型: ${model}`,
-    });
-  }
+  const providerValidation = validateChatRouteProviderAndModel({
+    provider: chatRouteObj?.provider,
+    model: chatRouteObj?.model,
+  });
+  fieldErrors.push(...providerValidation.fieldErrors);
+  const provider = providerValidation.provider;
+  const model = providerValidation.model;
 
   const nodesRaw = o.nodes;
   const nodeIds = new Set<string>();
@@ -238,7 +228,7 @@ export function validateIntentRoutingConfig(
       defaultRouteNextNodes:
         defaultRouteNextNodes ?? INTENT_ROUTING_DEFAULTS.defaultRouteNextNodes,
       chatRoute: {
-        provider: (provider as "zhipu" | "deepseek") ?? "zhipu",
+        provider: provider ?? "zhipu",
         ...(model ? { model } : {}),
       },
       nodes,

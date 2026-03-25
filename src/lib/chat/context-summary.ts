@@ -5,11 +5,12 @@ import {
   renderPromptTemplate,
   renderTemplateString,
 } from "@/lib/prompt-templates";
-import { fetchChatCompletionText } from "./providers";
+import { fetchChatCompletionText } from "@/lib/provider/providers";
 import { logChat } from "./logger";
 import type { ChatStore, StoredMessage } from "./store/port";
 import { storedToChatMessages } from "./store/port";
-import type { ChatMessage, ChatProviderId } from "./types";
+import type { ChatMessage } from "./types";
+import type { ChatProviderId } from "@/lib/provider/types";
 
 function contextSummaryInjectDetectionPrefix(): string {
   const t = getPromptTemplatesMerged().contextSummaryInjectPrefix;

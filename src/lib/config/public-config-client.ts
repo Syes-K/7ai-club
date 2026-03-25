@@ -1,4 +1,4 @@
-import type { ChatProviderId } from "@/lib/chat/types";
+import type { ChatProviderId } from "@/lib/provider/types";
 
 /** 与 `GET /api/config/public` 响应一致（客户端安全子集） */
 export type PublicAppConfig = {

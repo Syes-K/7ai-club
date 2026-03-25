@@ -1,5 +1,5 @@
 import { FALLBACK_DEFAULTS } from "@/lib/config/defaults";
-import type { ChatRoute } from "./types";
+import type { ChatRoute } from "@/lib/provider/types";
 
 /**
  * 客户端构建期默认路由；运行时服务端以 `getAppConfig()` 为准。

@@ -22,7 +22,6 @@ import {
   Row,
   Select,
   Space,
-  Spin,
   Switch,
   Table,
   Tooltip,
@@ -184,6 +183,8 @@ export function IntentRoutingConfigApp() {
   const [addRouteOpen, setAddRouteOpen] = useState(false);
   const [editingRouteKey, setEditingRouteKey] = useState<string | null>(null);
   const [isDirty, setIsDirty] = useState(false);
+  /** 仅客户端为 true；首屏与 SSR 同构，避免加载区 DOM 与缓存的旧 bundle 不一致导致 hydration 失败 */
+  const [hydrated, setHydrated] = useState(false);
 
   const kbRequiredLocalError = useMemo(() => {
     const hit = routesDraft.find(
@@ -273,6 +274,10 @@ export function IntentRoutingConfigApp() {
   }, [loadConfig]);
 
   useEffect(() => {
+    setHydrated(true);
+  }, []);
+
+  useEffect(() => {
     // 仅拦截浏览器刷新/关闭，避免误丢失未保存草稿。
     const onBeforeUnload = (event: BeforeUnloadEvent) => {
       if (!isDirty) return;
@@ -284,15 +289,8 @@ export function IntentRoutingConfigApp() {
   }, [isDirty]);
 
   const openAddRouteModal = useCallback(() => {
-    addRouteForm.setFieldsValue({
-      intentId: "",
-      enabled: true,
-      keywordsText: "",
-      nextNodes: ["model_request", "final_response"],
-      selectedKnowledgeBaseEntryIds: [],
-    });
     setAddRouteOpen(true);
-  }, [addRouteForm]);
+  }, []);
 
   const submitAddRoute = useCallback(async () => {
     try {
@@ -331,19 +329,9 @@ export function IntentRoutingConfigApp() {
     }
   }, [addRouteForm, message, routesDraft]);
 
-  const openEditRouteModal = useCallback(
-    (route: RouteRow) => {
-      editRouteForm.setFieldsValue({
-        intentId: route.intentId,
-        enabled: route.enabled,
-        keywordsText: formatKeywordsInput(route.keywords),
-        nextNodes: route.nextNodes,
-        selectedKnowledgeBaseEntryIds: route.selectedKnowledgeBaseEntryIds,
-      });
-      setEditingRouteKey(route.key);
-    },
-    [editRouteForm]
-  );
+  const openEditRouteModal = useCallback((route: RouteRow) => {
+    setEditingRouteKey(route.key);
+  }, []);
 
   const submitEditRoute = useCallback(async () => {
     if (!editingRouteKey) return;
@@ -516,9 +504,27 @@ export function IntentRoutingConfigApp() {
   }, [currentConfigForSubmit, executeForm, message]);
 
   if (loading) {
+    // 首屏仅占位，等 hydrated 后再渲染完整加载 UI，避免与旧 SSR 片段（如 antd Spin）不一致。
+    if (!hydrated) {
+      return (
+        <div className="mx-auto max-w-7xl px-4 py-10">
+          <div className="min-h-[200px]" aria-busy="true" />
+        </div>
+      );
+    }
     return (
       <div className="mx-auto max-w-7xl px-4 py-10">
-        <Spin tip="加载配置中..." />
+        <div
+          className="flex min-h-[200px] flex-col items-center justify-center gap-3 text-zinc-500 dark:text-zinc-400"
+          role="status"
+          aria-live="polite"
+        >
+          <span
+            className="inline-block h-8 w-8 animate-spin rounded-full border-2 border-zinc-200 border-t-violet-600 dark:border-zinc-700 dark:border-t-violet-400"
+            aria-hidden
+          />
+          <span>加载配置中...</span>
+        </div>
       </div>
     );
   }
@@ -589,17 +595,18 @@ export function IntentRoutingConfigApp() {
             pagination={false}
             dataSource={routesDraft}
             locale={{ emptyText: "暂无路由，点击右上角“新增意图路由”" }}
+            scroll={{ x: "max-content" }}
             columns={[
               {
                 title: "intentId",
                 dataIndex: "intentId",
-                width: 220,
+                width: 160,
                 render: (_, row) => <Typography.Text>{row.intentId || "-"}</Typography.Text>,
               },
               {
                 title: "启用",
                 dataIndex: "enabled",
-                width: 90,
+                width: 60,
                 render: (_, row) => (
                   <Tag color={row.enabled ? "green" : "default"}>
                     {row.enabled ? "是" : "否"}
@@ -609,6 +616,7 @@ export function IntentRoutingConfigApp() {
               {
                 title: keywordsHeader,
                 dataIndex: "keywords",
+                width: 160,
                 render: (_, row) => (
                   <Typography.Text>{formatKeywordsInput(row.keywords) || "-"}</Typography.Text>
                 ),
@@ -616,7 +624,7 @@ export function IntentRoutingConfigApp() {
               {
                 title: "nextNodes",
                 dataIndex: "nextNodes",
-                width: 260,
+                width: 200,
                 render: (_, row) => (
                   <Typography.Text>{row.nextNodes.join(", ") || "-"}</Typography.Text>
                 ),
@@ -634,6 +642,7 @@ export function IntentRoutingConfigApp() {
               {
                 title: "操作",
                 width: 132,
+                fixed: "right",
                 render: (_, row, idx) => (
                   <Space size={4}>
                     <Button type="link" onClick={() => openEditRouteModal(row)}>
@@ -702,6 +711,16 @@ export function IntentRoutingConfigApp() {
         okText="确认新增"
         cancelText="取消"
         destroyOnHidden
+        afterOpenChange={(open) => {
+          if (!open) return;
+          addRouteForm.setFieldsValue({
+            intentId: "",
+            enabled: true,
+            keywordsText: "",
+            nextNodes: ["model_request", "final_response"],
+            selectedKnowledgeBaseEntryIds: [],
+          });
+        }}
       >
         <Form
           form={addRouteForm}
@@ -750,6 +769,18 @@ export function IntentRoutingConfigApp() {
         okText="确认修改"
         cancelText="取消"
         destroyOnHidden
+        afterOpenChange={(open) => {
+          if (!open || !editingRouteKey) return;
+          const route = routesDraft.find((r) => r.key === editingRouteKey);
+          if (!route) return;
+          editRouteForm.setFieldsValue({
+            intentId: route.intentId,
+            enabled: route.enabled,
+            keywordsText: formatKeywordsInput(route.keywords),
+            nextNodes: route.nextNodes,
+            selectedKnowledgeBaseEntryIds: route.selectedKnowledgeBaseEntryIds,
+          });
+        }}
       >
         <Form form={editRouteForm} layout="vertical">
           <Form.Item

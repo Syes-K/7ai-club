@@ -1,8 +1,9 @@
-import { DEEPSEEK_DEFAULT_MODEL } from "./constants";
-import { fetchDeepseekSseStream, fetchZhipuSseStream } from "./providers";
+import { DEEPSEEK_DEFAULT_MODEL } from "@/lib/provider/constants";
+import { fetchChatUpstreamSseStream } from "@/lib/provider/providers";
 import { iterateOpenAIChatStream } from "./openai-stream";
 import { logChat } from "./logger";
-import type { ChatMessage, ChatProviderId } from "./types";
+import type { ChatMessage } from "./types";
+import type { ChatProviderId } from "@/lib/provider/types";
 
 function sseData(obj: unknown) {
   return `data: ${JSON.stringify(obj)}\n\n`;
@@ -39,10 +40,13 @@ export function createChatCompletionSseStream(params: {
 
       try {
         const fetchOpts = noLog ? { skipChatLog: true as const } : undefined;
-        const upstream =
-          provider === "zhipu"
-            ? await fetchZhipuSseStream(messages, model!, requestId, fetchOpts)
-            : await fetchDeepseekSseStream(messages, requestId, fetchOpts);
+        const upstream = await fetchChatUpstreamSseStream({
+          provider,
+          model,
+          messages,
+          requestId,
+          options: fetchOpts,
+        });
 
         let chunkCount = 0;
         let totalChars = 0;

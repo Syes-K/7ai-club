@@ -1,6 +1,6 @@
-import { DEEPSEEK_DEFAULT_MODEL } from "@/lib/chat/constants";
+import { DEEPSEEK_DEFAULT_MODEL } from "@/lib/provider/constants";
 import { getAppConfig } from "@/lib/config";
-import { fetchChatCompletionText } from "@/lib/chat/providers";
+import { fetchChatCompletionText } from "@/lib/provider/providers";
 import { searchKnowledgeEntries } from "@/lib/knowledge";
 import type {
   IntentRoute,
@@ -87,7 +87,6 @@ const intentRecognitionExecutor: NodeExecutor = async (ctx) => {
 
   try {
     const provider = ctx.config.chatRoute.provider;
-    const model = provider === "zhipu" ? ctx.config.chatRoute.model : undefined;
     const candidateIntents = enabledRoutes.map((route) => ({
       intentId: route.intentId,
       keywords: route.keywords,
@@ -107,7 +106,7 @@ const intentRecognitionExecutor: NodeExecutor = async (ctx) => {
 
     const raw = await fetchChatCompletionText({
       provider,
-      model,
+      model: ctx.config.chatRoute.model,
       messages: [{ role: "user", content: prompt }],
       requestId: `${ctx.requestId}:intent`,
     });
@@ -275,10 +274,9 @@ export function buildModelMessagesFromState(params: {
 
 const modelRequestExecutor: NodeExecutor = async (ctx) => {
   const provider = ctx.config.chatRoute.provider;
-  const model = provider === "zhipu" ? ctx.config.chatRoute.model : undefined;
   const text = await fetchChatCompletionText({
     provider,
-    model,
+    model: ctx.config.chatRoute.model,
     messages: buildModelMessages(ctx),
     requestId: ctx.requestId,
   });
@@ -287,7 +285,7 @@ const modelRequestExecutor: NodeExecutor = async (ctx) => {
     status: "success",
     meta: {
       provider,
-      model: model ?? DEEPSEEK_DEFAULT_MODEL,
+      model: ctx.config.chatRoute.model ?? DEEPSEEK_DEFAULT_MODEL,
       usedKnowledgeCount: ctx.state.retrievalHits.length,
     },
   };

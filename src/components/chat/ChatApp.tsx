@@ -2,8 +2,8 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { DEFAULT_CHAT_ROUTE } from "@/lib/chat/route-key";
-import { ZHIPU_MODEL_GROUPS } from "@/lib/chat/zhipu-models";
-import type { ChatProviderId } from "@/lib/chat/types";
+import { MODEL_GROUPS } from "@/lib/provider/models";
+import type { ChatProviderId } from "@/lib/provider/types";
 import {
   apiClearMessages,
   apiCreateSession,
@@ -14,9 +14,10 @@ import {
   type SessionListItem,
   type SessionMessageRow,
 } from "@/lib/chat/session-api-client";
-import { DEEPSEEK_DEFAULT_MODEL } from "@/lib/chat/constants";
+import { DEEPSEEK_DEFAULT_MODEL } from "@/lib/provider/constants";
 import { FALLBACK_DEFAULTS } from "@/lib/config/defaults";
 import { fetchPublicAppConfig } from "@/lib/config/public-config-client";
+import { normalizeChatRouteModel } from "@/lib/provider/route";
 import { SessionDockedSidebar, SessionDrawer } from "./SessionSidebar";
 
 type UserMsg = { id: string; role: "user"; content: string };
@@ -236,7 +237,7 @@ export function ChatApp() {
   const [provider, setProvider] = useState<ChatProviderId>(
     DEFAULT_CHAT_ROUTE.provider
   );
-  const [zhipuModel, setZhipuModel] = useState(
+  const [currentModelId, setCurrentModelId] = useState(
     DEFAULT_CHAT_ROUTE.model ?? "glm-4-flash"
   );
   const [appDisplayName, setAppDisplayName] = useState(
@@ -253,7 +254,7 @@ export function ChatApp() {
   const loadTokenRef = useRef(0);
 
   const modelSelectValue =
-    provider === "deepseek" ? "deepseek" : `zhipu:${zhipuModel}`;
+    provider === "deepseek" ? DEEPSEEK_DEFAULT_MODEL : currentModelId;
 
   const scrollToBottom = useCallback(() => {
     const el = listRef.current;
@@ -271,7 +272,7 @@ export function ChatApp() {
       const pub = await fetchPublicAppConfig();
       if (!pub) return;
       setProvider(pub.defaultProvider);
-      setZhipuModel(pub.defaultModel);
+      setCurrentModelId(pub.defaultModel);
       setAppDisplayName(pub.appDisplayName);
       if (typeof document !== "undefined") {
         document.title = pub.appDisplayName;
@@ -444,11 +445,12 @@ export function ChatApp() {
     setBusy(true);
     setMessages((prev) => [...prev, userMsg, asst]);
 
+    const normalizedModel = normalizeChatRouteModel(provider, currentModelId);
     const body: Record<string, unknown> = {
       sessionId: sid,
       content: text,
       provider,
-      ...(provider === "zhipu" ? { model: zhipuModel } : {}),
+      ...(normalizedModel ? { model: normalizedModel } : {}),
     };
     await postSessionSse(aid, body);
   }, [
@@ -456,7 +458,7 @@ export function ChatApp() {
     busy,
     activeSessionId,
     provider,
-    zhipuModel,
+    currentModelId,
     postSessionSse,
   ]);
 
@@ -474,11 +476,12 @@ export function ChatApp() {
       )
     );
 
+    const normalizedModel = normalizeChatRouteModel(provider, currentModelId);
     const body: Record<string, unknown> = {
       sessionId: activeSessionId,
       retryLast: true,
       provider,
-      ...(provider === "zhipu" ? { model: zhipuModel } : {}),
+      ...(normalizedModel ? { model: normalizedModel } : {}),
     };
     await postSessionSse(last.id, body);
   }, [
@@ -486,7 +489,7 @@ export function ChatApp() {
     activeSessionId,
     messages,
     provider,
-    zhipuModel,
+    currentModelId,
     postSessionSse,
   ]);
 
@@ -555,11 +558,11 @@ export function ChatApp() {
   };
 
   const onModelChange = (value: string) => {
-    if (value === "deepseek") {
+    if (value === DEEPSEEK_DEFAULT_MODEL) {
       setProvider("deepseek");
-    } else if (value.startsWith("zhipu:")) {
+    } else {
       setProvider("zhipu");
-      setZhipuModel(value.slice(6));
+      setCurrentModelId(value);
     }
   };
 
@@ -622,15 +625,10 @@ export function ChatApp() {
                 onChange={(e) => onModelChange(e.target.value)}
                 className="min-w-0 flex-1 rounded-lg border border-zinc-300 bg-white px-2 py-1.5 text-sm outline-none ring-violet-500 focus-visible:ring-2 disabled:opacity-40 dark:border-zinc-600 dark:bg-zinc-950"
               >
-                <optgroup label="DeepSeek">
-                  <option value="deepseek">
-                    DeepSeek Chat（{DEEPSEEK_DEFAULT_MODEL}）
-                  </option>
-                </optgroup>
-                {ZHIPU_MODEL_GROUPS.map((g) => (
-                  <optgroup key={g.label} label={`智谱 · ${g.label}`}>
+                {MODEL_GROUPS.map((g) => (
+                  <optgroup key={g.label} label={g.label}>
                     {g.models.map((opt) => (
-                      <option key={opt.id} value={`zhipu:${opt.id}`}>
+                      <option key={opt.id} value={opt.id}>
                         {opt.label} — {opt.hint}
                       </option>
                     ))}

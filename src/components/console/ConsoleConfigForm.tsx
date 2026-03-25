@@ -1,8 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { ZHIPU_MODEL_GROUPS } from "@/lib/chat/zhipu-models";
-import type { ChatProviderId } from "@/lib/chat/types";
+import { MODEL_GROUPS } from "@/lib/provider/models";
+import type { ChatProviderId } from "@/lib/provider/types";
 import type { AppConfig } from "@/lib/config/defaults";
 import { FALLBACK_DEFAULTS } from "@/lib/config/defaults";
 import { Tooltip } from "antd";
@@ -360,7 +360,7 @@ export function ConsoleConfigForm({
               }
               className="w-full rounded-xl border border-zinc-300 bg-white px-3 py-2 text-sm dark:border-zinc-600 dark:bg-zinc-950"
             >
-              {ZHIPU_MODEL_GROUPS.map((g) => (
+              {MODEL_GROUPS.map((g) => (
                 <optgroup key={g.label} label={`智谱 · ${g.label}`}>
                   {g.models.map((opt) => (
                     <option key={opt.id} value={opt.id}>

@@ -1,4 +1,4 @@
-import type { ChatProviderId } from "@/lib/chat/types";
+import type { ChatProviderId } from "@/lib/provider/types";
 
 export type IntentRoutingNodeType =
   | "intent_recognition"

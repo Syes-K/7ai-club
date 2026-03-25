@@ -7,35 +7,24 @@ import {
 import { parseAndValidateChatBody } from "@/lib/chat/validate-request";
 import { logChat } from "@/lib/chat/logger";
 import { getChatStore } from "@/lib/chat/store";
-import { DEEPSEEK_DEFAULT_MODEL } from "@/lib/chat/constants";
+import { DEEPSEEK_DEFAULT_MODEL } from "@/lib/provider/constants";
+import { buildChatRouteConfig } from "@/lib/provider/route";
 import { getAppConfig } from "@/lib/config";
 import {
   executeIntentRoutingStream,
   getIntentRoutingConfig,
 } from "@/lib/intent-routing";
-import type { ChatProviderId } from "@/lib/chat/types";
+import type { ChatProviderId } from "@/lib/provider/types";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-function mergeRoutingModelConfig(
-  provider: ChatProviderId,
-  model: string | undefined
-) {
+function mergeRoutingModelConfig(provider: ChatProviderId, model: string | undefined) {
   const routingConfig = getIntentRoutingConfig();
-  if (provider === "zhipu") {
-    return {
-      ...routingConfig,
-      chatRoute: {
-        provider,
-        ...(model ? { model } : {}),
-      },
-    };
-  }
   return {
     ...routingConfig,
     chatRoute: {
-      provider,
+      ...buildChatRouteConfig(provider, model),
     },
   };
 }

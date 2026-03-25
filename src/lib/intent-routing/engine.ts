@@ -1,9 +1,8 @@
-import { DEEPSEEK_DEFAULT_MODEL } from "@/lib/chat/constants";
+import { DEEPSEEK_DEFAULT_MODEL } from "@/lib/provider/constants";
 import { logChat } from "@/lib/chat/logger";
 import {
-  fetchDeepseekSseStream,
-  fetchZhipuSseStream,
-} from "@/lib/chat/providers";
+  fetchChatUpstreamSseStream,
+} from "@/lib/provider/providers";
 import { iterateOpenAIChatStream } from "@/lib/chat/openai-stream";
 import {
   buildModelMessagesFromState,
@@ -252,15 +251,17 @@ export async function executeIntentRoutingStream(params: {
           state: buildNodeStateSnapshot(state),
         });
         const provider = ctx.config.chatRoute.provider;
-        const model = provider === "zhipu" ? ctx.config.chatRoute.model : undefined;
+        const model = ctx.config.chatRoute.model;
         const messages = buildModelMessagesFromState({
           query: state.query,
           retrievalHits: state.retrievalHits,
         });
-        const upstream =
-          provider === "zhipu"
-            ? await fetchZhipuSseStream(messages, model!, requestId)
-            : await fetchDeepseekSseStream(messages, requestId);
+        const upstream = await fetchChatUpstreamSseStream({
+          provider,
+          model,
+          messages,
+          requestId,
+        });
 
         let fullText = "";
         for await (const text of iterateOpenAIChatStream(upstream)) {

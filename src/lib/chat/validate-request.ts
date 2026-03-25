@@ -1,6 +1,6 @@
 import { getAppConfig } from "@/lib/config";
-import { ZHIPU_MODEL_IDS } from "./zhipu-models";
-import type { ChatMessage, ChatProviderId } from "./types";
+import type { ChatMessage } from "@/lib/chat/types";
+import type { ChatProviderId } from "@/lib/provider/types";
 
 export type ChatApiBody =
   | {
@@ -23,18 +23,11 @@ function isChatRole(r: string): r is ChatMessage["role"] {
   return r === "user" || r === "assistant" || r === "system";
 }
 
-function validateZhipuModel(
-  raw: Record<string, unknown>
-): { ok: true; model: string } | { ok: false; error: string } {
+function resolveZhipuModel(raw: Record<string, unknown>): string {
   const cfg = getAppConfig();
-  const model =
-    typeof raw.model === "string" && raw.model.length > 0
-      ? raw.model
-      : cfg.defaultModel;
-  if (!ZHIPU_MODEL_IDS.includes(model)) {
-    return { ok: false, error: `不支持的智谱模型: ${model}` };
-  }
-  return { ok: true, model };
+  return typeof raw.model === "string" && raw.model.trim()
+    ? raw.model.trim()
+    : cfg.defaultModel;
 }
 
 export function parseAndValidateChatBody(
@@ -73,15 +66,14 @@ export function parseAndValidateChatBody(
     }
 
     if (provider === "zhipu") {
-      const m = validateZhipuModel(o);
-      if (!m.ok) return m;
+      const model = resolveZhipuModel(o);
       return {
         ok: true,
         data: {
           variant: "session",
           sessionId,
           provider: "zhipu",
-          model: m.model,
+          model,
           retryLast,
           content: retryLast ? undefined : contentRaw,
         },
@@ -125,15 +117,14 @@ export function parseAndValidateChatBody(
   const sliced = messages.slice(-getAppConfig().maxMessagesInContext);
 
   if (provider === "zhipu") {
-    const m = validateZhipuModel(o);
-    if (!m.ok) return m;
+    const model = resolveZhipuModel(o);
     return {
       ok: true,
       data: {
         variant: "legacy",
         messages: sliced,
         provider: "zhipu",
-        model: m.model,
+        model,
       },
     };
   }
@@ -143,3 +134,4 @@ export function parseAndValidateChatBody(
     data: { variant: "legacy", messages: sliced, provider: "deepseek" },
   };
 }
+

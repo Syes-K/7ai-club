@@ -46,12 +46,14 @@ type OpenAIEmbeddingResponse = {
   error?: { message?: string };
 };
 
-/** 单批调用；返回与输入顺序一致的归一化向量。 */
-export async function embedTexts(
+/** 与上游 API 单次 `input` 条数上限对齐（ embedding 要求 ≤10），见 pipeline 与 embedTexts 分批。 */
+export const EMBED_BATCH_MAX = 10;
+
+/** 智谱等兼容接口常见限制：单次 input 条数不超过 10。 */
+async function embedTextsSingleBatch(
   texts: string[],
   config: EmbeddingConfig
 ): Promise<number[][]> {
-  if (texts.length === 0) return [];
   const url = `${config.baseUrl}/embeddings`;
   const res = await fetch(url, {
     method: "POST",
@@ -87,5 +89,17 @@ export async function embedTexts(
   return sorted.map((d) => l2Normalize(d.embedding));
 }
 
-/** 与上游 API 单次 `input` 数组长度上限对齐，见 pipeline 分批循环。 */
-export const EMBED_BATCH_MAX = 20;
+/** 单批调用；返回与输入顺序一致的归一化向量。内部按 EMBED_BATCH_MAX 自动分批。 */
+export async function embedTexts(
+  texts: string[],
+  config: EmbeddingConfig
+): Promise<number[][]> {
+  if (texts.length === 0) return [];
+  const out: number[][] = [];
+  for (let i = 0; i < texts.length; i += EMBED_BATCH_MAX) {
+    const batch = texts.slice(i, i + EMBED_BATCH_MAX);
+    const part = await embedTextsSingleBatch(batch, config);
+    out.push(...part);
+  }
+  return out;
+}
