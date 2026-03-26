@@ -412,7 +412,7 @@ export function ConsoleConfigForm({
                 <input
                   id="embedding-api-base-url"
                   type="url"
-                  placeholder="https://api.openai.com/v1"
+                  placeholder="https://dashscope.aliyuncs.com/compatible-mode/v1"
                   value={cfg.embeddingApiBaseUrl ?? ""}
                   onChange={(e) => {
                     const v = e.target.value;
@@ -437,7 +437,7 @@ export function ConsoleConfigForm({
                 <input
                   id="embedding-model"
                   type="text"
-                  placeholder="text-embedding-3-small"
+                  placeholder="text-embedding-v3"
                   value={cfg.embeddingModel ?? ""}
                   onChange={(e) => {
                     const v = e.target.value;

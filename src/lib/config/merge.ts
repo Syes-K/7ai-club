@@ -21,8 +21,8 @@ export function mergeAppConfigPartial(partial: unknown): AppConfig {
   }
 
   let defaultProvider = d.defaultProvider;
-  if (o.defaultProvider === "zhipu" || o.defaultProvider === "deepseek") {
-    defaultProvider = o.defaultProvider;
+  if (typeof o.defaultProvider === "string" && o.defaultProvider.trim()) {
+    defaultProvider = o.defaultProvider.trim();
   }
 
   let defaultModel = d.defaultModel;

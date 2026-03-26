@@ -25,10 +25,10 @@ export function validateAppConfigForSave(
   }
 
   const p = o.defaultProvider;
-  if (p !== "zhipu" && p !== "deepseek") {
-    return { ok: false, error: "defaultProvider 须为 zhipu 或 deepseek" };
+  if (typeof p !== "string" || !p.trim()) {
+    return { ok: false, error: "defaultProvider 须为非空字符串" };
   }
-  const defaultProvider = p as ChatProviderId;
+  const defaultProvider = p.trim() as ChatProviderId;
 
   const dm = o.defaultModel;
   if (typeof dm !== "string" || !dm.trim()) {

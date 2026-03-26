@@ -30,6 +30,12 @@ function resolveZhipuModel(raw: Record<string, unknown>): string {
     : cfg.defaultModel;
 }
 
+function explicitModelFromBody(raw: Record<string, unknown>): string | undefined {
+  return typeof raw.model === "string" && raw.model.trim()
+    ? raw.model.trim()
+    : undefined;
+}
+
 export function parseAndValidateChatBody(
   raw: unknown
 ): { ok: true; data: ChatApiBody } | { ok: false; error: string } {
@@ -38,9 +44,10 @@ export function parseAndValidateChatBody(
   }
   const o = raw as Record<string, unknown>;
   const provider = o.provider;
-  if (provider !== "zhipu" && provider !== "deepseek") {
-    return { ok: false, error: "provider 须为 zhipu 或 deepseek" };
+  if (typeof provider !== "string" || !provider.trim()) {
+    return { ok: false, error: "provider 须为非空字符串" };
   }
+  const pv = provider.trim();
 
   const sessionIdRaw = o.sessionId;
   const hasSessionId =
@@ -65,14 +72,14 @@ export function parseAndValidateChatBody(
       };
     }
 
-    if (provider === "zhipu") {
+    if (pv === "zhipu") {
       const model = resolveZhipuModel(o);
       return {
         ok: true,
         data: {
           variant: "session",
           sessionId,
-          provider: "zhipu",
+          provider: pv,
           model,
           retryLast,
           content: retryLast ? undefined : contentRaw,
@@ -80,12 +87,33 @@ export function parseAndValidateChatBody(
       };
     }
 
+    if (pv === "deepseek") {
+      return {
+        ok: true,
+        data: {
+          variant: "session",
+          sessionId,
+          provider: pv,
+          retryLast,
+          content: retryLast ? undefined : contentRaw,
+        },
+      };
+    }
+
+    const modelOther = explicitModelFromBody(o);
+    if (!modelOther) {
+      return {
+        ok: false,
+        error: "非 zhipu/deepseek 的 provider 须在请求体提供非空 model",
+      };
+    }
     return {
       ok: true,
       data: {
         variant: "session",
         sessionId,
-        provider: "deepseek",
+        provider: pv,
+        model: modelOther,
         retryLast,
         content: retryLast ? undefined : contentRaw,
       },
@@ -116,22 +144,41 @@ export function parseAndValidateChatBody(
 
   const sliced = messages.slice(-getAppConfig().maxMessagesInContext);
 
-  if (provider === "zhipu") {
+  if (pv === "zhipu") {
     const model = resolveZhipuModel(o);
     return {
       ok: true,
       data: {
         variant: "legacy",
         messages: sliced,
-        provider: "zhipu",
+        provider: pv,
         model,
       },
     };
   }
 
+  if (pv === "deepseek") {
+    return {
+      ok: true,
+      data: { variant: "legacy", messages: sliced, provider: pv },
+    };
+  }
+
+  const modelLegacy = explicitModelFromBody(o);
+  if (!modelLegacy) {
+    return {
+      ok: false,
+      error: "非 zhipu/deepseek 的 provider 须在请求体提供非空 model",
+    };
+  }
   return {
     ok: true,
-    data: { variant: "legacy", messages: sliced, provider: "deepseek" },
+    data: {
+      variant: "legacy",
+      messages: sliced,
+      provider: pv,
+      model: modelLegacy,
+    },
   };
 }
 

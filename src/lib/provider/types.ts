@@ -1,10 +1,10 @@
-export type ChatProviderId = "zhipu" | "deepseek";
+/** 上游厂商标识，不做枚举约束，由配置与 model 解析共同决定行为 */
+export type ChatProviderId = string;
 
 export type ChatRoute = {
   provider: ChatProviderId;
   /**
-   * 智谱（zhipu）必填具体 model；
-   * DeepSeek 使用服务端默认时可省略。
+   * 具体 model id（按厂商规则：如 zhipu 通常必填；deepseek 可走默认时可省略）。
    */
   model?: string;
 };

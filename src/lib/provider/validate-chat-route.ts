@@ -18,15 +18,18 @@ export function validateChatRouteProviderAndModel(input: {
   const fieldErrors: ChatRouteProviderValidationError[] = [];
   const providerRaw = input.provider;
 
-  if (providerRaw !== "zhipu" && providerRaw !== "deepseek") {
+  if (typeof providerRaw !== "string" || !providerRaw.trim()) {
     fieldErrors.push({
       field: "chatRoute.provider",
       code: "CFG_ROUTE_BROKEN",
-      message: "chatRoute.provider 须为 zhipu 或 deepseek",
+      message: "chatRoute.provider 须为非空字符串",
     });
   }
 
-  const provider = (providerRaw as ChatProviderId | null) ?? null;
+  const provider =
+    typeof providerRaw === "string" && providerRaw.trim()
+      ? (providerRaw.trim() as ChatProviderId)
+      : null;
   const modelRaw = input.model;
   const model =
     typeof modelRaw === "string" && modelRaw.trim() ? modelRaw.trim() : undefined;

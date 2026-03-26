@@ -14,7 +14,7 @@ function toOpenAIMessages(messages: ChatMessage[]) {
 type ProviderLogContext = {
   requestId: string;
   messageCount: number;
-  provider: "zhipu" | "deepseek";
+  provider: string;
   model: string;
   messages: { role: ChatMessage["role"]; content: string }[];
 };

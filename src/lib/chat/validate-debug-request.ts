@@ -26,8 +26,8 @@ export function parseAndValidateDebugChatBody(
     typeof o.model === "string" && o.model.trim() ? o.model.trim() : undefined;
 
   let provider: ChatProviderId | undefined;
-  if (providerRaw === "zhipu" || providerRaw === "deepseek") {
-    provider = providerRaw;
+  if (typeof providerRaw === "string" && providerRaw.trim()) {
+    provider = providerRaw.trim();
   } else if (modelRaw) {
     // 不传 provider 时：根据 model id 推导提供商
     provider = modelRaw === DEEPSEEK_DEFAULT_MODEL ? "deepseek" : "zhipu";
@@ -66,10 +66,23 @@ export function parseAndValidateDebugChatBody(
       modelRaw ?? cfg.defaultModel;
     return {
       ok: true,
-      data: { messages: sliced, provider: "zhipu", model },
+      data: { messages: sliced, provider, model },
     };
   }
 
-  return { ok: true, data: { messages: sliced, provider: "deepseek" } };
+  if (provider === "deepseek") {
+    return { ok: true, data: { messages: sliced, provider } };
+  }
+
+  if (!modelRaw) {
+    return {
+      ok: false,
+      error: "非 zhipu/deepseek 的 provider 须提供非空 model",
+    };
+  }
+  return {
+    ok: true,
+    data: { messages: sliced, provider, model: modelRaw },
+  };
 }
 
