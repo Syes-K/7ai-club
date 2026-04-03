@@ -122,8 +122,8 @@ pm2 startup          # 按提示配置开机自启（可选）
 阿里云「部署脚本」示例：
 
 ```bash
-tar zxvf /home/admin/app/package.tgz -C /home/admin/app/
-sh /home/admin/app/deploy.sh restart
+tar zxvf /home/admin/app/package.tgz -C /home/admin/app/7ai-web
+sh /home/admin/app/7ai-web/deploy.sh restart
 ```
 
 常用环境变量：

@@ -9,7 +9,7 @@
 # 可选环境变量：
 #   PORT       监听端口，默认 8080
 #   NODE_ENV   默认 production
-#   PM2_NAME   PM2 应用名，默认 home-next
+#   PM2_NAME   PM2 应用名，默认 7ai-web
 
 set -euo pipefail
 
@@ -18,7 +18,7 @@ cd "$ROOT"
 
 export NODE_ENV="${NODE_ENV:-production}"
 export PORT="${PORT:-8080}"
-PM2_NAME="${PM2_NAME:-home-next}"
+PM2_NAME="${PM2_NAME:-7ai-web}"
 
 require_node() {
   if ! command -v node >/dev/null 2>&1 || ! command -v npm >/dev/null 2>&1; then
