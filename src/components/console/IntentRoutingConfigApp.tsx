@@ -170,7 +170,7 @@ export function IntentRoutingConfigApp() {
   }>();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [validating, setValidating] = useState(false);
+  const [, setValidating] = useState(false);
   const [executing, setExecuting] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [warning, setWarning] = useState<string | null>(null);

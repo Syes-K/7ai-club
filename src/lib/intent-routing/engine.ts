@@ -350,6 +350,5 @@ export async function executeIntentRoutingStream(params: {
     },
   });
 
-  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-  return { stream, done: done! };
+  return { stream, done };
 }

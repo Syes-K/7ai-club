@@ -10,7 +10,18 @@ import {
 import { PageContainer, ProLayout } from "@ant-design/pro-components";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { useMemo, useSyncExternalStore, type ReactNode } from "react";
+
+/** ProLayout 依赖客户端 breakpoint；SSR 为 false，hydrate 后为 true，避免 effect 内同步 setState。 */
+function useIsClient() {
+  return useSyncExternalStore(
+    () => () => {
+      /* no store */
+    },
+    () => true,
+    () => false
+  );
+}
 
 const PAGE_TITLE: Record<string, string> = {
   "/console": "应用配置",
@@ -27,10 +38,7 @@ export function ConsoleProShell({
 }) {
   const pathname = usePathname() ?? "";
   /** ProLayout 用 useBreakpoint 生成 `screen-*` 等 class，SSR 与首屏客户端不一致会 hydration mismatch */
-  const [layoutReady, setLayoutReady] = useState(false);
-  useEffect(() => {
-    setLayoutReady(true);
-  }, []);
+  const layoutReady = useIsClient();
 
   const route = useMemo(
     () => ({

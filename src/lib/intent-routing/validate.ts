@@ -1,4 +1,3 @@
-import { MODEL_IDS } from "@/lib/provider/models";
 import { INTENT_ROUTING_DEFAULTS } from "./defaults";
 import { validateChatRouteProviderAndModel } from "@/lib/provider/validate-chat-route";
 import type {

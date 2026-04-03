@@ -4,7 +4,7 @@ export abstract class BaseNode {
 
     abstract start(): Promise<Record<string, unknown>>;
 
-    abstract run(): Promise<any>;
+    abstract run(): Promise<Record<string, unknown>>;
 
     abstract end(): Promise<void>;
 }
