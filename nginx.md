@@ -160,6 +160,27 @@ curl -Ik https://127.0.0.1
 | `systemctl reload nginx` → **not active** | 服务未运行 | `systemctl start nginx` |
 | 外网域名打不开，本机 `curl 127.0.0.1` 正常 | 安全组未放行 80/443，或 DNS 未指到本机公网 IP | 查安全组与解析 |
 | 502 Bad Gateway | 后端 Next 未启动或端口与 `proxy_pass` 不一致 | 检查 PM2、`PORT`、`proxy_pass` |
+| `.logs/common-error.*.log` 出现 **`Module did not self-register`**（`better_sqlite3.node`） | **原生模块与当前系统/Node 不一致**：例如在 macOS/Windows 上装好 `node_modules` 再整包拷到 Linux，或 ECS 上 Node 版本与编译时不一致 | 见下文 **6.1** |
+
+### 6.1 `better-sqlite3`：`Module did not self-register`
+
+本项目会话/聊天库使用 **`better-sqlite3`**（C++ 原生扩展）。`.node` 文件必须与 **运行时的操作系统、CPU 架构、Node 主版本（ABI）** 一致，否则会报上述错误，接口如 `/api/chat/sessions` 会失败。
+
+**推荐做法（在阿里云 ECS 本机为 Linux 时）：**
+
+1. **不要在本地 Mac/Windows 打好 `node_modules` 再上传到 Linux**；应在服务器上安装依赖，或在 CI 用 **linux + 与线上一致的 Node 版本** 构建制品。
+2. 已上传错误制品时，在应用目录执行（与线上一致的 Node）：
+
+```bash
+cd /home/admin/app/7ai-web   # 按实际路径
+node -v                      # 记下主版本，与构建/开发约定一致
+rm -rf node_modules/better-sqlite3
+npm install                  # 或 npm ci
+# 若仍异常：
+npm rebuild better-sqlite3
+```
+
+3. 重新执行 **`npm run build`**（若构建也在本机完成），再 **`deploy.sh restart`**。
 
 ---
 

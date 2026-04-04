@@ -9,8 +9,8 @@ export function PunkLanding() {
         className="punk-glitch-bg-sync pointer-events-none absolute inset-0 z-0 opacity-[0.4]"
         style={{
           backgroundImage: `
-            linear-gradient(rgba(34, 211, 238, 0.06) 1px, transparent 1px),
-            linear-gradient(90deg, rgba(232, 121, 249, 0.05) 1px, transparent 1px)
+            linear-gradient(rgba(34, 211, 238, 0.03) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(232, 121, 249, 0.025) 1px, transparent 1px)
           `,
           backgroundSize: "56px 56px",
         }}
