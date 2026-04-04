@@ -42,7 +42,7 @@ export function ConsoleProShell({
 
   const route = useMemo(
     () => ({
-      path: "/",
+      path: "/chat",
       routes: [
         {
           path: "/console",
@@ -100,7 +100,7 @@ export function ConsoleProShell({
         actionsRender={() => [
           <Link
             key="back-chat"
-            href="/"
+            href="/chat"
             className="text-sm font-medium text-violet-600 hover:underline dark:text-violet-400"
           >
             返回对话
