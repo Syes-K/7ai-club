@@ -551,10 +551,11 @@ export function ChatApp() {
   );
 
   const onKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) {
-      e.preventDefault();
-      void send();
-    }
+    if (e.key !== "Enter") return;
+    if (e.nativeEvent.isComposing) return;
+    if (e.shiftKey) return;
+    e.preventDefault();
+    void send();
   };
 
   const onModelChange = (value: string) => {
@@ -672,8 +673,8 @@ export function ChatApp() {
                   开始对话
                 </p>
                 <p className="mt-2 max-w-sm text-sm text-zinc-500 dark:text-zinc-400">
-                  在顶栏选择模型后向当前会话发送消息；支持多轮追问与历史会话切换。快捷键：⌘/Ctrl
-                  + Enter 发送，Enter 换行。
+                  在顶栏选择模型后向当前会话发送消息；支持多轮追问与历史会话切换。快捷键：Enter
+                  发送，Shift+Enter 换行。
                 </p>
               </div>
             </div>
@@ -760,7 +761,7 @@ export function ChatApp() {
               onKeyDown={onKeyDown}
               disabled={busy || !ready}
               rows={3}
-              placeholder="输入问题…（⌘/Ctrl + Enter 发送）"
+              placeholder="输入问题…（Enter 发送，Shift+Enter 换行）"
               className="min-h-[5rem] w-full resize-y rounded-xl border border-zinc-300 bg-zinc-50 px-3 py-2 pb-12 pr-[5.5rem] text-sm outline-none ring-violet-500 focus:ring-2 disabled:opacity-60 dark:border-zinc-600 dark:bg-zinc-950"
               aria-label="消息输入"
             />
