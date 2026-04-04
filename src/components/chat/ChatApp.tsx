@@ -18,6 +18,7 @@ import { DEEPSEEK_DEFAULT_MODEL } from "@/lib/provider/constants";
 import { FALLBACK_DEFAULTS } from "@/lib/config/defaults";
 import { fetchPublicAppConfig } from "@/lib/config/public-config-client";
 import { normalizeChatRouteModel } from "@/lib/provider/route";
+import { randomUUID } from "@/lib/random-uuid";
 import { SessionDockedSidebar, SessionDrawer } from "./SessionSidebar";
 
 type UserMsg = { id: string; role: "user"; content: string };
@@ -431,8 +432,8 @@ export function ChatApp() {
     const sid = activeSessionId;
     if (!text || busy || !sid) return;
 
-    const aid = crypto.randomUUID();
-    const uid = crypto.randomUUID();
+    const aid = randomUUID();
+    const uid = randomUUID();
     const userMsg: UserMsg = { id: uid, role: "user", content: text };
     const asst: AssistantMsg = {
       id: aid,

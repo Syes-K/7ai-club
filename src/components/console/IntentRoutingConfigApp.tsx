@@ -29,6 +29,7 @@ import {
   Typography,
 } from "antd";
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { randomUUID } from "@/lib/random-uuid";
 
 type ConfigGetResponse = {
   config?: IntentRoutingConfig;
@@ -251,7 +252,7 @@ export function IntentRoutingConfigApp() {
       setWarning(configJson.warning ?? null);
       setRoutesDraft(
         (config.routes ?? []).map((r) => ({
-          key: r.intentId || crypto.randomUUID(),
+          key: r.intentId || randomUUID(),
           intentId: r.intentId,
           enabled: r.enabled,
           keywords: Array.isArray(r.keywords) ? r.keywords : [],
@@ -312,7 +313,7 @@ export function IntentRoutingConfigApp() {
       setRoutesDraft((prev) => [
         ...prev,
         {
-          key: crypto.randomUUID(),
+          key: randomUUID(),
           intentId,
           enabled: values.enabled !== false,
           keywords,
