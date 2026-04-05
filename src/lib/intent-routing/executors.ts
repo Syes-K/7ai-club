@@ -1,4 +1,5 @@
 import { DEEPSEEK_DEFAULT_MODEL } from "@/lib/provider/constants";
+import type { ChatMessage } from "@/lib/chat/types";
 import { getAppConfig } from "@/lib/config";
 import { fetchChatCompletionText } from "@/lib/provider/providers";
 import { searchKnowledgeEntries } from "@/lib/knowledge";
@@ -22,6 +23,13 @@ export type RuntimeState = {
   }>;
   fallbackReason?: "empty_retrieval" | "retrieval_error" | "intent_not_hit";
   modelAnswer?: string;
+  /** 会话助手提示词快照；非空时置于模型 messages 最前一条 system */
+  assistantSystemPrompt?: string | null;
+  /**
+   * 多轮上下文：与 `POST /api/chat` 中 `buildMessagesWithContextSummary` 一致
+   *（尾窗 K 条 + 可选摘要 system），末条须为当前轮 user。
+   */
+  contextMessages?: ChatMessage[] | null;
 };
 
 export type NodeExecutionContext = {
@@ -49,6 +57,7 @@ function clamp01(v: number): number {
 
 const intentRecognitionExecutor: NodeExecutor = async (ctx) => {
   const appCfg = getAppConfig();
+  // 强制意图命中阈值，若命中则直接返回成功。
   const confidenceThreshold = appCfg.intentConfidenceThreshold;
   if (ctx.state.forcedIntentId) {
     const forcedRoute = ctx.config.routes.find(
@@ -181,14 +190,14 @@ const knowledgeSearchExecutor: NodeExecutor = async (ctx) => {
       knowledgeSearchNode?.input?.selectedKnowledgeBaseEntryIdsByIntent;
     const routeEntryIdsRaw =
       entryIdsByIntentRaw &&
-      typeof entryIdsByIntentRaw === "object" &&
-      !Array.isArray(entryIdsByIntentRaw)
+        typeof entryIdsByIntentRaw === "object" &&
+        !Array.isArray(entryIdsByIntentRaw)
         ? (entryIdsByIntentRaw as Record<string, unknown>)[route.intentId]
         : [];
     const configuredEntryIds = Array.isArray(routeEntryIdsRaw)
       ? routeEntryIdsRaw.filter(
-          (v): v is string => typeof v === "string" && v.trim().length > 0
-        )
+        (v): v is string => typeof v === "string" && v.trim().length > 0
+      )
       : [];
 
     const hits = await searchKnowledgeEntries(
@@ -236,12 +245,24 @@ const knowledgeSearchExecutor: NodeExecutor = async (ctx) => {
   }
 };
 
-function buildModelMessages(ctx: NodeExecutionContext): Array<{
-  role: "system" | "user";
-  content: string;
-}> {
+const KNOWLEDGE_AUGMENT_SYSTEM = `你是知识增强问答助手。优先基于给定知识片段回答；若片段不足可明确说明并给出稳妥结论。`;
+
+function prependAssistantSystemChat(
+  messages: ChatMessage[],
+  prompt: string | undefined | null
+): ChatMessage[] {
+  const t = prompt?.trim();
+  if (!t) return messages;
+  return [{ role: "system", content: t }, ...messages];
+}
+
+function buildSingleTurnMessages(ctx: NodeExecutionContext): ChatMessage[] {
+  const ap = ctx.state.assistantSystemPrompt;
   if (ctx.state.retrievalHits.length === 0) {
-    return [{ role: "user", content: ctx.state.query }];
+    return prependAssistantSystemChat(
+      [{ role: "user", content: ctx.state.query }],
+      ap
+    );
   }
   const knowledge = ctx.state.retrievalHits
     .map(
@@ -249,25 +270,72 @@ function buildModelMessages(ctx: NodeExecutionContext): Array<{
         `[${idx + 1}] kb_entry_id=${h.kbEntryId}; score=${h.score.toFixed(4)}\n${h.content}`
     )
     .join("\n\n");
-  return [
-    {
-      role: "system",
-      content:
-        "你是知识增强问答助手。优先基于给定知识片段回答；若片段不足可明确说明并给出稳妥结论。",
-    },
-    {
-      role: "user",
-      content: `用户问题：${ctx.state.query}\n\n可用知识片段：\n${knowledge}`,
-    },
-  ];
+  return prependAssistantSystemChat(
+    [
+      { role: "system", content: KNOWLEDGE_AUGMENT_SYSTEM },
+      {
+        role: "user",
+        content: `用户问题：${ctx.state.query}\n\n可用知识片段：\n${knowledge}`,
+      },
+    ],
+    ap
+  );
+}
+
+function buildModelMessages(ctx: NodeExecutionContext): ChatMessage[] {
+  const ap = ctx.state.assistantSystemPrompt;
+  const ctxMsgs = ctx.state.contextMessages;
+
+  if (ctxMsgs && ctxMsgs.length > 0) {
+    const msgs = [...ctxMsgs];
+    const last = msgs[msgs.length - 1];
+    if (last.role !== "user") {
+      return buildSingleTurnMessages(ctx);
+    }
+    if (ctx.state.retrievalHits.length === 0) {
+      return prependAssistantSystemChat(msgs, ap);
+    }
+    const knowledge = ctx.state.retrievalHits
+      .map(
+        (h, idx) =>
+          `[${idx + 1}] kb_entry_id=${h.kbEntryId}; score=${h.score.toFixed(4)}\n${h.content}`
+      )
+      .join("\n\n");
+    const prefix = msgs.slice(0, -1);
+    const q = last.content;
+    return prependAssistantSystemChat(
+      [
+        ...prefix,
+        { role: "system", content: KNOWLEDGE_AUGMENT_SYSTEM },
+        {
+          role: "user",
+          content: `用户问题：${q}\n\n可用知识片段：\n${knowledge}`,
+        },
+      ],
+      ap
+    );
+  }
+
+  return buildSingleTurnMessages(ctx);
 }
 
 export function buildModelMessagesFromState(params: {
   query: string;
   retrievalHits: IntentRoutingRetrievalHit[];
-}): Array<{ role: "system" | "user"; content: string }> {
+  assistantSystemPrompt?: string | null;
+  /** 多轮：与 chat 路由中 `buildMessagesWithContextSummary` 输出一致 */
+  contextMessages?: ChatMessage[] | null;
+}): ChatMessage[] {
   const fakeCtx = {
-    state: { query: params.query, retrievalHits: params.retrievalHits },
+    state: {
+      query: params.query,
+      retrievalHits: params.retrievalHits,
+      assistantSystemPrompt: params.assistantSystemPrompt,
+      contextMessages:
+        params.contextMessages && params.contextMessages.length > 0
+          ? params.contextMessages
+          : undefined,
+    },
   } as NodeExecutionContext;
   return buildModelMessages(fakeCtx);
 }

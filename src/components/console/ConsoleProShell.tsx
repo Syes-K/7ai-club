@@ -5,6 +5,7 @@ import {
   CommentOutlined,
   FileSearchOutlined,
   NodeIndexOutlined,
+  RobotOutlined,
   SettingOutlined,
 } from "@ant-design/icons";
 import { PageContainer, ProLayout } from "@ant-design/pro-components";
@@ -28,6 +29,8 @@ const PAGE_TITLE: Record<string, string> = {
   "/console/prompts": "提示词管理",
   "/console/logs": "日志",
   "/console/knowledge": "知识库",
+  "/console/assistants": "助手",
+  "/console/assistants/new": "新建助手",
   "/console/intent-routing/config": "意图配置",
 };
 
@@ -60,6 +63,11 @@ export function ConsoleProShell({
           icon: <BookOutlined />,
         },
         {
+          path: "/console/assistants",
+          name: "助手",
+          icon: <RobotOutlined />,
+        },
+        {
           path: "/console/intent-routing/config",
           name: "意图配置",
           icon: <NodeIndexOutlined />,
@@ -74,10 +82,22 @@ export function ConsoleProShell({
     []
   );
 
-  const pageTitle =
-    pathname.startsWith("/console/knowledge/") && pathname !== "/console/knowledge"
-      ? "知识库详情"
-      : (PAGE_TITLE[pathname] ?? "");
+  const pageTitle = (() => {
+    if (
+      pathname.startsWith("/console/knowledge/") &&
+      pathname !== "/console/knowledge"
+    ) {
+      return "知识库详情";
+    }
+    if (
+      pathname.startsWith("/console/assistants/") &&
+      pathname !== "/console/assistants" &&
+      pathname !== "/console/assistants/new"
+    ) {
+      return "编辑助手";
+    }
+    return PAGE_TITLE[pathname] ?? "";
+  })();
 
   if (!layoutReady) {
     return (

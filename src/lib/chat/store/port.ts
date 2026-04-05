@@ -1,9 +1,18 @@
+import type {
+  AssistantInput,
+  AssistantListItem,
+  AssistantPublicItem,
+  AssistantRow,
+} from "@/lib/assistants/types";
 import type { ChatMessage } from "../types";
 
 export type SessionSummary = {
   id: string;
   title: string | null;
   updatedAt: number;
+  assistantId: string | null;
+  assistantName: string | null;
+  assistantIcon: string | null;
 };
 
 export type StoredMessage = {
@@ -18,8 +27,11 @@ export type StoredMessage = {
  */
 export interface ChatStore {
   listSessions(): SessionSummary[];
-  createSession(): { id: string };
+  /** 新建会话；`assistantId` 存在时写入助手快照列 */
+  createSession(options?: { assistantId?: string | null }): { id: string };
   sessionExists(id: string): boolean;
+  /** 会话绑定的助手提示快照，供意图路由注入 system */
+  getSessionAssistantPromptSnapshot(sessionId: string): string | null;
   listMessages(sessionId: string): StoredMessage[];
   appendMessage(
     sessionId: string,
@@ -43,6 +55,14 @@ export interface ChatStore {
   /** 会话尚无标题时，用首条用户话节选设置标题 */
   maybeSetTitleFromUserMessage(sessionId: string, userContent: string): void;
   touchSession(sessionId: string): void;
+
+  listAssistants(): AssistantListItem[];
+  /** 对话页新建会话用：无 prompt，含开场白全文 */
+  listAssistantsPublic(): AssistantPublicItem[];
+  getAssistant(id: string): AssistantRow | null;
+  createAssistantRow(input: AssistantInput): { id: string };
+  updateAssistantRow(id: string, input: AssistantInput): boolean;
+  deleteAssistantRow(id: string): boolean;
 }
 
 export function storedToChatMessages(rows: StoredMessage[]): ChatMessage[] {

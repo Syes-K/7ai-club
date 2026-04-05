@@ -69,6 +69,7 @@ export async function POST(req: Request) {
       const { stream } = await executeIntentRoutingStream({
         query: latestUserMessage.content,
         config: mergeRoutingModelConfig(provider, model),
+        contextMessages: messages,
       });
       return new Response(stream, {
         status: 200,
@@ -152,10 +153,14 @@ export async function POST(req: Request) {
       })()
     : (content ?? "");
 
+  const assistantSystemPrompt = store.getSessionAssistantPromptSnapshot(sessionId);
+
   try {
     const { stream, done } = await executeIntentRoutingStream({
       query: currentQuery,
       config: mergeRoutingModelConfig(provider, model),
+      assistantSystemPrompt,
+      contextMessages: messages,
     });
     void done
       .then(async (routingResult) => {

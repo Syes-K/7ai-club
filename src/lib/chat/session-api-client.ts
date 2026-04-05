@@ -2,10 +2,15 @@
  * 浏览器端调用会话 API（勿从此文件导入服务端-only 模块如 sqlite store）。
  */
 
+import type { AssistantPublicItem } from "@/lib/assistants/types";
+
 export type SessionListItem = {
   id: string;
   title: string | null;
   updatedAt: number;
+  assistantId: string | null;
+  assistantName: string | null;
+  assistantIcon: string | null;
 };
 
 export type SessionMessageRow = {
@@ -22,11 +27,29 @@ export async function apiListSessions(): Promise<SessionListItem[]> {
   return data.sessions;
 }
 
-export async function apiCreateSession(): Promise<string> {
-  const res = await fetch("/api/chat/sessions", { method: "POST" });
+export async function apiCreateSession(assistantId?: string | null): Promise<string> {
+  const trimmed =
+    typeof assistantId === "string" && assistantId.trim() ? assistantId.trim() : null;
+  const res = await fetch("/api/chat/sessions", {
+    method: "POST",
+    headers: trimmed ? { "Content-Type": "application/json" } : undefined,
+    body: trimmed ? JSON.stringify({ assistantId: trimmed }) : undefined,
+  });
   if (!res.ok) throw new Error("创建会话失败");
   const data = (await res.json()) as { id: string };
   return data.id;
+}
+
+export async function apiListAssistantsPublic(): Promise<AssistantPublicItem[]> {
+  const res = await fetch("/api/assistants", { cache: "no-store" });
+  if (!res.ok) throw new Error("无法加载助手列表");
+  const data = (await res.json()) as { assistants?: AssistantPublicItem[] };
+  const raw = Array.isArray(data.assistants) ? data.assistants : [];
+  return raw.map((a) => ({
+    ...a,
+    openingMessage:
+      typeof a.openingMessage === "string" ? a.openingMessage : "",
+  }));
 }
 
 export async function apiGetMessages(

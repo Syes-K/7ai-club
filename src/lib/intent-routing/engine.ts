@@ -4,6 +4,7 @@ import {
   fetchChatUpstreamSseStream,
 } from "@/lib/provider/providers";
 import { iterateOpenAIChatStream } from "@/lib/chat/openai-stream";
+import type { ChatMessage } from "@/lib/chat/types";
 import {
   buildModelMessagesFromState,
   NODE_EXECUTOR_REGISTRY,
@@ -38,6 +39,7 @@ function buildNodeStateSnapshot(state: RuntimeState) {
     matchedIntentId: state.matchedIntent?.intentId ?? null,
     confidence: state.confidence ?? null,
     retrievalCount: state.retrievalHits.length,
+    contextMessageCount: state.contextMessages?.length ?? 0,
     fallbackReason: state.fallbackReason ?? null,
     hasModelAnswer: Boolean(state.modelAnswer),
   };
@@ -62,6 +64,7 @@ function buildNodeInput(
       return {
         query: state.query,
         retrievalCount: state.retrievalHits.length,
+        contextMessageCount: state.contextMessages?.length ?? 0,
         retrievalHits: state.retrievalHits.map((h) => ({
           chunkId: h.chunkId,
           score: h.score,
@@ -103,6 +106,8 @@ export async function executeIntentRoutingOnce(params: {
   query: string;
   config: IntentRoutingConfig;
   intentId?: string;
+  assistantSystemPrompt?: string | null;
+  contextMessages?: ChatMessage[] | null;
 }): Promise<ExecuteOnceResult> {
   const traceId = crypto.randomUUID();
   const requestId = crypto.randomUUID();
@@ -110,6 +115,11 @@ export async function executeIntentRoutingOnce(params: {
     query: params.query.trim(),
     forcedIntentId: params.intentId?.trim() || undefined,
     retrievalHits: [],
+    assistantSystemPrompt: params.assistantSystemPrompt,
+    contextMessages:
+      params.contextMessages && params.contextMessages.length > 0
+        ? params.contextMessages
+        : undefined,
   };
   const ctx = { traceId, requestId, config: params.config, state };
   const traces: NodeExecutionTrace[] = [];
@@ -179,6 +189,8 @@ export async function executeIntentRoutingStream(params: {
   query: string;
   config: IntentRoutingConfig;
   intentId?: string;
+  assistantSystemPrompt?: string | null;
+  contextMessages?: ChatMessage[] | null;
 }): Promise<ExecuteStreamResult> {
   const traceId = crypto.randomUUID();
   const requestId = crypto.randomUUID();
@@ -186,6 +198,11 @@ export async function executeIntentRoutingStream(params: {
     query: params.query.trim(),
     forcedIntentId: params.intentId?.trim() || undefined,
     retrievalHits: [],
+    assistantSystemPrompt: params.assistantSystemPrompt,
+    contextMessages:
+      params.contextMessages && params.contextMessages.length > 0
+        ? params.contextMessages
+        : undefined,
   };
   const ctx = { traceId, requestId, config: params.config, state };
   const traces: NodeExecutionTrace[] = [];
@@ -255,6 +272,8 @@ export async function executeIntentRoutingStream(params: {
         const messages = buildModelMessagesFromState({
           query: state.query,
           retrievalHits: state.retrievalHits,
+          assistantSystemPrompt: state.assistantSystemPrompt,
+          contextMessages: state.contextMessages,
         });
         const upstream = await fetchChatUpstreamSseStream({
           provider,

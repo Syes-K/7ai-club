@@ -1,19 +1,21 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { DEFAULT_CHAT_ROUTE } from "@/lib/chat/route-key";
-import { MODEL_GROUPS } from "@/lib/provider/models";
+import { ModelSelect } from "./ModelSelect";
 import type { ChatProviderId } from "@/lib/provider/types";
 import {
   apiClearMessages,
   apiCreateSession,
   apiDeleteSession,
-  apiListSessions,
   apiGetMessages,
+  apiListAssistantsPublic,
+  apiListSessions,
   ensureAtLeastOneSession,
   type SessionListItem,
   type SessionMessageRow,
 } from "@/lib/chat/session-api-client";
+import { NewSessionAssistantModal } from "./NewSessionAssistantModal";
 import { DEEPSEEK_DEFAULT_MODEL } from "@/lib/provider/constants";
 import { FALLBACK_DEFAULTS } from "@/lib/config/defaults";
 import { fetchPublicAppConfig } from "@/lib/config/public-config-client";
@@ -206,6 +208,54 @@ function RefreshIcon({ className }: { className?: string }) {
   );
 }
 
+function assistantSessionBadge(s: SessionListItem | null) {
+  if (!s) return null;
+  if (s.assistantId) {
+    const emoji = s.assistantIcon?.trim() || "🤖";
+    const name = s.assistantName?.trim() || "助手";
+    return (
+      <span
+        className="inline-flex max-w-[9rem] items-center gap-1 truncate rounded-md border border-zinc-200 bg-zinc-100 px-1.5 py-0.5 text-xs text-zinc-600 sm:max-w-[12rem] sm:px-2 sm:text-sm dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-400"
+        aria-label={`当前助手：${name}`}
+      >
+        <span className="shrink-0 text-sm leading-none sm:text-base" aria-hidden>
+          {emoji}
+        </span>
+        <span className="truncate">{name}</span>
+      </span>
+    );
+  }
+  if (s.assistantName || s.assistantIcon) {
+    return (
+      <span className="rounded-md border border-red-300 px-1.5 py-0.5 text-xs text-zinc-500 sm:px-2 sm:text-sm dark:border-red-800 dark:text-zinc-400">
+        助手已删除
+      </span>
+    );
+  }
+  return null;
+}
+
+/** 助手配置的单条开场白（非模型生成，仅展示） */
+function AssistantOpeningBlock({ text }: { text: string }) {
+  const t = text.trim();
+  if (!t) return null;
+  return (
+    <li className="flex justify-start gap-2">
+      <span className="mt-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-violet-100 text-violet-700 dark:bg-violet-950 dark:text-violet-300">
+        <BotIcon className="h-4 w-4" />
+      </span>
+      <div className="max-w-[85%] rounded-2xl rounded-bl-md border border-violet-200/80 bg-white px-4 py-2.5 shadow-sm dark:border-violet-800/50 dark:bg-zinc-900">
+        <p className="text-[11px] font-medium uppercase tracking-wide text-violet-600 dark:text-violet-400">
+          开场白
+        </p>
+        <p className="mt-1.5 whitespace-pre-wrap text-sm leading-relaxed text-zinc-800 dark:text-zinc-100">
+          {t}
+        </p>
+      </div>
+    </li>
+  );
+}
+
 function MenuIcon({ className }: { className?: string }) {
   return (
     <svg
@@ -235,6 +285,8 @@ export function ChatApp() {
   const [messagesError, setMessagesError] = useState<string | null>(null);
 
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [newSessionModalOpen, setNewSessionModalOpen] = useState(false);
+  const [assistantOpeningMessage, setAssistantOpeningMessage] = useState("");
   const [provider, setProvider] = useState<ChatProviderId>(
     DEFAULT_CHAT_ROUTE.provider
   );
@@ -254,6 +306,13 @@ export function ChatApp() {
   const selectId = "model-select";
   const loadTokenRef = useRef(0);
 
+  const showAssistantOpening = useMemo(() => {
+    const aid = sessions.find((x) => x.id === activeSessionId)?.assistantId;
+    return Boolean(aid && assistantOpeningMessage.trim());
+  }, [activeSessionId, assistantOpeningMessage, sessions]);
+
+  const openingScrollKey = assistantOpeningMessage;
+
   const modelSelectValue =
     provider === "deepseek" ? DEEPSEEK_DEFAULT_MODEL : currentModelId;
 
@@ -266,7 +325,28 @@ export function ChatApp() {
 
   useEffect(() => {
     scrollToBottom();
-  }, [messages, scrollToBottom]);
+  }, [messages, openingScrollKey, scrollToBottom]);
+
+  useEffect(() => {
+    const s = sessions.find((x) => x.id === activeSessionId);
+    if (!s?.assistantId) {
+      setAssistantOpeningMessage("");
+      return;
+    }
+    let cancelled = false;
+    void apiListAssistantsPublic()
+      .then((list) => {
+        if (cancelled) return;
+        const a = list.find((x) => x.id === s.assistantId);
+        setAssistantOpeningMessage(a?.openingMessage?.trim() ?? "");
+      })
+      .catch(() => {
+        if (!cancelled) setAssistantOpeningMessage("");
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [activeSessionId, sessions]);
 
   useEffect(() => {
     void (async () => {
@@ -352,20 +432,20 @@ export function ChatApp() {
     };
   }, [loadMessagesForSession]);
 
-  const newSession = useCallback(async () => {
+  const openNewSessionModal = useCallback(() => {
     if (busy) return;
-    try {
-      const id = await apiCreateSession();
+    setNewSessionModalOpen(true);
+  }, [busy]);
+
+  const handleNewSessionCreated = useCallback(
+    async (id: string) => {
       await refreshSessions();
       setDrawerOpen(false);
       await selectSession(id);
       queueMicrotask(() => textareaRef.current?.focus());
-    } catch (e) {
-      setSessionsError(
-        e instanceof Error ? e.message : "创建会话失败"
-      );
-    }
-  }, [busy, refreshSessions, selectSession]);
+    },
+    [refreshSessions, selectSession]
+  );
 
   const retryBootstrap = useCallback(() => {
     setSessionsError(null);
@@ -579,7 +659,7 @@ export function ChatApp() {
       void selectSession(id);
     },
     onNew: () => {
-      void newSession();
+      openNewSessionModal();
     },
     onDeleteSession: (id: string) => {
       void deleteSessionById(id);
@@ -588,9 +668,16 @@ export function ChatApp() {
   };
 
   const ready = activeSessionId !== null && !sessionsLoading && !sessionsError;
+  const currentSession =
+    sessions.find((x) => x.id === activeSessionId) ?? null;
 
   return (
     <div className="flex h-full min-h-0 flex-1 bg-zinc-50 dark:bg-zinc-950">
+      <NewSessionAssistantModal
+        open={newSessionModalOpen}
+        onClose={() => setNewSessionModalOpen(false)}
+        onCreated={handleNewSessionCreated}
+      />
       <SessionDockedSidebar {...sidebarProps} />
       <SessionDrawer
         open={drawerOpen}
@@ -599,60 +686,38 @@ export function ChatApp() {
       />
 
       <div className="flex min-h-0 min-w-0 flex-1 flex-col">
-        <header className="flex shrink-0 flex-wrap items-center justify-between gap-3 border-b border-zinc-200 px-4 py-3 dark:border-zinc-800">
-          <div className="flex min-w-0 shrink-0 items-center gap-2">
+        <header className="flex shrink-0 flex-wrap items-center justify-between gap-2 border-b border-zinc-200 px-3 py-2.5 dark:border-zinc-800 sm:gap-3 sm:px-4 sm:py-3">
+          <div className="flex min-w-0 flex-1 items-center gap-1.5 sm:gap-2">
             <button
               type="button"
-              className="inline-flex rounded-lg p-2 text-zinc-600 outline-none ring-violet-500 hover:bg-zinc-200 focus-visible:ring-2 sm:hidden dark:text-zinc-400 dark:hover:bg-zinc-800"
+              className="-ml-0.5 inline-flex rounded-lg p-2 text-zinc-600 outline-none ring-violet-500 hover:bg-zinc-200 focus-visible:ring-2 sm:hidden dark:text-zinc-400 dark:hover:bg-zinc-800"
               aria-expanded={drawerOpen}
               aria-label="打开会话列表"
               onClick={() => setDrawerOpen(true)}
             >
               <MenuIcon />
             </button>
-            <BotIcon className="text-violet-600 dark:text-violet-400" />
-            <h1 className="text-lg font-semibold tracking-tight">
+            <BotIcon className="hidden shrink-0 text-violet-600 sm:block dark:text-violet-400" />
+            <h1 className="min-w-0 flex-1 truncate text-base font-semibold tracking-tight sm:flex-none sm:text-lg">
               {appDisplayName}
             </h1>
+            <div className="min-w-0 shrink-0">{assistantSessionBadge(currentSession)}</div>
           </div>
-          <div className="flex min-w-0 flex-wrap items-center justify-end gap-2 sm:flex-nowrap">
-            <div className="flex min-w-0 max-w-full items-center gap-2 sm:max-w-[min(100%,14rem)]">
-              <label htmlFor={selectId} className="shrink-0 text-xs text-zinc-500">
-                模型
-              </label>
-              <select
-                id={selectId}
-                value={modelSelectValue}
-                disabled={busy}
-                onChange={(e) => onModelChange(e.target.value)}
-                className="min-w-0 flex-1 rounded-lg border border-zinc-300 bg-white px-2 py-1.5 text-sm outline-none ring-violet-500 focus-visible:ring-2 disabled:opacity-40 dark:border-zinc-600 dark:bg-zinc-950"
-              >
-                {MODEL_GROUPS.map((g) => (
-                  <optgroup key={g.label} label={g.label}>
-                    {g.models.map((opt) => (
-                      <option key={opt.id} value={opt.id}>
-                        {opt.label} — {opt.hint}
-                      </option>
-                    ))}
-                  </optgroup>
-                ))}
-              </select>
-            </div>
-            <button
-              type="button"
-              onClick={() => void clear()}
-              disabled={busy || messages.length === 0 || !ready}
-              className="inline-flex shrink-0 items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm text-zinc-600 outline-none ring-violet-500 hover:bg-zinc-200 focus-visible:ring-2 disabled:opacity-40 dark:text-zinc-400 dark:hover:bg-zinc-800"
-            >
-              <TrashIcon className="shrink-0" />
-              清空对话
-            </button>
-          </div>
+          <button
+            type="button"
+            onClick={() => void clear()}
+            disabled={busy || messages.length === 0 || !ready}
+            title="清空对话"
+            className="inline-flex shrink-0 items-center justify-center gap-1.5 rounded-lg px-2.5 py-2 text-sm text-zinc-600 outline-none ring-violet-500 hover:bg-zinc-200 focus-visible:ring-2 disabled:opacity-40 sm:px-3 sm:py-1.5 dark:text-zinc-400 dark:hover:bg-zinc-800"
+          >
+            <TrashIcon className="shrink-0" />
+            <span className="hidden sm:inline">清空对话</span>
+          </button>
         </header>
 
         <div
           ref={listRef}
-          className="min-h-0 flex-1 overflow-y-auto px-4 py-4"
+          className="min-h-0 flex-1 overflow-y-auto px-3 py-3 sm:px-4 sm:py-4"
           role="log"
           aria-live="polite"
         >
@@ -666,7 +731,10 @@ export function ChatApp() {
               {messagesError}
             </div>
           )}
-          {!messagesLoading && !messagesError && messages.length === 0 && (
+          {!messagesLoading &&
+            !messagesError &&
+            messages.length === 0 &&
+            !showAssistantOpening && (
             <div className="mx-auto flex max-w-2xl flex-col items-center justify-center gap-4 py-16 text-center">
               <div className="rounded-2xl bg-white p-6 shadow-sm dark:bg-zinc-900">
                 <BotIcon className="mx-auto mb-3 h-10 w-10 text-violet-600 dark:text-violet-400" />
@@ -674,14 +742,19 @@ export function ChatApp() {
                   开始对话
                 </p>
                 <p className="mt-2 max-w-sm text-sm text-zinc-500 dark:text-zinc-400">
-                  在顶栏选择模型后向当前会话发送消息；支持多轮追问与历史会话切换。快捷键：Enter
+                  在输入框下方选择模型后发送消息；支持多轮追问与历史会话切换。快捷键：Enter
                   发送，Shift+Enter 换行。
                 </p>
               </div>
             </div>
           )}
-          {!messagesLoading && !messagesError && messages.length > 0 && (
-            <ul className="mx-auto flex max-w-3xl flex-col gap-4">
+          {!messagesLoading &&
+            !messagesError &&
+            (messages.length > 0 || showAssistantOpening) && (
+            <ul className="mx-auto flex max-w-3xl flex-col gap-3 sm:gap-4">
+              {showAssistantOpening && (
+                <AssistantOpeningBlock text={assistantOpeningMessage} />
+              )}
               {messages.map((m) => (
                 <li
                   key={m.id}
@@ -753,8 +826,11 @@ export function ChatApp() {
           )}
         </div>
 
-        <footer className="shrink-0 border-t border-zinc-200 bg-white px-4 py-3 dark:border-zinc-800 dark:bg-zinc-900">
+        <footer className="shrink-0 border-t border-zinc-200 bg-white px-3 py-2.5 pb-[max(0.625rem,env(safe-area-inset-bottom))] dark:border-zinc-800 dark:bg-zinc-900 sm:px-4 sm:py-3">
           <div className="relative mx-auto max-w-3xl">
+            <label htmlFor={selectId} className="sr-only">
+              模型
+            </label>
             <textarea
               ref={textareaRef}
               value={input}
@@ -763,20 +839,30 @@ export function ChatApp() {
               disabled={busy || !ready}
               rows={3}
               placeholder="输入问题…（Enter 发送，Shift+Enter 换行）"
-              className="min-h-[5rem] w-full resize-y rounded-xl border border-zinc-300 bg-zinc-50 px-3 py-2 pb-12 pr-[5.5rem] text-sm outline-none ring-violet-500 focus:ring-2 disabled:opacity-60 dark:border-zinc-600 dark:bg-zinc-950"
+              className="min-h-[4.5rem] w-full resize-y rounded-xl border border-zinc-300 bg-zinc-50 px-3 py-2 pb-14 pr-3 text-sm outline-none ring-violet-500 focus:ring-2 disabled:opacity-60 sm:min-h-[5rem] sm:pb-16 dark:border-zinc-600 dark:bg-zinc-950"
               aria-label="消息输入"
             />
-            <button
-              type="button"
-              style={{
-               cursor: 'pointer',
-              }}
-              onClick={() => void send()}
-              disabled={busy || !input.trim() || !ready}
-              className="absolute bottom-3 right-3 z-10 inline-flex items-center gap-1.5 rounded-xl bg-violet-600 px-3 py-2 text-sm font-medium text-white shadow-sm outline-none ring-offset-2 ring-offset-white hover:bg-violet-700 focus-visible:ring-2 focus-visible:ring-violet-500 disabled:opacity-40 dark:ring-offset-zinc-900"
-            >
-              <SendIcon className="shrink-0 text-white" />
-            </button>
+            {/* 左右拉满：模型在文本框左下角，发送在右下，同一行对齐 */}
+            <div className="absolute bottom-2 left-2 right-2 z-10 flex items-center justify-between gap-3 sm:bottom-3 sm:left-3 sm:right-3">
+              <div className="min-w-0 w-[min(18rem,calc(100%-5rem))] max-w-[calc(100%-5rem)] shrink sm:min-w-[12rem]">
+                <ModelSelect
+                  id={selectId}
+                  dropdownPlacement="above"
+                  className="relative w-full min-w-0"
+                  value={modelSelectValue}
+                  disabled={busy}
+                  onChange={onModelChange}
+                />
+              </div>
+              <button
+                type="button"
+                onClick={() => void send()}
+                disabled={busy || !input.trim() || !ready}
+                className="inline-flex shrink-0 cursor-pointer items-center gap-1.5 rounded-lg bg-violet-600 px-2.5 py-1.5 text-sm font-medium text-white shadow-sm outline-none ring-offset-2 ring-offset-white hover:bg-violet-700 focus-visible:ring-2 focus-visible:ring-violet-500 disabled:opacity-40 sm:rounded-xl sm:px-3 sm:py-2 dark:ring-offset-zinc-900"
+              >
+                <SendIcon className="shrink-0 text-white" />
+              </button>
+            </div>
           </div>
         </footer>
       </div>
