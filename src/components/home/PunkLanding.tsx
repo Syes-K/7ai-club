@@ -52,7 +52,7 @@ export function PunkLanding() {
         <div className="font-mono text-xs tracking-[0.35em] text-cyan-400/90">
           7AI<span className="text-fuchsia-400/80">·CLUB</span>
         </div>
-        <nav className="flex items-center gap-2 sm:gap-4" aria-label="主导航">
+        <nav className="flex flex-wrap items-center justify-end gap-2 sm:gap-3" aria-label="主导航">
           <Link
             href="/chat"
             className="rounded border border-cyan-500/40 bg-cyan-500/10 px-3 py-1.5 font-mono text-[11px] uppercase tracking-wider text-cyan-300 transition hover:border-cyan-400 hover:bg-cyan-500/20 sm:text-xs"
@@ -112,7 +112,7 @@ export function PunkLanding() {
           </Link>
         </div>
 
-        <ul className="mt-16 grid max-w-2xl grid-cols-1 gap-3 font-mono text-[11px] text-zinc-500 sm:grid-cols-3 sm:text-xs">
+        <ul className="mt-16 grid max-w-3xl grid-cols-1 gap-3 font-mono text-[11px] text-zinc-500 sm:grid-cols-2 sm:text-xs lg:grid-cols-4">
           <li className="rounded border border-zinc-800/80 bg-black/40 px-4 py-3 text-left">
             <span className="text-cyan-500/90">[01]</span> 流式对话 · 多模型
           </li>
@@ -121,6 +121,9 @@ export function PunkLanding() {
           </li>
           <li className="rounded border border-zinc-800/80 bg-black/40 px-4 py-3 text-left">
             <span className="text-emerald-500/90">[03]</span> 知识库 · 意图路由
+          </li>
+          <li className="rounded border border-zinc-800/80 bg-black/40 px-4 py-3 text-left">
+            <span className="text-violet-400/90">[04]</span> 助手 · 指定人设
           </li>
         </ul>
       </main>
