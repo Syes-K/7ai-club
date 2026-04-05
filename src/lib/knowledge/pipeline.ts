@@ -90,7 +90,7 @@ export async function searchKnowledgeBase(
   return searchChunksInBase(store, baseId, qv, topK);
 }
 
-/** 按知识库条目白名单检索，供意图路由命中后的聚合检索使用。 */
+/** 按知识库文档白名单检索，供意图路由命中后的聚合检索使用。 */
 export async function searchKnowledgeEntries(
   entryIds: string[],
   query: string,
@@ -110,7 +110,7 @@ export async function searchKnowledgeEntries(
   return searchChunksInEntries(store, entryIds, qv, topK);
 }
 
-/** 插入条目后立即完整走一遍 reindexEntry。 */
+/** 插入文档后立即完整走一遍 reindexEntry。 */
 export async function createEntryAndIndex(
   baseId: string,
   title: string | null,
@@ -159,7 +159,7 @@ export async function updateEntryAndIndex(
 }
 
 /**
- * 仅更新条目元信息（目前仅标题），不触发重索引。
+ * 仅更新文档元信息（目前仅标题），不触发重索引。
  * 适用于“标题改了但正文不变”的场景，避免不必要的 Embedding 调用。
  */
 export async function updateEntryMetaOnly(

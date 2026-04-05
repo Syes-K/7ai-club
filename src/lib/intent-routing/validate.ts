@@ -205,7 +205,7 @@ export function validateIntentRoutingConfig(
           field: `nodes(knowledge_search).input.selectedKnowledgeBaseEntryIdsByIntent.${intentId}`,
           code: "CFG_KB_ENTRY_REQUIRED",
           message:
-            "当后续节点包含 knowledge_search 时，knowledge_search.input.selectedKnowledgeBaseEntryIdsByIntent 中该意图必须至少选择一个知识库条目",
+            "当后续节点包含 knowledge_search 时，knowledge_search.input.selectedKnowledgeBaseEntryIdsByIntent 中该意图必须至少选择一个知识库文档",
         });
       }
       routes.push({

@@ -8,7 +8,7 @@
 ## 组件
 
 - `src/components/console/knowledge/KnowledgeBasesClient.tsx`：库列表、新建/重命名/删除。
-- `src/components/console/knowledge/KnowledgeBaseDetailClient.tsx`：条目表、新建/编辑条目、失败重试索引、折叠「检索试查」。
+- `src/components/console/knowledge/KnowledgeBaseDetailClient.tsx`：文档表、新建/编辑文档、失败重试索引、折叠「检索试查」。
 
 ## 数据
 

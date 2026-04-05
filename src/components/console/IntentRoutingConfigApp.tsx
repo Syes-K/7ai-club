@@ -195,7 +195,7 @@ export function IntentRoutingConfigApp() {
           route.selectedKnowledgeBaseEntryIds.length < 1)
     );
     return hit
-      ? `意图 ${hit.intentId || "(未填写 intentId)"} 包含 knowledge_search，必须至少选择 1 个知识库条目`
+      ? `意图 ${hit.intentId || "(未填写 intentId)"} 包含 knowledge_search，必须至少选择 1 个知识库文档`
       : null;
   }, [routesDraft]);
 
@@ -756,7 +756,7 @@ export function IntentRoutingConfigApp() {
               showSearch
               optionFilterProp="label"
               options={knowledgeOptions}
-              placeholder="选择知识库条目"
+              placeholder="选择知识库文档"
             />
           </Form.Item>
         </Form>
@@ -807,7 +807,7 @@ export function IntentRoutingConfigApp() {
               showSearch
               optionFilterProp="label"
               options={knowledgeOptions}
-              placeholder="选择知识库条目"
+              placeholder="选择知识库文档"
             />
           </Form.Item>
         </Form>

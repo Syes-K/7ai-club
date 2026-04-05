@@ -196,7 +196,7 @@ interface IntentRouteEntity {
 }
 ```
 
-### 4.4 知识库条目关联实体
+### 4.4 知识库文档关联实体
 
 ```ts
 interface KnowledgeEntryBinding {
@@ -212,7 +212,7 @@ interface KnowledgeEntryBinding {
 ### 5.1 读配置
 
 - `GET /api/console/intent-routing/config`
-- 返回：全局参数 + 节点定义 + 路由定义 + 知识库条目关联。
+- 返回：全局参数 + 节点定义 + 路由定义 + 知识库文档关联。
 
 ### 5.2 保存配置
 
@@ -239,7 +239,7 @@ interface KnowledgeEntryBinding {
 ```json
 {
   "code": "CFG_KB_ENTRY_REQUIRED",
-  "message": "当后续节点包含 knowledge_search 时，必须至少选择一个知识库条目",
+  "message": "当后续节点包含 knowledge_search 时，必须至少选择一个知识库文档",
   "field": "selectedKnowledgeBaseEntryIds",
   "retryable": false,
   "traceId": "tr_xxx"
@@ -248,7 +248,7 @@ interface KnowledgeEntryBinding {
 
 建议错误码：
 - `CFG_INVALID_THRESHOLD`：阈值非法（越界/类型错误）；
-- `CFG_KB_ENTRY_REQUIRED`：knowledge_search 依赖条目缺失；
+- `CFG_KB_ENTRY_REQUIRED`：knowledge_search 依赖文档缺失；
 - `CFG_NODE_TYPE_UNSUPPORTED`：节点类型无可用执行器；
 - `CFG_ROUTE_BROKEN`：路由图断裂或指向不存在节点；
 - `RUNTIME_INTENT_FAILED`：意图识别执行异常；
@@ -294,7 +294,7 @@ interface KnowledgeEntryBinding {
 | 阈值命中 | `confidence >= threshold` | 进入 `knowledge_search` 后再到 `model_request` |
 | 阈值未命中 | `confidence < threshold` | 直接 `model_request` |
 | 命中空检索 | 命中 + 检索过滤后 0 条 | 无用户提示，直达 `model_request`，日志有 `empty_retrieval` |
-| 配置非法 | nextNodes 含 `knowledge_search` 且未选条目 | 保存/发布失败，返回 `CFG_KB_ENTRY_REQUIRED` |
+| 配置非法 | nextNodes 含 `knowledge_search` 且未选文档 | 保存/发布失败，返回 `CFG_KB_ENTRY_REQUIRED` |
 | 正常流 | 命中 + 检索有结果 | 使用检索上下文请求模型并统一输出 |
 
 ## 9. 与需求映射
@@ -302,5 +302,5 @@ interface KnowledgeEntryBinding {
 - FR-01/AC-01/AC-02：命中阈值与未命中直达规则（见第 3 章）；
 - FR-03/AC-03：`topN`、`scoreThreshold` 全局参数生效（见第 3 章与第 4 章）；
 - FR-04/AC-04：空检索无提示回退（见第 3.4）；
-- FR-05/FR-06/AC-07：NodeSchema、路由约束与知识库条目必选（见第 2、3、5、6 章）；
+- FR-05/FR-06/AC-07：NodeSchema、路由约束与知识库文档必选（见第 2、3、5、6 章）；
 - NFR-02：日志、trace 与指标（见第 7 章）。

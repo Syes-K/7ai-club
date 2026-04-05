@@ -185,7 +185,7 @@ const knowledgeSearchExecutor: NodeExecutor = async (ctx) => {
   }
   try {
     const knowledgeSearchNode = ctx.config.nodes.find((node) => node.id === "knowledge_search");
-    // 每个意图使用独立的知识库条目映射，避免不同意图共享同一组检索范围。
+    // 每个意图使用独立的知识库文档映射，避免不同意图共享同一组检索范围。
     const entryIdsByIntentRaw =
       knowledgeSearchNode?.input?.selectedKnowledgeBaseEntryIdsByIntent;
     const routeEntryIdsRaw =

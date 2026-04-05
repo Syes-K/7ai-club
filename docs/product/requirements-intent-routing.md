@@ -43,10 +43,10 @@
 - 当前阶段默认线性流转为：`intent_recognition_node -> knowledge_search_node -> model_request_node -> final_response_node`。
 - `nextNodes` 用于编排流转扩展，结构层面允许未来非线性路由，但本期运行时仍按线性默认流执行。
 
-### FR-06 知识库搜索节点必选条目约束
-- 当某 node 的 `nextNodes` 包含 `knowledge_search_node` 时，必须配置知识库条目。
-- 知识库条目字段支持多选，至少选择 1 项后才可保存。
-- 若未配置条目则配置保存失败，并返回明确错误信息给配置端。
+### FR-06 知识库搜索节点必选文档约束
+- 当某 node 的 `nextNodes` 包含 `knowledge_search_node` 时，必须配置知识库文档。
+- 知识库文档字段支持多选，至少选择 1 项后才可保存。
+- 若未配置文档则配置保存失败，并返回明确错误信息给配置端。
 
 ## 2.1 数据结构约束
 
@@ -58,7 +58,7 @@
 - `nextNodes: string[]`，后续 node 列表，可为空数组。
 
 ### KnowledgeSearchNodeConfig
-- `selectedKnowledgeBaseEntryIds: string[]`，知识库条目 ID 列表，支持多选。
+- `selectedKnowledgeBaseEntryIds: string[]`，知识库文档 ID 列表，支持多选。
 - 约束：当当前 node 或上游路由将流转到 `knowledge_search_node` 时，`selectedKnowledgeBaseEntryIds.length >= 1`。
 - 约束违反时禁止保存，并返回字段级错误：`selectedKnowledgeBaseEntryIds is required when next node includes knowledge_search_node`。
 
@@ -121,10 +121,10 @@
 - When 请求进入异常处理
 - Then 系统记录错误并进入直答分支，最终响应结构保持一致且包含 `trace_id`
 
-### AC-07 知识库搜索节点缺失条目时保存失败
+### AC-07 知识库搜索节点缺失文档时保存失败
 - Given 运营人员在意图配置中将某 node 的 `nextNodes` 配置为包含 `knowledge_search_node`
 - When `selectedKnowledgeBaseEntryIds` 为空数组或未传
-- Then 配置保存失败，并提示必须至少选择一个知识库条目
+- Then 配置保存失败，并提示必须至少选择一个知识库文档
 
 ## 6. 依赖与假设
 - 已具备向量检索能力与可用模型服务。

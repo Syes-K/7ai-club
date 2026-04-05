@@ -1,4 +1,4 @@
-/** 单块文本及其在整条目 body 上的 UTF-16 码元区间 [charStart, charEnd)。 */
+/** 单块文本及其在整篇文档 body 上的 UTF-16 码元区间 [charStart, charEnd)。 */
 export type TextChunk = {
   text: string;
   charStart: number;

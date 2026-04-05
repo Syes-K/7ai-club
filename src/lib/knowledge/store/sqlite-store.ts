@@ -1,5 +1,5 @@
 /**
- * 知识库 SQLite 持久化：库 / 条目 / 块+向量同库；与聊天表共用同一 db 文件。
+ * 知识库 SQLite 持久化：库 / 文档(entry) / 块+向量同库；与聊天表共用同一 db 文件。
  */
 import Database from "better-sqlite3";
 import fs from "node:fs";
@@ -366,7 +366,7 @@ export class KnowledgeSqliteStore {
     }));
   }
 
-  /** 按 entryId 集合列出块（含向量），用于意图路由的多条目聚合检索。 */
+  /** 按 entryId 集合列出块（含向量），用于意图路由的多文档聚合检索。 */
   listChunksWithEmbeddingsForEntries(entryIds: string[]): {
     chunkId: string;
     entryId: string;

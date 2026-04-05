@@ -8,7 +8,7 @@
 ## 分块
 
 - 滑动窗口默认 **512** 字符、重叠 **64**（UTF-16 码元，与 `String` 索引一致）。
-- 可在应用配置 `app-config.json` 中通过 `knowledgeChunkSize`、`knowledgeChunkOverlap` 调整（同一条目更新会按新配置重新切分并重建向量）。
+- 可在应用配置 `app-config.json` 中通过 `knowledgeChunkSize`、`knowledgeChunkOverlap` 调整（同一文档更新会按新配置重新切分并重建向量）。
 - 实现见 `src/lib/knowledge/chunk.ts`。
 
 ## 向量与检索
@@ -38,7 +38,7 @@
 - 侧栏：`ConsoleProShell` 增加「知识库」入口。
 - 设计对照：`iterations/0.1.0/design/spec-knowledge-base.md`。
 
-## 条目更新（硬分离）
+## 文档更新（硬分离）
 
 - 标题/元信息更新：`PATCH /api/console/knowledge/[baseId]/entries/[entryId]/meta`，只改 `title`，不触发向量重建。
 - 正文更新：`PATCH /api/console/knowledge/[baseId]/entries/[entryId]/body`，改 `body` 后触发重分块与 Embedding。

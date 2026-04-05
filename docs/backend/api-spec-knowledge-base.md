@@ -36,7 +36,7 @@
 
 ## `GET /api/console/knowledge/[baseId]`
 
-库详情及条目列表。
+库详情及文档列表。
 
 **响应 200**：`{ "base": KnowledgeBase, "entries": KnowledgeEntry[] }`  
 **404**：库不存在
@@ -59,7 +59,7 @@
 
 ## `DELETE /api/console/knowledge/[baseId]`
 
-删除库（级联删除条目、块、向量）。
+删除库（级联删除文档、块、向量）。
 
 **响应 200**：`{ "ok": true }`  
 **404**：库不存在
@@ -68,7 +68,7 @@
 
 ## `POST /api/console/knowledge/[baseId]/entries`
 
-新建文本条目并触发索引。
+新建文本文档并触发索引。
 
 **请求体**：
 
@@ -92,47 +92,47 @@
 **请求体**：`title?`、`body?`（至少一项）
 
 **响应 200**：`{ "entry": KnowledgeEntry }`  
-**404**：条目不属于该库或不存在
+**404**：文档不属于该库或不存在
 
 ---
 
 ## `PATCH /api/console/knowledge/[baseId]/entries/[entryId]/meta`
 
-仅更新条目元信息（标题），不触发向量重建。
+仅更新文档元信息（标题），不触发向量重建。
 
 **请求体**：`title` string | null
 
 **响应 200**：`{ "entry": KnowledgeEntry }`  
-**404**：条目不属于该库或不存在
+**404**：文档不属于该库或不存在
 
 ---
 
 ## `PATCH /api/console/knowledge/[baseId]/entries/[entryId]/body`
 
-仅更新条目正文，并触发向量重建（重分块 + Embedding）。
+仅更新文档正文，并触发向量重建（重分块 + Embedding）。
 
 **请求体**：`body` string
 
 **响应 200**：`{ "entry": KnowledgeEntry }`  
-**404**：条目不属于该库或不存在
+**404**：文档不属于该库或不存在
 
 ---
 
 ## `DELETE /api/console/knowledge/[baseId]/entries/[entryId]`
 
-删除条目及关联块与向量。
+删除文档及关联块与向量。
 
 **响应 200**：`{ "ok": true }`  
-**404**：条目不存在
+**404**：文档不存在
 
 ---
 
 ## `POST /api/console/knowledge/[baseId]/entries/[entryId]/reindex`
 
-对已有条目重新执行索引（用于失败重试）。
+对已有文档重新执行索引（用于失败重试）。
 
 **响应 200**：`{ "entry": KnowledgeEntry }`  
-**404**：条目不存在
+**404**：文档不存在
 
 ---
 

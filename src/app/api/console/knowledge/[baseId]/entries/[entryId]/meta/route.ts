@@ -10,7 +10,7 @@ export const dynamic = "force-dynamic";
 type Ctx = { params: Promise<{ baseId: string; entryId: string }> };
 
 /**
- * 仅更新条目元信息（标题），不触发向量重建。
+ * 仅更新文档元信息（标题），不触发向量重建。
  * API 路径：`/api/console/knowledge/[baseId]/entries/[entryId]/meta`
  */
 export async function PATCH(req: Request, ctx: Ctx) {
@@ -19,7 +19,7 @@ export async function PATCH(req: Request, ctx: Ctx) {
 
   const entry = store.getEntry(entryId);
   if (!entry || entry.baseId !== baseId) {
-    return Response.json({ error: "条目不存在" }, { status: 404 });
+    return Response.json({ error: "文档不存在" }, { status: 404 });
   }
 
   let json: unknown;
@@ -43,7 +43,7 @@ export async function PATCH(req: Request, ctx: Ctx) {
 
   const next = await updateEntryMetaOnly(entryId, { title: t.title });
   if (!next) {
-    return Response.json({ error: "条目不存在" }, { status: 404 });
+    return Response.json({ error: "文档不存在" }, { status: 404 });
   }
 
   return Response.json({ entry: next });

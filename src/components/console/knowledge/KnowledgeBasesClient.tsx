@@ -116,7 +116,7 @@ export function KnowledgeBasesClient() {
   const removeBase = (b: KnowledgeBase) => {
     if (
       !confirm(
-        `将删除知识库「${b.name}」及库内全部条目与已生成向量，确定删除？`
+        `将删除知识库「${b.name}」及库内全部文档与已生成向量，确定删除？`
       )
     ) {
       return;
@@ -205,7 +205,7 @@ export function KnowledgeBasesClient() {
                   ),
               },
               {
-                title: "条目数",
+                title: "文档数",
                 dataIndex: "entryCount",
                 key: "entryCount",
                 width: 88,

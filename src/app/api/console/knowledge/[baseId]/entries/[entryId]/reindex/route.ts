@@ -10,7 +10,7 @@ export async function POST(_req: Request, ctx: Ctx) {
   const store = getKnowledgeStore();
   const entry = store.getEntry(entryId);
   if (!entry || entry.baseId !== baseId) {
-    return Response.json({ error: "条目不存在" }, { status: 404 });
+    return Response.json({ error: "文档不存在" }, { status: 404 });
   }
   await reindexEntry(entryId);
   const updated = store.getEntry(entryId);

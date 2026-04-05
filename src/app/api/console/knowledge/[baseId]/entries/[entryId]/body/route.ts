@@ -10,7 +10,7 @@ export const dynamic = "force-dynamic";
 type Ctx = { params: Promise<{ baseId: string; entryId: string }> };
 
 /**
- * 仅更新条目正文，并触发向量化重索引。
+ * 仅更新文档正文，并触发向量化重索引。
  * API 路径：`/api/console/knowledge/[baseId]/entries/[entryId]/body`
  */
 export async function PATCH(req: Request, ctx: Ctx) {
@@ -19,7 +19,7 @@ export async function PATCH(req: Request, ctx: Ctx) {
 
   const entry = store.getEntry(entryId);
   if (!entry || entry.baseId !== baseId) {
-    return Response.json({ error: "条目不存在" }, { status: 404 });
+    return Response.json({ error: "文档不存在" }, { status: 404 });
   }
 
   let json: unknown;
@@ -41,7 +41,7 @@ export async function PATCH(req: Request, ctx: Ctx) {
 
   const next = await updateEntryBodyAndIndex(entryId, b.body);
   if (!next) {
-    return Response.json({ error: "条目不存在" }, { status: 404 });
+    return Response.json({ error: "文档不存在" }, { status: 404 });
   }
 
   return Response.json({ entry: next });

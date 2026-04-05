@@ -10,7 +10,7 @@ export async function PATCH(req: Request, ctx: Ctx) {
   const store = getKnowledgeStore();
   const entry = store.getEntry(entryId);
   if (!entry || entry.baseId !== baseId) {
-    return Response.json({ error: "条目不存在" }, { status: 404 });
+    return Response.json({ error: "文档不存在" }, { status: 404 });
   }
 
   let json: unknown;
@@ -54,7 +54,7 @@ export async function DELETE(_req: Request, ctx: Ctx) {
   const store = getKnowledgeStore();
   const entry = store.getEntry(entryId);
   if (!entry || entry.baseId !== baseId) {
-    return Response.json({ error: "条目不存在" }, { status: 404 });
+    return Response.json({ error: "文档不存在" }, { status: 404 });
   }
   store.deleteEntry(entryId);
   return Response.json({ ok: true });

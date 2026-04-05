@@ -201,7 +201,7 @@ export function KnowledgeBaseDetailClient({ baseId }: { baseId: string }) {
   };
 
   const removeEntry = (e: KnowledgeEntry) => {
-    if (!confirm("将删除该条目及对应向量，确定删除？")) return;
+    if (!confirm("将删除该文档及对应向量，确定删除？")) return;
     void (async () => {
       try {
         const res = await fetch(
@@ -213,7 +213,7 @@ export function KnowledgeBaseDetailClient({ baseId }: { baseId: string }) {
           setBanner({ type: "err", text: j.error ?? "删除失败" });
           return;
         }
-        setBanner({ type: "ok", text: "已删除条目" });
+        setBanner({ type: "ok", text: "已删除文档" });
         await load();
       } catch {
         setBanner({ type: "err", text: "网络错误" });
@@ -325,19 +325,19 @@ export function KnowledgeBaseDetailClient({ baseId }: { baseId: string }) {
 
       <div className={`${cardClass} mb-6 flex flex-wrap items-center justify-between gap-4`}>
         <Typography.Title level={5} className="!mb-0">
-          文本条目
+          文本文档
         </Typography.Title>
         <Button type="primary" icon={<PlusOutlined />} onClick={openCreateEntry}>
-          添加条目
+          添加文档
         </Button>
       </div>
 
       <div className={cardClass}>
         {entries.length === 0 && !loading ? (
           <div className="py-12 text-center text-sm text-zinc-500 dark:text-zinc-400">
-            <p className="mb-4">暂无条目，点击「添加条目」录入纯文本内容。</p>
+            <p className="mb-4">暂无文档，点击「添加文档」录入纯文本内容。</p>
             <Button type="primary" onClick={openCreateEntry}>
-              添加条目
+              添加文档
             </Button>
           </div>
         ) : (
@@ -507,7 +507,7 @@ export function KnowledgeBaseDetailClient({ baseId }: { baseId: string }) {
                           className="rounded-lg border border-zinc-100 bg-zinc-50/80 p-3 text-sm dark:border-zinc-800 dark:bg-zinc-900/50"
                         >
                           <div className="mb-1 flex flex-wrap gap-2 text-xs text-zinc-500">
-                            <span>条目 {h.entryId.slice(0, 8)}…</span>
+                            <span>文档 {h.entryId.slice(0, 8)}…</span>
                             <span>块 #{h.chunkIndex}</span>
                             <span>
                               字符 [{h.charStart}, {h.charEnd}]
@@ -531,7 +531,7 @@ export function KnowledgeBaseDetailClient({ baseId }: { baseId: string }) {
       <Modal
         title={
           entryModal === "create"
-            ? "新建条目"
+            ? "新建文档"
             : entryModal === "title"
               ? "修改标题"
               : "修改正文"

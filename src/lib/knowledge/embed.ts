@@ -13,7 +13,7 @@ export type EmbeddingConfig = {
   model: string;
 };
 
-/** 缺少 KNOWLEDGE_EMBEDDING_API_KEY 时返回 ok:false，由调用方将条目标为 failed。 */
+/** 缺少 KNOWLEDGE_EMBEDDING_API_KEY 时返回 ok:false，由调用方将文档标为 failed。 */
 export function readEmbeddingConfig():
   | { ok: true; config: EmbeddingConfig }
   | { ok: false; error: string } {

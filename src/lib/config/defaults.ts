@@ -28,7 +28,7 @@ export type AppConfig = {
   embeddingModel: string | null;
   /**
    * 知识库分块参数：chunkSize（块长）与 overlap（相邻块重叠冗余）。
-   * 影响条目重索引/创建时的分块粒度。
+   * 影响文档重索引/创建时的分块粒度。
    */
   knowledgeChunkSize: number;
   knowledgeChunkOverlap: number;
