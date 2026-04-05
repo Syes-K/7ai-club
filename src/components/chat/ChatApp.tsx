@@ -22,6 +22,7 @@ import { fetchPublicAppConfig } from "@/lib/config/public-config-client";
 import { normalizeChatRouteModel } from "@/lib/provider/route";
 import { randomUUID } from "@/lib/random-uuid";
 import { SessionDockedSidebar, SessionDrawer } from "./SessionSidebar";
+import { ChatMarkdown } from "./ChatMarkdown";
 
 type UserMsg = { id: string; role: "user"; content: string };
 type AssistantMsg = {
@@ -248,9 +249,9 @@ function AssistantOpeningBlock({ text }: { text: string }) {
         <p className="text-[11px] font-medium uppercase tracking-wide text-violet-600 dark:text-violet-400">
           开场白
         </p>
-        <p className="mt-1.5 whitespace-pre-wrap text-sm leading-relaxed text-zinc-800 dark:text-zinc-100">
-          {t}
-        </p>
+        <div className="mt-1.5 text-zinc-800 dark:text-zinc-100">
+          <ChatMarkdown>{t}</ChatMarkdown>
+        </div>
       </div>
     </li>
   );
@@ -805,12 +806,12 @@ export function ChatApp() {
                           </p>
                         )}
                         {(m.content.length > 0 || m.phase === "done") && (
-                          <p className="whitespace-pre-wrap">
-                            {m.content}
+                          <div className="min-w-0">
+                            <ChatMarkdown>{m.content}</ChatMarkdown>
                             {m.phase === "streaming" && (
                               <span className="ml-0.5 inline-block h-4 w-1 animate-pulse bg-violet-500 align-middle" />
                             )}
-                          </p>
+                          </div>
                         )}
                       </div>
                     )}

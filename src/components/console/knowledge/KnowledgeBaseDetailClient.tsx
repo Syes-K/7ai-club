@@ -403,6 +403,12 @@ export function KnowledgeBaseDetailClient({ baseId }: { baseId: string }) {
                 fixed: "right",
                 render: (_, row) => (
                   <Space size="small" wrap>
+                    <Link
+                      href={`/knowledge/preview/${row.id}?baseId=${encodeURIComponent(baseId)}`}
+                      className="text-sm text-violet-600 hover:text-violet-500 dark:text-violet-400 dark:hover:text-violet-300"
+                    >
+                      预览
+                    </Link>
                     <Button
                       type="link"
                       size="small"

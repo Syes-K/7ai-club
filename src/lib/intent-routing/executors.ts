@@ -2,7 +2,7 @@ import { DEEPSEEK_DEFAULT_MODEL } from "@/lib/provider/constants";
 import type { ChatMessage } from "@/lib/chat/types";
 import { getAppConfig } from "@/lib/config";
 import { fetchChatCompletionText } from "@/lib/provider/providers";
-import { searchKnowledgeEntries } from "@/lib/knowledge";
+import { getKnowledgeStore, searchKnowledgeEntries } from "@/lib/knowledge";
 import type {
   IntentRoute,
   IntentRoutingConfig,
@@ -21,6 +21,11 @@ export type RuntimeState = {
     score: number;
     kbEntryId: string;
   }>;
+  /**
+   * 检索阶段命中的知识库文档（id + 标题，顺序为首次命中顺序），由 knowledge_search 写入；
+   * 供 model_request 在提示中附带预览路径与文档名称。
+   */
+  hitKnowledgeDocuments: Array<{ id: string; title: string | null }>;
   fallbackReason?: "empty_retrieval" | "retrieval_error" | "intent_not_hit";
   modelAnswer?: string;
   /** 会话助手提示词快照；非空时置于模型 messages 最前一条 system */
@@ -175,6 +180,7 @@ const intentRecognitionExecutor: NodeExecutor = async (ctx) => {
 };
 
 const knowledgeSearchExecutor: NodeExecutor = async (ctx) => {
+  ctx.state.hitKnowledgeDocuments = [];
   const appCfg = getAppConfig();
   const topN = appCfg.intentSearchTopN;
   const scoreThreshold = appCfg.intentScoreThreshold;
@@ -215,6 +221,12 @@ const knowledgeSearchExecutor: NodeExecutor = async (ctx) => {
         kbEntryId: h.entryId,
       }));
     ctx.state.retrievalHits = filtered;
+    const uniqueIds = [...new Set(filtered.map((h) => h.kbEntryId))];
+    const store = getKnowledgeStore();
+    ctx.state.hitKnowledgeDocuments = uniqueIds.map((id) => {
+      const e = store.getEntry(id);
+      return { id, title: e?.title ?? null };
+    });
     if (filtered.length === 0) {
       ctx.state.fallbackReason = "empty_retrieval";
       return {
@@ -224,6 +236,7 @@ const knowledgeSearchExecutor: NodeExecutor = async (ctx) => {
           retrievalCountAfterFilter: 0,
           scoreThreshold,
           topN,
+          hitKnowledgeDocuments: [],
         },
       };
     }
@@ -234,6 +247,7 @@ const knowledgeSearchExecutor: NodeExecutor = async (ctx) => {
         retrievalCountAfterFilter: filtered.length,
         scoreThreshold,
         topN,
+        hitKnowledgeDocuments: ctx.state.hitKnowledgeDocuments,
       },
     };
   } catch (e) {
@@ -245,7 +259,47 @@ const knowledgeSearchExecutor: NodeExecutor = async (ctx) => {
   }
 };
 
-const KNOWLEDGE_AUGMENT_SYSTEM = `你是知识增强问答助手。优先基于给定知识片段回答；若片段不足可明确说明并给出稳妥结论。`;
+/** 站内知识库文档 Markdown 预览路径（与 `src/app/knowledge/preview/[entryId]` 一致）。 */
+export const KNOWLEDGE_DOC_PREVIEW_PATH = "/knowledge/preview";
+
+const KNOWLEDGE_AUGMENT_SYSTEM = `你是知识增强问答助手。优先基于给定知识片段回答；若片段不足可明确说明并给出稳妥结论。
+当用户消息中列出「命中的知识库文档」及 Markdown 预览链接时，请在回答末尾用简短列表复述（文档名称 + \`[文字](路径)\` 链接，路径须与给定内容完全一致）。对话页中链接会在新标签页打开，便于用户查看原文 Markdown 而不中断对话。`;
+
+function formatHitKnowledgeDocLines(
+  docs: Array<{ id: string; title: string | null }>
+): string {
+  if (docs.length === 0) return "";
+  return [
+    "",
+    "---",
+    "命中的知识库文档（文档名称与 Markdown 预览链接；用户点击后在新标签页打开）：",
+    ...docs.map(({ id, title }) => {
+      const href = `${KNOWLEDGE_DOC_PREVIEW_PATH}/${id}`;
+      const name = title?.trim() ? title.trim() : "（无标题）";
+      return `- **${name}**  ·  [打开预览（新标签页）](${href})`;
+    }),
+  ].join("\n");
+}
+
+function appendKnowledgeUserBlock(
+  base: string,
+  docs: Array<{ id: string; title: string | null }>
+): string {
+  const extra = formatHitKnowledgeDocLines(docs);
+  return extra ? `${base}${extra}` : base;
+}
+
+/** 仅 id 列表时从 store 补全标题（fallback） */
+function deriveHitKnowledgeDocumentsFromHits(
+  retrievalHits: IntentRoutingRetrievalHit[]
+): Array<{ id: string; title: string | null }> {
+  const uniqueIds = [...new Set(retrievalHits.map((h) => h.kbEntryId))];
+  const store = getKnowledgeStore();
+  return uniqueIds.map((id) => {
+    const e = store.getEntry(id);
+    return { id, title: e?.title ?? null };
+  });
+}
 
 function prependAssistantSystemChat(
   messages: ChatMessage[],
@@ -270,12 +324,16 @@ function buildSingleTurnMessages(ctx: NodeExecutionContext): ChatMessage[] {
         `[${idx + 1}] kb_entry_id=${h.kbEntryId}; score=${h.score.toFixed(4)}\n${h.content}`
     )
     .join("\n\n");
+  const userBlock = appendKnowledgeUserBlock(
+    `用户问题：${ctx.state.query}\n\n可用知识片段：\n${knowledge}`,
+    ctx.state.hitKnowledgeDocuments
+  );
   return prependAssistantSystemChat(
     [
       { role: "system", content: KNOWLEDGE_AUGMENT_SYSTEM },
       {
         role: "user",
-        content: `用户问题：${ctx.state.query}\n\n可用知识片段：\n${knowledge}`,
+        content: userBlock,
       },
     ],
     ap
@@ -303,13 +361,17 @@ function buildModelMessages(ctx: NodeExecutionContext): ChatMessage[] {
       .join("\n\n");
     const prefix = msgs.slice(0, -1);
     const q = last.content;
+    const userBlock = appendKnowledgeUserBlock(
+      `用户问题：${q}\n\n可用知识片段：\n${knowledge}`,
+      ctx.state.hitKnowledgeDocuments
+    );
     return prependAssistantSystemChat(
       [
         ...prefix,
         { role: "system", content: KNOWLEDGE_AUGMENT_SYSTEM },
         {
           role: "user",
-          content: `用户问题：${q}\n\n可用知识片段：\n${knowledge}`,
+          content: userBlock,
         },
       ],
       ap
@@ -322,14 +384,21 @@ function buildModelMessages(ctx: NodeExecutionContext): ChatMessage[] {
 export function buildModelMessagesFromState(params: {
   query: string;
   retrievalHits: IntentRoutingRetrievalHit[];
+  /** 未传时从 retrievalHits 去重并用 store 补标题 */
+  hitKnowledgeDocuments?: Array<{ id: string; title: string | null }>;
   assistantSystemPrompt?: string | null;
   /** 多轮：与 chat 路由中 `buildMessagesWithContextSummary` 输出一致 */
   contextMessages?: ChatMessage[] | null;
 }): ChatMessage[] {
+  const hitDocs =
+    params.hitKnowledgeDocuments !== undefined
+      ? params.hitKnowledgeDocuments
+      : deriveHitKnowledgeDocumentsFromHits(params.retrievalHits);
   const fakeCtx = {
     state: {
       query: params.query,
       retrievalHits: params.retrievalHits,
+      hitKnowledgeDocuments: hitDocs,
       assistantSystemPrompt: params.assistantSystemPrompt,
       contextMessages:
         params.contextMessages && params.contextMessages.length > 0
@@ -355,6 +424,7 @@ const modelRequestExecutor: NodeExecutor = async (ctx) => {
       provider,
       model: ctx.config.chatRoute.model ?? DEEPSEEK_DEFAULT_MODEL,
       usedKnowledgeCount: ctx.state.retrievalHits.length,
+      hitKnowledgeDocumentCount: ctx.state.hitKnowledgeDocuments.length,
     },
   };
 };

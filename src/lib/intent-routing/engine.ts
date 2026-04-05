@@ -39,6 +39,7 @@ function buildNodeStateSnapshot(state: RuntimeState) {
     matchedIntentId: state.matchedIntent?.intentId ?? null,
     confidence: state.confidence ?? null,
     retrievalCount: state.retrievalHits.length,
+    hitKnowledgeDocumentCount: state.hitKnowledgeDocuments.length,
     contextMessageCount: state.contextMessages?.length ?? 0,
     fallbackReason: state.fallbackReason ?? null,
     hasModelAnswer: Boolean(state.modelAnswer),
@@ -64,6 +65,7 @@ function buildNodeInput(
       return {
         query: state.query,
         retrievalCount: state.retrievalHits.length,
+        hitKnowledgeDocuments: state.hitKnowledgeDocuments,
         contextMessageCount: state.contextMessages?.length ?? 0,
         retrievalHits: state.retrievalHits.map((h) => ({
           chunkId: h.chunkId,
@@ -115,6 +117,7 @@ export async function executeIntentRoutingOnce(params: {
     query: params.query.trim(),
     forcedIntentId: params.intentId?.trim() || undefined,
     retrievalHits: [],
+    hitKnowledgeDocuments: [],
     assistantSystemPrompt: params.assistantSystemPrompt,
     contextMessages:
       params.contextMessages && params.contextMessages.length > 0
@@ -198,6 +201,7 @@ export async function executeIntentRoutingStream(params: {
     query: params.query.trim(),
     forcedIntentId: params.intentId?.trim() || undefined,
     retrievalHits: [],
+    hitKnowledgeDocuments: [],
     assistantSystemPrompt: params.assistantSystemPrompt,
     contextMessages:
       params.contextMessages && params.contextMessages.length > 0
@@ -272,6 +276,7 @@ export async function executeIntentRoutingStream(params: {
         const messages = buildModelMessagesFromState({
           query: state.query,
           retrievalHits: state.retrievalHits,
+          hitKnowledgeDocuments: state.hitKnowledgeDocuments,
           assistantSystemPrompt: state.assistantSystemPrompt,
           contextMessages: state.contextMessages,
         });
@@ -299,6 +304,7 @@ export async function executeIntentRoutingStream(params: {
                 provider,
                 model: model ?? DEEPSEEK_DEFAULT_MODEL,
                 usedKnowledgeCount: state.retrievalHits.length,
+                hitKnowledgeDocumentCount: state.hitKnowledgeDocuments.length,
               },
             },
             state
@@ -318,6 +324,7 @@ export async function executeIntentRoutingStream(params: {
               provider,
               model: model ?? DEEPSEEK_DEFAULT_MODEL,
               usedKnowledgeCount: state.retrievalHits.length,
+              hitKnowledgeDocumentCount: state.hitKnowledgeDocuments.length,
               streamedChars: fullText.length,
             },
             "success"
