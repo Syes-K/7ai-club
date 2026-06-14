@@ -18,6 +18,11 @@
 # misc
 .DS_Store
 *.pem
+__pycache__/
+*.pyc
+
+# specstory local history
+.specstory/
 
 # debug
 npm-debug.log*
@@ -27,6 +32,9 @@ yarn-error.log*
 # local env files
 .env*.local
 .env
+
+# cursor — copy mcp.json.example if customizing per-developer tokens
+# Project mcp.json uses OAuth (no secrets); global ~/.cursor/mcp.json may contain API keys
 
 # vercel
 .vercel

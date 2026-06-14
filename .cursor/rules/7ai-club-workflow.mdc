@@ -1,0 +1,62 @@
+---
+description: 7ai-club 两阶段开发工作流门禁（PRD → 技术设计 → 编码）
+alwaysApply: true
+---
+
+# 7ai-club 开发工作流
+
+本项目使用两个自定义 subagent 分阶段交付：
+
+| Subagent | 文件 | 职责 |
+|----------|------|------|
+| `product-analyst` | `.cursor/agents/product-analyst.md` | 需求对焦、PRD |
+| `fullstack-developer` | `.cursor/agents/fullstack-developer.md` | 技术设计、编码 |
+
+## 文档约定（Feature 为主 + 迭代索引）
+
+**PRD / 技术设计** 放在 feature 目录（跨迭代修订同一文件，不按迭代号复制）：
+
+```
+docs/features/<slug>/
+  README.md                    # 可选：功能概览与当前状态
+  01-product-requirements.md   # PRD（product-analyst）
+  02-technical-design.md       # 技术设计（fullstack-developer）
+```
+
+**迭代** 仅作计划与发布索引（不放 PRD/设计正文）：
+
+```
+docs/iterations/<iter-id>/
+  README.md                    # 本迭代目标、包含的 features、验收、发布状态
+```
+
+| 概念 | 记录位置 | 示例 |
+|------|----------|------|
+| 迭代（时间盒） | `docs/iterations/iter-01/README.md` | 本 sprint 交付什么 |
+| Feature（能力） | `docs/features/mvp-chat/` | 长期存在的功能文档 |
+| 路线图阶段 | PRD frontmatter `phase: 1` | 架构路线图 1–5 |
+
+模板：`.cursor/skills/iteration-planning/templates/iter-readme-template.md`
+
+## 门禁规则
+
+1. **无确认 PRD** → 不进行技术设计、不编写实现代码
+2. **无确认技术设计** → 不编写实现代码（`.ts`、`.tsx`、`.sql` 等）
+3. 用户确认话术：
+   - PRD：`PRD 已确认，可进入技术设计`
+   - 技术设计：`技术设计已确认，可开始编码`
+
+## 技术栈（已决）
+
+- 方案 B：Vercel AI SDK + Next.js App Router + Supabase + Vercel 部署
+- MVP 不使用 n8n 编排
+
+## 调用示例
+
+```
+用 product-analyst 分析 [功能描述]，slug: mvp-chat，迭代: iter-01
+```
+
+```
+用 fullstack-developer 读取 docs/features/mvp-chat/01-product-requirements.md，先做技术设计
+```
