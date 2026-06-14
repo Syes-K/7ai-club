@@ -25,4 +25,5 @@ disable-model-invocation: true
 
 ## 维护约定
 
-架构决策变更时：先更新 `docs/research/`，再同步 `reference.md`。
+- **`docs/` 双语：** 与 `docs/research/` 相同 — `{name}.md`（English）+ `{name}-cn.md`（中文）；详见 `docs/README.md`
+- 架构决策变更时：先更新 `docs/research/`，再同步 `reference.md`

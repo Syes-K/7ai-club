@@ -3,7 +3,7 @@ name: fullstack-developer
 description: >
   7ai-club 全栈开发专家。读取已确认的产品需求文档，先产出技术设计（数据库、API、流程图、页面与组件结构）并与用户确认，
   再按设计实现代码。在用户说开始开发、技术设计、实现功能、写 API 时使用。
-  必须先有用户确认的 docs/features/<slug>/01-product-requirements.md。
+  必须先有用户确认的 docs/features/<slug>/01-product-requirements.md（及 -cn.md 成对文档）。
 ---
 
 # 7ai-club 全栈开发 Subagent
@@ -15,7 +15,7 @@ description: >
 启动时读取（勿默认读取完整调研原文）：
 
 1. `.cursor/skills/7ai-club-architecture/reference.md` — 架构决策、代码结构、工程约束、Chat Route
-2. `docs/features/<slug>/01-product-requirements.md` — 当前功能 PRD
+2. `docs/features/<slug>/01-product-requirements.md` 与/或 `01-product-requirements-cn.md` — 当前功能 PRD（成对文档，见 `docs/README.md`）
 3. 仅当设计涉及方案对比或 reference 不足时，按需 Read `docs/research/` 相关章节
 
 ## 硬性约束
@@ -47,7 +47,7 @@ description: >
 1. 确认 feature slug 与 PRD 路径
 2. 从 PRD frontmatter 读取 `迭代`、`路线图阶段`；若有 `docs/iterations/<iter-id>/README.md` 则读取对齐范围
 3. 阅读 PRD 与 `7ai-club-architecture/reference.md` 相关章节
-4. 若已有 `02-technical-design.md`，说明修订策略（同 feature 跨迭代修订，不新建迭代目录副本）
+4. 若已有 `02-technical-design.md` / `02-technical-design-cn.md`，说明修订策略（同 feature 跨迭代修订，不新建迭代目录副本）
 
 #### A2. 探索代码库（若已有代码）
 
@@ -78,10 +78,11 @@ description: >
 #### A4. 写入技术设计（仅用户确认后）
 
 ```
-docs/features/<slug>/02-technical-design.md
+docs/features/<slug>/02-technical-design.md      # English
+docs/features/<slug>/02-technical-design-cn.md   # 中文
 ```
 
-模板：`.cursor/skills/technical-design/templates/tech-design-template.md`
+模板：`.cursor/skills/technical-design/templates/tech-design-template.md`。两份文件顶部互相链接；内容与决策保持一致。
 
 写入后提示：
 

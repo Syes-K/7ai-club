@@ -4,7 +4,7 @@
 
 聊天优先、可配置 AI 助理的 Web 平台。用户可创建助理、进行流式对话，并为每个助理配置系统提示词、知识库与 MCP 工具。
 
-**当前状态：** 架构调研与 Cursor 开发工作流已就绪；应用代码尚未脚手架化。
+**当前状态：** iter-01 MVP 聊天已实现（Next.js + Supabase Auth + SiliconFlow 流式聊天）。
 
 ---
 
@@ -45,11 +45,12 @@ docs/
 
 | 类型 | 路径 |
 |------|------|
-| PRD | `docs/features/<slug>/01-product-requirements.md` |
-| 技术设计 | `docs/features/<slug>/02-technical-design.md` |
-| 迭代索引 | `docs/iterations/<iter-id>/README.md` |
+| 文档索引 | `docs/README.md` / `docs/README-cn.md` |
+| PRD | `docs/features/<slug>/01-product-requirements.md` + `01-product-requirements-cn.md` |
+| 技术设计 | `docs/features/<slug>/02-technical-design.md` + `02-technical-design-cn.md` |
+| 迭代索引 | `docs/iterations/<iter-id>/README.md` + `README-cn.md` |
 
-**原则：** Feature 目录存放可长期修订的需求与设计；迭代目录只记录本时间盒的目标与包含的 features，不重复存放 PRD 正文。
+**原则：** Feature 目录存放可长期修订的需求与设计；迭代目录只记录本时间盒的目标与包含的 features。**`docs/` 与 `research/` 相同，中英文成对维护。**
 
 ---
 
@@ -93,21 +94,32 @@ docs/
 
 ---
 
-## 本地开发（脚手架完成后）
+## 本地开发
 
 ```bash
-# 依赖安装与启动命令将在 Next.js 脚手架落地后补充
-cp .env.example .env.local   # 配置 Supabase / LLM 密钥
+pnpm install
+cp .env.example .env.local   # 填写 Supabase 与 LLM 提供商密钥
 ```
 
-环境变量（规划）：
+**Supabase 数据库：** 在 Supabase 项目执行 `supabase/migrations/20260614000000_mvp_chat.sql`（或通过 Supabase CLI `supabase db push`）。
+
+```bash
+pnpm dev     # http://localhost:3000
+pnpm build   # 生产构建验证
+```
+
+### 环境变量
 
 | 变量 | 说明 |
 |------|------|
 | `NEXT_PUBLIC_SUPABASE_URL` | Supabase 项目 URL |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | 匿名公钥 |
-| `SUPABASE_SERVICE_ROLE_KEY` | 服务端（勿暴露给浏览器） |
-| LLM 相关 | 按所选提供商配置 |
+| `LLM_PROVIDER` | `siliconflow` 或 `nvidia`（默认 `siliconflow`） |
+| `LLM_MODEL` | 可选，覆盖默认模型 |
+| `SILICONFLOW_API_KEY` | SiliconFlow API Key（`LLM_PROVIDER=siliconflow` 时） |
+| `SILICONFLOW_BASE_URL` | 可选，默认 `https://api.siliconflow.cn/v1` |
+| `NVIDIA_API_KEY` | NVIDIA NIM API Key（`LLM_PROVIDER=nvidia` 时） |
+| `NVIDIA_BASE_URL` | 可选，默认 `https://integrate.api.nvidia.com/v1` |
 
 ---
 

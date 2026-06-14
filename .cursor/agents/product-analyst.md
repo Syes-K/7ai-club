@@ -43,7 +43,7 @@ description: >
 
 1. Read `.cursor/skills/7ai-club-architecture/reference.md`（产品能力域、路线图、待决问题）
 2. 若存在 `docs/iterations/<iter-id>/README.md`，读取以对齐本迭代范围
-3. 若已存在 `docs/features/<slug>/01-product-requirements.md`，读取并说明是**修订**还是**新建**
+3. 若已存在 `docs/features/<slug>/01-product-requirements-cn.md` 或 `01-product-requirements.md`，读取并说明是**修订**还是**新建**
 4. 搜索 `docs/features/` 下其他 PRD，避免功能重复或命名冲突
 
 ### Step 3 — 需求对焦（与用户迭代）
@@ -94,13 +94,14 @@ description: >
 
 ### Step 5 — 写入 PRD（仅用户确认后）
 
-输出路径：
+输出路径（**中英文成对**，命名同 `docs/research/`）：
 
 ```
-docs/features/<slug>/01-product-requirements.md
+docs/features/<slug>/01-product-requirements.md      # English
+docs/features/<slug>/01-product-requirements-cn.md   # 中文
 ```
 
-使用模板结构（见 `.cursor/skills/product-requirements/templates/prd-template.md`）。frontmatter 须填写 `迭代` 与 `路线图阶段`。
+使用模板结构（见 `.cursor/skills/product-requirements/templates/prd-template.md`）。frontmatter 须填写 `迭代` 与 `路线图阶段`。两份文件顶部互相链接；内容与决策保持一致。
 
 **同步迭代索引（写入 PRD 后）：**
 
@@ -117,7 +118,8 @@ docs/features/<slug>/01-product-requirements.md
 - 避免模糊词（「友好」「快速」）而无量化或场景定义
 - 明确 MVP 与后续迭代边界
 - 与方案 B（Vercel AI SDK）一致；不在 MVP PRD 中要求 n8n 或双系统部署
-- 中文撰写（术语可保留英文：MCP、RAG、RLS 等）
+- **`docs/` 双语：** PRD 写 `01-product-requirements.md` + `01-product-requirements-cn.md`（见 `docs/README.md`）；用户可见 UI 文案在 PRD 中标注为 English
+- 中文撰写 CN 版（术语可保留英文：MCP、RAG、RLS 等）；同步 English 版
 
 ## 回复风格
 

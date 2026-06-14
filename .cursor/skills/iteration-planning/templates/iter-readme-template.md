@@ -1,6 +1,9 @@
-# [迭代标题，如 iter-01 — MVP 聊天]
+# [Iteration title, e.g. iter-01 — MVP Chat]
 
-> **迭代 ID：** `iter-01`  
+> **English:** [README.md](./README.md)  
+> **中文：** [README-cn.md](./README-cn.md)
+
+> **Iteration ID:** `iter-01`  
 > **状态：** 计划中 / 进行中 / 已发布  
 > **路线图阶段：** 1（见 architecture reference 实施路线图）  
 > **计划发布：** YYYY-MM-DD  
@@ -28,7 +31,7 @@
 
 | Feature slug | PRD | 技术设计 | 优先级 | 本迭代状态 |
 |--------------|-----|----------|--------|------------|
-| `mvp-chat` | [链接](../features/mvp-chat/01-product-requirements.md) | [链接](../features/mvp-chat/02-technical-design.md) | P0 | 进行中 |
+| `mvp-chat` | [01-product-requirements.md](../features/mvp-chat/01-product-requirements.md) · [01-product-requirements-cn.md](../features/mvp-chat/01-product-requirements-cn.md) | [02-technical-design.md](../features/mvp-chat/02-technical-design.md) · [02-technical-design-cn.md](../features/mvp-chat/02-technical-design-cn.md) | P0 | In progress |
 
 路径约定：文档在 `docs/features/<slug>/`，**不在**迭代文件夹内重复存放 PRD/设计。
 

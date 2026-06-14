@@ -196,6 +196,23 @@ if (!user) return new Response('Unauthorized', { status: 401 });
 
 PRD / 技术设计须标明功能所属阶段。
 
+## Locale & user-facing copy（已决）
+
+| 范围 | 语言 | 说明 |
+|------|------|------|
+| 用户可见 UI | **English** | 页面文案、按钮、空态/错误提示、`aria-label` |
+| DB seed / 默认值 | **English** | 如 `assistants.name`、`system_prompt`、对话默认 title |
+| **`docs/` 项目文档** | **English + 中文（成对）** | 与 `docs/research/` 相同：`*.md` + `*-cn.md`；见 `docs/README.md` |
+| Cursor rules / skills / Agent 回复 | 中文为主 | 与用户协作；术语可保留英文 |
+| i18n（产品多语言） | 暂不做 | 需要时再引入 `next-intl` 等 |
+
+**编码约束：**
+
+- `app/`、`components/` 中面向用户的字符串使用英文
+- 新增 Supabase migration 的 seed / default 与用户可见枚举值使用英文
+- 默认助理 system prompt 使用英文；模型按用户输入语言回复（见 seed 文案）
+- `html lang="en"`（`app/layout.tsx`）
+
 ## 配置 vs 编排边界
 
 | Supabase（应用管理） | 代码编排（AI SDK） |

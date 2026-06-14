@@ -4,7 +4,7 @@
 
 A chat-first web platform for configurable AI assistants. Users can create assistants, chat with streaming responses, and configure per-assistant system prompts, knowledge bases, and MCP tools.
 
-**Status:** Architecture research and the Cursor development workflow are in place; application code has not been scaffolded yet.
+**Status:** iter-01 MVP chat is implemented (Next.js + Supabase Auth + SiliconFlow streaming chat).
 
 ---
 
@@ -43,13 +43,15 @@ docs/
 
 ## Documentation Conventions
 
+See [`docs/README.md`](docs/README.md) (Chinese: [`docs/README-cn.md`](docs/README-cn.md)).
+
 | Type | Path |
 |------|------|
-| PRD | `docs/features/<slug>/01-product-requirements.md` |
-| Technical design | `docs/features/<slug>/02-technical-design.md` |
-| Iteration index | `docs/iterations/<iter-id>/README.md` |
+| PRD | `docs/features/<slug>/01-product-requirements.md` + `01-product-requirements-cn.md` |
+| Technical design | `docs/features/<slug>/02-technical-design.md` + `02-technical-design-cn.md` |
+| Iteration index | `docs/iterations/<iter-id>/README.md` + `README-cn.md` |
 
-**Principle:** Feature folders hold living requirements and design docs. Iteration folders only track time-boxed goals and which features ship—do not duplicate PRD bodies per iteration.
+**Principle:** Feature folders hold living requirements and design docs. Iteration folders track time-boxed goals only. **`docs/` pairs English and Chinese files like `research/`.**
 
 ---
 
@@ -93,21 +95,32 @@ See `.cursor/rules/7ai-club-workflow.mdc` for full workflow rules.
 
 ---
 
-## Local Development (after scaffolding)
+## Local Development
 
 ```bash
-# Install and start commands will be added once the Next.js app is scaffolded
-cp .env.example .env.local   # Supabase / LLM keys
+pnpm install
+cp .env.example .env.local   # Supabase + LLM provider keys
 ```
 
-Planned environment variables:
+**Database:** Run `supabase/migrations/20260614000000_mvp_chat.sql` on your Supabase project (or `supabase db push` with the CLI).
+
+```bash
+pnpm dev     # http://localhost:3000
+pnpm build   # production build check
+```
+
+### Environment variables
 
 | Variable | Description |
 |----------|-------------|
 | `NEXT_PUBLIC_SUPABASE_URL` | Supabase project URL |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Public anon key |
-| `SUPABASE_SERVICE_ROLE_KEY` | Server-only (never expose to the browser) |
-| LLM-related | Per chosen provider |
+| `LLM_PROVIDER` | `siliconflow` or `nvidia` (default: `siliconflow`) |
+| `LLM_MODEL` | Optional model override |
+| `SILICONFLOW_API_KEY` | SiliconFlow API key (when `LLM_PROVIDER=siliconflow`) |
+| `SILICONFLOW_BASE_URL` | Optional; default `https://api.siliconflow.cn/v1` |
+| `NVIDIA_API_KEY` | NVIDIA NIM API key (when `LLM_PROVIDER=nvidia`) |
+| `NVIDIA_BASE_URL` | Optional; default `https://integrate.api.nvidia.com/v1` |
 
 ---
 

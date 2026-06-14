@@ -14,20 +14,31 @@ alwaysApply: true
 
 ## 文档约定（Feature 为主 + 迭代索引）
 
+**`docs/` 中英文成对维护**，命名与 `docs/research/` 一致（详见 [`docs/README.md`](../../docs/README.md) / [`docs/README-cn.md`](../../docs/README-cn.md)）：
+
+| 语言 | 文件名 |
+|------|--------|
+| English | `{name}.md` |
+| 中文 | `{name}-cn.md` |
+
 **PRD / 技术设计** 放在 feature 目录（跨迭代修订同一文件，不按迭代号复制）：
 
 ```
 docs/features/<slug>/
-  README.md                    # 可选：功能概览与当前状态
-  01-product-requirements.md   # PRD（product-analyst）
-  02-technical-design.md       # 技术设计（fullstack-developer）
+  README.md                      # 可选：功能概览（English）
+  README-cn.md                   # 可选：功能概览（中文）
+  01-product-requirements.md     # PRD（English）
+  01-product-requirements-cn.md  # PRD（中文，product-analyst）
+  02-technical-design.md         # 技术设计（English）
+  02-technical-design-cn.md    # 技术设计（中文，fullstack-developer）
 ```
 
 **迭代** 仅作计划与发布索引（不放 PRD/设计正文）：
 
 ```
 docs/iterations/<iter-id>/
-  README.md                    # 本迭代目标、包含的 features、验收、发布状态
+  README.md                      # English
+  README-cn.md                   # 中文
 ```
 
 | 概念 | 记录位置 | 示例 |
@@ -50,6 +61,7 @@ docs/iterations/<iter-id>/
 
 - 方案 B：Vercel AI SDK + Next.js App Router + Supabase + Vercel 部署
 - MVP 不使用 n8n 编排
+- **用户可见 UI / DB seed 文案：English**（详见 `.cursor/skills/7ai-club-architecture/reference.md` → Locale）
 
 ## 调用示例
 
