@@ -6,7 +6,7 @@ import {
   streamText,
   type UIMessage,
 } from "ai";
-import { getChatModel } from "@/lib/llm/provider";
+import { getChatModel, getLlmConfigError } from "@/lib/llm/provider";
 import {
   getAssistantForConversation,
   getConversationForUser,
@@ -24,6 +24,12 @@ type ChatRequestBody = {
 };
 
 export async function POST(req: Request) {
+  const configError = getLlmConfigError();
+  if (configError) {
+    console.error("LLM config error:", configError);
+    return new Response(configError, { status: 503 });
+  }
+
   const supabase = await createClient();
   const {
     data: { user },

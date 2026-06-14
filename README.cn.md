@@ -121,6 +121,29 @@ pnpm build   # 生产构建验证
 | `NVIDIA_API_KEY` | NVIDIA NIM API Key（`LLM_PROVIDER=nvidia` 时） |
 | `NVIDIA_BASE_URL` | 可选，默认 `https://integrate.api.nvidia.com/v1` |
 
+### 部署到 Vercel
+
+1. **环境变量** — 在 Vercel → Project → Settings → Environment Variables 中，为 **Production**（及 Preview）配置与 `.env.local` 相同的变量：
+
+   | 必填 | 说明 |
+   |------|------|
+   | `NEXT_PUBLIC_SUPABASE_URL` | 与本地相同 |
+   | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | 与本地相同 |
+   | `LLM_PROVIDER` | `nvidia` 或 `siliconflow` |
+   | `NVIDIA_API_KEY` | `LLM_PROVIDER=nvidia` 时必填 |
+   | `SILICONFLOW_API_KEY` | `LLM_PROVIDER=siliconflow` 时必填 |
+   | `LLM_MODEL` | 可选（如 `deepseek-ai/deepseek-v4-flash`） |
+
+   服务端密钥（`NVIDIA_API_KEY`、`SILICONFLOW_API_KEY`）**不要**加 `NEXT_PUBLIC_` 前缀。
+
+2. **修改环境变量后必须 Redeploy**（Deployments → … → Redeploy）。
+
+3. **Supabase Auth** — 在 Supabase → Authentication → URL Configuration 添加 Vercel 域名：
+   - Site URL: `https://your-app.vercel.app`
+   - Redirect URLs: `https://your-app.vercel.app/**`
+
+4. **函数超时** — Hobby 计划 Serverless 函数最长 **10 秒**。大模型（如 `deepseek-v4-pro`）可能超时；可改用 `deepseek-v4-flash` 或升级 Pro（60 秒+）。
+
 ---
 
 ## MCP（Cursor IDE）

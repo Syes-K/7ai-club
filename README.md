@@ -122,6 +122,29 @@ pnpm build   # production build check
 | `NVIDIA_API_KEY` | NVIDIA NIM API key (when `LLM_PROVIDER=nvidia`) |
 | `NVIDIA_BASE_URL` | Optional; default `https://integrate.api.nvidia.com/v1` |
 
+### Deploying to Vercel
+
+1. **Environment variables** — In Vercel → Project → Settings → Environment Variables, add the same keys as `.env.local` for **Production** (and Preview if needed):
+
+   | Required | Notes |
+   |----------|--------|
+   | `NEXT_PUBLIC_SUPABASE_URL` | Same as local |
+   | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Same as local |
+   | `LLM_PROVIDER` | `nvidia` or `siliconflow` |
+   | `NVIDIA_API_KEY` | Required when `LLM_PROVIDER=nvidia` |
+   | `SILICONFLOW_API_KEY` | Required when `LLM_PROVIDER=siliconflow` |
+   | `LLM_MODEL` | Optional override (e.g. `deepseek-ai/deepseek-v4-flash`) |
+
+   Server-only keys (`NVIDIA_API_KEY`, `SILICONFLOW_API_KEY`) must **not** use the `NEXT_PUBLIC_` prefix.
+
+2. **Redeploy** after changing env vars (Deployments → … → Redeploy).
+
+3. **Supabase Auth** — In Supabase → Authentication → URL Configuration, add your Vercel URL:
+   - Site URL: `https://your-app.vercel.app`
+   - Redirect URLs: `https://your-app.vercel.app/**`
+
+4. **Function timeout** — Hobby plan limits serverless functions to **10 seconds**. Large models (e.g. `deepseek-v4-pro`) may hit this limit; use `deepseek-v4-flash` or upgrade to Pro (60s+).
+
 ---
 
 ## MCP (Cursor IDE)

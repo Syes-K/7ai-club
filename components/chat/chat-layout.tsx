@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Menu, Plus, X } from "lucide-react";
 import type { ConversationSummary } from "@/lib/chat/conversations";
+import { chatFetch } from "@/lib/chat/fetch-with-error";
 import { ChatInput } from "@/components/chat/chat-input";
 import { ChatMessages } from "@/components/chat/chat-messages";
 import { ChatSidebar } from "@/components/chat/chat-sidebar";
@@ -35,6 +36,7 @@ export function ChatLayout({
     messages: initialMessages,
     transport: new DefaultChatTransport({
       api: "/api/chat",
+      fetch: chatFetch,
       prepareSendMessagesRequest: ({ id, messages: allMessages }) => ({
         body: {
           conversationId: id,

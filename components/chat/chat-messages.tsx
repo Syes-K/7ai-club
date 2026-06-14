@@ -2,6 +2,7 @@
 
 import type { ChatStatus, UIMessage } from "ai";
 import { Bot, User } from "lucide-react";
+import { formatChatErrorMessage } from "@/lib/chat/fetch-with-error";
 import { cn } from "@/lib/utils";
 
 interface ChatMessagesProps {
@@ -87,7 +88,7 @@ export function ChatMessages({ messages, status, error }: ChatMessagesProps) {
           className="mx-auto mt-4 max-w-3xl rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-300"
           role="alert"
         >
-          {error.message || "Failed to send message. Please try again."}
+          {formatChatErrorMessage(error)}
         </div>
       )}
     </div>

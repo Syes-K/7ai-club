@@ -77,3 +77,24 @@ export function getLlmDisplayLabel(assistantModel?: string): string {
   const model = resolveChatModelId(assistantModel);
   return `${model} (${provider})`;
 }
+
+/** Returns a user-facing message when the active provider is misconfigured. */
+export function getLlmConfigError(): string | null {
+  const provider = getLlmProviderId();
+  const config = PROVIDER_CONFIG[provider];
+  const apiKey = process.env[config.apiKeyEnv]?.trim();
+
+  if (!apiKey) {
+    return `${config.apiKeyEnv} is not set. Add it in Vercel → Project Settings → Environment Variables, then redeploy.`;
+  }
+
+  if (!process.env.NEXT_PUBLIC_SUPABASE_URL?.trim()) {
+    return "NEXT_PUBLIC_SUPABASE_URL is not set.";
+  }
+
+  if (!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY?.trim()) {
+    return "NEXT_PUBLIC_SUPABASE_ANON_KEY is not set.";
+  }
+
+  return null;
+}
