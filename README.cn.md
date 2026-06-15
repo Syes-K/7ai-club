@@ -114,12 +114,14 @@ pnpm build   # 生产构建验证
 |------|------|
 | `NEXT_PUBLIC_SUPABASE_URL` | Supabase 项目 URL |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | 匿名公钥 |
-| `LLM_PROVIDER` | `siliconflow` 或 `nvidia`（默认 `siliconflow`） |
+| `LLM_PROVIDER` | `siliconflow`、`nvidia` 或 `bailian`（默认 `siliconflow`；别名：`dashscope`、`aliyun`） |
 | `LLM_MODEL` | 可选，覆盖默认模型 |
 | `SILICONFLOW_API_KEY` | SiliconFlow API Key（`LLM_PROVIDER=siliconflow` 时） |
 | `SILICONFLOW_BASE_URL` | 可选，默认 `https://api.siliconflow.cn/v1` |
 | `NVIDIA_API_KEY` | NVIDIA NIM API Key（`LLM_PROVIDER=nvidia` 时） |
 | `NVIDIA_BASE_URL` | 可选，默认 `https://integrate.api.nvidia.com/v1` |
+| `BAILIAN_API_KEY` | 阿里百炼 API Key（`LLM_PROVIDER=bailian` 时） |
+| `BAILIAN_BASE_URL` | 可选，默认 `https://dashscope.aliyuncs.com/compatible-mode/v1` |
 
 ### 部署到 Vercel
 
@@ -129,9 +131,10 @@ pnpm build   # 生产构建验证
    |------|------|
    | `NEXT_PUBLIC_SUPABASE_URL` | 与本地相同 |
    | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | 与本地相同 |
-   | `LLM_PROVIDER` | `nvidia` 或 `siliconflow` |
+   | `LLM_PROVIDER` | `nvidia`、`siliconflow` 或 `bailian` |
    | `NVIDIA_API_KEY` | `LLM_PROVIDER=nvidia` 时必填 |
    | `SILICONFLOW_API_KEY` | `LLM_PROVIDER=siliconflow` 时必填 |
+   | `BAILIAN_API_KEY` | `LLM_PROVIDER=bailian` 时必填 |
    | `LLM_MODEL` | 可选（如 `deepseek-ai/deepseek-v4-flash`） |
 
    服务端密钥（`NVIDIA_API_KEY`、`SILICONFLOW_API_KEY`）**不要**加 `NEXT_PUBLIC_` 前缀。

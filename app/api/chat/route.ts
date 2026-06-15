@@ -1,5 +1,5 @@
 export const runtime = "nodejs";
-export const maxDuration = 300;
+export const maxDuration = 60;
 
 import {
   convertToModelMessages,
@@ -7,6 +7,7 @@ import {
   type UIMessage,
 } from "ai";
 import { getChatModel, getLlmConfigError } from "@/lib/llm/provider";
+import { getLlmTimeoutMs, mergeAbortSignals } from "@/lib/llm/timeout";
 import {
   getAssistantForConversation,
   getConversationForUser,
@@ -76,13 +77,18 @@ export async function POST(req: Request) {
   }
 
   const assistant = await getAssistantForConversation(conversationId);
+  const llmTimeoutMs = getLlmTimeoutMs();
 
   try {
     const result = streamText({
       model: getChatModel(assistant.model),
       system: assistant.system_prompt,
       messages: await convertToModelMessages(uiMessages),
-      abortSignal: req.signal,
+      abortSignal: mergeAbortSignals(req.signal, AbortSignal.timeout(llmTimeoutMs)),
+      timeout: { totalMs: llmTimeoutMs, chunkMs: 15_000 },
+      onError: ({ error }) => {
+        console.error("LLM stream error:", error);
+      },
     });
 
     return result.toUIMessageStreamResponse({

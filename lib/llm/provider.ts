@@ -1,8 +1,9 @@
 import { createOpenAI } from "@ai-sdk/openai";
 import { createOpenAICompatible } from "@ai-sdk/openai-compatible";
 import type { LanguageModel } from "ai";
+import { createTimeoutFetch, getLlmTimeoutMs } from "./timeout";
 
-export type LlmProviderId = "siliconflow" | "nvidia";
+export type LlmProviderId = "siliconflow" | "nvidia" | "bailian";
 
 const PROVIDER_CONFIG: Record<
   LlmProviderId,
@@ -10,22 +11,35 @@ const PROVIDER_CONFIG: Record<
 > = {
   siliconflow: {
     baseURL: "https://api.siliconflow.cn/v1",
-    defaultModel: "Qwen/Qwen2.5-7B-Instruct",
+    defaultModel: "deepseek-ai/DeepSeek-OCR",
     apiKeyEnv: "SILICONFLOW_API_KEY",
     baseUrlEnv: "SILICONFLOW_BASE_URL",
   },
   nvidia: {
     baseURL: "https://integrate.api.nvidia.com/v1",
-    // deepseek-r1 is deprecated on build.nvidia.com; use v4 flash/pro instead
     defaultModel: "deepseek-ai/deepseek-v4-flash",
     apiKeyEnv: "NVIDIA_API_KEY",
     baseUrlEnv: "NVIDIA_BASE_URL",
   },
+  bailian: {
+    baseURL: "https://dashscope.aliyuncs.com/compatible-mode/v1",
+    defaultModel: "qwen3.6-plus",
+    apiKeyEnv: "BAILIAN_API_KEY",
+    baseUrlEnv: "BAILIAN_BASE_URL",
+  },
+};
+
+const PROVIDER_ALIASES: Record<string, LlmProviderId> = {
+  siliconflow: "siliconflow",
+  nvidia: "nvidia",
+  bailian: "bailian",
+  dashscope: "bailian",
+  aliyun: "bailian",
 };
 
 export function getLlmProviderId(): LlmProviderId {
-  const raw = process.env.LLM_PROVIDER?.trim().toLowerCase();
-  return raw === "nvidia" ? "nvidia" : "siliconflow";
+  const raw = process.env.LLM_PROVIDER?.trim().toLowerCase() ?? "";
+  return PROVIDER_ALIASES[raw] ?? "siliconflow";
 }
 
 export function getDefaultModel(provider: LlmProviderId = getLlmProviderId()): string {
@@ -40,23 +54,32 @@ export function resolveChatModelId(_assistantModel?: string): string {
   return getDefaultModel();
 }
 
-function createSiliconFlowClient() {
-  const config = PROVIDER_CONFIG.siliconflow;
+function createChatCompletionsClient(
+  provider: Extract<LlmProviderId, "siliconflow" | "bailian">,
+) {
+  const config = PROVIDER_CONFIG[provider];
   const baseURL = process.env[config.baseUrlEnv]?.trim() || config.baseURL;
   const apiKey = process.env[config.apiKeyEnv];
+  const timeoutMs = getLlmTimeoutMs();
 
-  return createOpenAI({ baseURL, apiKey });
+  return createOpenAI({
+    baseURL,
+    apiKey,
+    fetch: createTimeoutFetch(timeoutMs),
+  });
 }
 
 function createNvidiaClient() {
   const config = PROVIDER_CONFIG.nvidia;
   const baseURL = process.env[config.baseUrlEnv]?.trim() || config.baseURL;
   const apiKey = process.env[config.apiKeyEnv];
+  const timeoutMs = getLlmTimeoutMs();
 
   return createOpenAICompatible({
     name: "nvidia-nim",
     baseURL,
     apiKey,
+    fetch: createTimeoutFetch(timeoutMs),
   });
 }
 
@@ -69,7 +92,11 @@ export function getChatModel(assistantModel?: string): LanguageModel {
     return createNvidiaClient().chatModel(modelId);
   }
 
-  return createSiliconFlowClient().chat(modelId);
+  if (provider === "bailian") {
+    return createChatCompletionsClient("bailian").chat(modelId);
+  }
+
+  return createChatCompletionsClient("siliconflow").chat(modelId);
 }
 
 export function getLlmDisplayLabel(assistantModel?: string): string {

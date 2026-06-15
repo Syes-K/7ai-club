@@ -115,12 +115,14 @@ pnpm build   # production build check
 |----------|-------------|
 | `NEXT_PUBLIC_SUPABASE_URL` | Supabase project URL |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Public anon key |
-| `LLM_PROVIDER` | `siliconflow` or `nvidia` (default: `siliconflow`) |
+| `LLM_PROVIDER` | `siliconflow`, `nvidia`, or `bailian` (default: `siliconflow`; aliases: `dashscope`, `aliyun`) |
 | `LLM_MODEL` | Optional model override |
 | `SILICONFLOW_API_KEY` | SiliconFlow API key (when `LLM_PROVIDER=siliconflow`) |
 | `SILICONFLOW_BASE_URL` | Optional; default `https://api.siliconflow.cn/v1` |
 | `NVIDIA_API_KEY` | NVIDIA NIM API key (when `LLM_PROVIDER=nvidia`) |
 | `NVIDIA_BASE_URL` | Optional; default `https://integrate.api.nvidia.com/v1` |
+| `BAILIAN_API_KEY` | Alibaba Bailian API key (when `LLM_PROVIDER=bailian`) |
+| `BAILIAN_BASE_URL` | Optional; default `https://dashscope.aliyuncs.com/compatible-mode/v1` |
 
 ### Deploying to Vercel
 
@@ -130,9 +132,10 @@ pnpm build   # production build check
    |----------|--------|
    | `NEXT_PUBLIC_SUPABASE_URL` | Same as local |
    | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Same as local |
-   | `LLM_PROVIDER` | `nvidia` or `siliconflow` |
+   | `LLM_PROVIDER` | `nvidia`, `siliconflow`, or `bailian` |
    | `NVIDIA_API_KEY` | Required when `LLM_PROVIDER=nvidia` |
    | `SILICONFLOW_API_KEY` | Required when `LLM_PROVIDER=siliconflow` |
+   | `BAILIAN_API_KEY` | Required when `LLM_PROVIDER=bailian` |
    | `LLM_MODEL` | Optional override (e.g. `deepseek-ai/deepseek-v4-flash`) |
 
    Server-only keys (`NVIDIA_API_KEY`, `SILICONFLOW_API_KEY`) must **not** use the `NEXT_PUBLIC_` prefix.

@@ -22,7 +22,11 @@ export function formatChatErrorMessage(error: Error | undefined): string {
   const lower = message.toLowerCase();
 
   if (lower === "network error" || lower.includes("failed to fetch")) {
-    return "Connection failed. On Vercel, check NVIDIA_API_KEY (or SILICONFLOW_API_KEY), LLM_PROVIDER, and redeploy. Hobby plan limits functions to 10s — try deepseek-v4-flash or upgrade to Pro.";
+    return "LLM request timed out or was interrupted. On Vercel: confirm API key matches local (NVIDIA_API_KEY / BAILIAN_API_KEY / SILICONFLOW_API_KEY), try a faster model, or switch LLM_PROVIDER. Redeploy after env changes.";
+  }
+
+  if (lower.includes("timeout") || lower.includes("timed out") || lower.includes("aborted")) {
+    return "LLM request timed out. Try LLM_MODEL=deepseek-ai/deepseek-v4-flash, or switch to LLM_PROVIDER=siliconflow.";
   }
 
   return message;
