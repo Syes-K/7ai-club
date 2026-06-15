@@ -30,6 +30,8 @@ docs/
     topic-cn.md             # 中文
 
   features/<slug>/          # 功能 PRD + 技术设计（跨迭代修订）
+    README.md               # 可选：功能概览（English）
+    README-cn.md            # 可选：功能概览（中文）
     01-product-requirements.md
     01-product-requirements-cn.md
     02-technical-design.md
@@ -59,3 +61,5 @@ docs/
 ## 遗留说明
 
 早期 feature 文档可能仅有一种语言。**mvp-chat** 与 **iter-01** 已按 `{name}.md` + `{name}-cn.md` 成对维护。
+
+**iter-01 本地迭代** 已完成，索引见 [`iterations/iter-01/README-cn.md`](./iterations/iter-01/README-cn.md)；功能交付概览见 [`features/mvp-chat/README-cn.md`](./features/mvp-chat/README-cn.md)。

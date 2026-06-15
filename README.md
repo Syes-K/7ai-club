@@ -4,7 +4,7 @@
 
 A chat-first web platform for configurable AI assistants. Users can create assistants, chat with streaming responses, and configure per-assistant system prompts, knowledge bases, and MCP tools.
 
-**Status:** iter-01 MVP chat is implemented (Next.js + Supabase Auth + SiliconFlow streaming chat).
+**Status:** iter-01 MVP chat — local iteration complete; production deploy in progress. See [`docs/iterations/iter-01/README.md`](docs/iterations/iter-01/README.md).
 
 ---
 

@@ -4,7 +4,7 @@
 
 聊天优先、可配置 AI 助理的 Web 平台。用户可创建助理、进行流式对话，并为每个助理配置系统提示词、知识库与 MCP 工具。
 
-**当前状态：** iter-01 MVP 聊天已实现（Next.js + Supabase Auth + SiliconFlow 流式聊天）。
+**当前状态：** iter-01 MVP 聊天本地迭代已完成；生产部署进行中。详见 [`docs/iterations/iter-01/README-cn.md`](docs/iterations/iter-01/README-cn.md)。
 
 ---
 

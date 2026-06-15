@@ -30,6 +30,8 @@ docs/
     topic-cn.md             # 中文
 
   features/<slug>/          # Living PRD + technical design per feature
+    README.md               # Optional feature overview (English)
+    README-cn.md            # Optional feature overview (中文)
     01-product-requirements.md
     01-product-requirements-cn.md
     02-technical-design.md
@@ -61,3 +63,5 @@ Architecture summaries: `.cursor/skills/7ai-club-architecture/reference.md` (syn
 ## Legacy note
 
 Early feature docs may have existed in a single language. **mvp-chat** and **iter-01** now follow the paired `{name}.md` + `{name}-cn.md` convention.
+
+**iter-01 local iteration** is complete — see [`iterations/iter-01/README.md`](./iterations/iter-01/README.md); feature delivery summary in [`features/mvp-chat/README.md`](./features/mvp-chat/README.md).

@@ -1,3 +1,12 @@
+/** Default LLM request timeout (ms). Override via LLM_TIMEOUT_MS. */
+export const DEFAULT_LLM_TIMEOUT_MS = 120_000;
+
+/** Abort if no new stream chunk within this window. */
+export const CHAT_CHUNK_TIMEOUT_MS = 15_000;
+
+/** Vercel function cap; should be slightly above getLlmTimeoutMs() for auth/DB overhead. */
+export const CHAT_FUNCTION_MAX_DURATION_SEC = 130;
+
 /** Merge multiple AbortSignals; aborts when any source aborts. */
 export function mergeAbortSignals(
   ...signals: (AbortSignal | undefined)[]
@@ -25,8 +34,7 @@ export function getLlmTimeoutMs(): number {
   if (Number.isFinite(parsed) && parsed > 0) {
     return parsed;
   }
-  // Stay under Vercel Pro default (60s); Hobby caps at 10s regardless.
-  return 55_000;
+  return DEFAULT_LLM_TIMEOUT_MS;
 }
 
 /** fetch wrapper that aborts hung upstream LLM requests. */

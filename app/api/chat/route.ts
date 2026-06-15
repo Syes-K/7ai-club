@@ -1,5 +1,6 @@
 export const runtime = "nodejs";
-export const maxDuration = 60;
+/** Keep in sync with CHAT_FUNCTION_MAX_DURATION_SEC in lib/llm/timeout.ts and vercel.json */
+export const maxDuration = 130;
 
 import {
   convertToModelMessages,
@@ -7,7 +8,11 @@ import {
   type UIMessage,
 } from "ai";
 import { getChatModel, getLlmConfigError } from "@/lib/llm/provider";
-import { getLlmTimeoutMs, mergeAbortSignals } from "@/lib/llm/timeout";
+import {
+  CHAT_CHUNK_TIMEOUT_MS,
+  getLlmTimeoutMs,
+  mergeAbortSignals,
+} from "@/lib/llm/timeout";
 import {
   getAssistantForConversation,
   getConversationForUser,
@@ -85,7 +90,7 @@ export async function POST(req: Request) {
       system: assistant.system_prompt,
       messages: await convertToModelMessages(uiMessages),
       abortSignal: mergeAbortSignals(req.signal, AbortSignal.timeout(llmTimeoutMs)),
-      timeout: { totalMs: llmTimeoutMs, chunkMs: 15_000 },
+      timeout: { totalMs: llmTimeoutMs, chunkMs: CHAT_CHUNK_TIMEOUT_MS },
       onError: ({ error }) => {
         console.error("LLM stream error:", error);
       },
