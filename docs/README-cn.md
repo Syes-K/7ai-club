@@ -2,64 +2,77 @@
 
 项目文档位于 `docs/`。**与 `docs/research/` 相同：中英文各一份，成对维护。**
 
-## 双语命名（与 research 一致）
+## 双语命名
 
-| 语言 | 文件名 | 示例 |
-|------|--------|------|
-| English | `{name}.md` | `01-product-requirements.md` |
-| 中文 | `{name}-cn.md` | `01-product-requirements-cn.md` |
+| 语言 | 文件名 |
+|------|--------|
+| English | `{name}.md` |
+| 中文 | `{name}-cn.md` |
 
-每个文件顶部应链接到对应语言版本：
+## 三层文档模型（Feature 为主 + 子文档 + 迭代索引）
 
-```markdown
-> **English:** [01-product-requirements.md](./01-product-requirements.md)  
-> **中文：** [01-product-requirements-cn.md](./01-product-requirements-cn.md)
-```
-
-更新任一语言时，同步另一份（结构、决策一致；正文翻译）。
-
-## 目录结构
+避免单个 PRD / 技术设计随迭代无限膨胀。**总纲薄、细节分册、迭代只写增量。**
 
 ```
 docs/
-  README.md                 # English
-  README-cn.md              # 本说明（中文）
+  features/<slug>/
+    README-cn.md                 # 功能概览 + 文档地图（Agent 入口）
+    01-product-requirements-cn.md  # 产品总纲：全局约定、索引、Out of Scope
+    02-technical-design-cn.md      # 技术总纲：架构、跨模块约定、索引
 
-  research/                 # 架构调研（只读参考）
-    topic.md                # English
-    topic-cn.md             # 中文
+    prd/                           # 产品子文档（按子能力拆分）
+      core-chat-cn.md
+      landing-cn.md
+      ...
 
-  features/<slug>/          # 功能 PRD + 技术设计（跨迭代修订）
-    README.md               # 可选：功能概览（English）
-    README-cn.md            # 可选：功能概览（中文）
-    01-product-requirements.md
-    01-product-requirements-cn.md
-    02-technical-design.md
-    02-technical-design-cn.md
+    design/                        # 技术子文档（按模块拆分）
+      core-chat-cn.md
+      landing-cn.md
+      ...
 
-  iterations/<iter-id>/     # 迭代索引（不重复 PRD 正文）
-    README.md
+    changelog/                     # 迭代增量（验收清单、必读文档列表）
+      iter-02-cn.md
+
+  iterations/<iter-id>/            # 时间盒：目标、范围、待办（不重复 PRD 正文）
     README-cn.md
+```
+
+### 何时新建什么
+
+| 情况 | 做法 |
+|------|------|
+| 新的独立产品能力（如 RAG、助理 CRUD） | 新 **feature slug** + 新目录 |
+| 同一 feature 内的大块（首页 vs Chat vs LLM） | 同 slug 下 **`prd/`、`design/` 子文档** |
+| 单次迭代改动 | **`changelog/iter-NN`** + 更新相关子文档 |
+| 全局规则变更 | 更新 **`01` / `02` 总纲**（保持 ≤150 行目标） |
+
+### Agent 读文档约定
+
+1. 先读 `features/<slug>/README-cn.md` 或当前 `iterations/iter-NN/README-cn.md`
+2. 再读 `changelog/iter-NN-cn.md` 中的 **必读列表**
+3. **不要**默认加载全部 `prd/`、`design/`（省 token）
+
+## 目录结构（完整）
+
+```
+docs/
+  README.md / README-cn.md
+  research/
+  features/<slug>/          # 见上
+  iterations/<iter-id>/
 ```
 
 ## 不需要双语的范围
 
-| 范围 | 语言 | 说明 |
-|------|------|------|
-| 用户可见 UI | English | 见 architecture `reference.md` → Locale |
-| DB seed / 默认值 | English | migration、system_prompt 等 |
-| Cursor rules / skills | 中文为主 | Agent 指令；术语可保留英文 |
-| 代码注释 | 优先 English | 与代码库一致 |
+| 范围 | 语言 |
+|------|------|
+| 用户可见 UI | English |
+| DB seed / 默认值 | English |
+| Cursor rules / skills | 中文为主 |
 
-## Research 范例
+## 范例
 
-- [`research/ai-agent-platform-architecture.md`](./research/ai-agent-platform-architecture.md)
-- [`research/ai-agent-platform-architecture-cn.md`](./research/ai-agent-platform-architecture-cn.md)
+- Feature 分层范例：**mvp-chat** — [`features/mvp-chat/README-cn.md`](./features/mvp-chat/README-cn.md)
+- iter-02 增量 — [`features/mvp-chat/changelog/iter-02-cn.md`](./features/mvp-chat/changelog/iter-02-cn.md)
 
-架构摘要：`.cursor/skills/7ai-club-architecture/reference.md`（research 变更时同步）。
-
-## 遗留说明
-
-早期 feature 文档可能仅有一种语言。**mvp-chat** 与 **iter-01** 已按 `{name}.md` + `{name}-cn.md` 成对维护。
-
-**iter-01 本地迭代** 已完成，索引见 [`iterations/iter-01/README-cn.md`](./iterations/iter-01/README-cn.md)；功能交付概览见 [`features/mvp-chat/README-cn.md`](./features/mvp-chat/README-cn.md)。
+**iter-01** 已完成 · **iter-02** 进行中 — 见 [`iterations/iter-02/README-cn.md`](./iterations/iter-02/README-cn.md)

@@ -8,8 +8,10 @@ import {
   type UIMessage,
 } from "ai";
 import { getChatModel, getLlmConfigError } from "@/lib/llm/provider";
+import { getStreamTextProviderOptions } from "@/lib/llm/stream-options";
+import { classifyLlmError } from "@/lib/llm/errors";
 import {
-  CHAT_CHUNK_TIMEOUT_MS,
+  getChatChunkTimeoutMs,
   getLlmTimeoutMs,
   mergeAbortSignals,
 } from "@/lib/llm/timeout";
@@ -89,10 +91,14 @@ export async function POST(req: Request) {
       model: getChatModel(assistant.model),
       system: assistant.system_prompt,
       messages: await convertToModelMessages(uiMessages),
+      providerOptions: getStreamTextProviderOptions(),
       abortSignal: mergeAbortSignals(req.signal, AbortSignal.timeout(llmTimeoutMs)),
-      timeout: { totalMs: llmTimeoutMs, chunkMs: CHAT_CHUNK_TIMEOUT_MS },
+      timeout: { totalMs: llmTimeoutMs, chunkMs: getChatChunkTimeoutMs() },
       onError: ({ error }) => {
-        console.error("LLM stream error:", error);
+        console.error("LLM stream error:", {
+          kind: classifyLlmError(error),
+          error,
+        });
       },
     });
 

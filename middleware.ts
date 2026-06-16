@@ -10,12 +10,7 @@ export async function middleware(request: NextRequest) {
   }
 
   if ((pathname === "/login" || pathname === "/register") && user) {
-    return NextResponse.redirect(new URL("/chat", request.url));
-  }
-
-  if (pathname === "/") {
-    const target = user ? "/chat" : "/login";
-    return NextResponse.redirect(new URL(target, request.url));
+    return NextResponse.redirect(new URL("/", request.url));
   }
 
   return supabaseResponse;

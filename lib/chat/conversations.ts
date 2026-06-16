@@ -14,6 +14,7 @@ export type ConversationSummary = {
   id: string;
   title: string;
   updated_at: string;
+  assistant_name: string;
 };
 
 export function getTextFromUIMessage(message: UIMessage): string {
@@ -119,7 +120,7 @@ export async function listConversations(
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("conversations")
-    .select("id, title, updated_at")
+    .select("id, title, updated_at, assistants(name)")
     .eq("user_id", userId)
     .order("updated_at", { ascending: false })
     .limit(50);
@@ -128,7 +129,19 @@ export async function listConversations(
     throw new Error(error.message);
   }
 
-  return (data ?? []) as ConversationSummary[];
+  return (data ?? []).map((row) => {
+    const assistant = row.assistants as { name: string } | { name: string }[] | null;
+    const assistantName = Array.isArray(assistant)
+      ? assistant[0]?.name
+      : assistant?.name;
+
+    return {
+      id: row.id,
+      title: row.title,
+      updated_at: row.updated_at,
+      assistant_name: assistantName ?? "7ai Assistant",
+    };
+  });
 }
 
 export async function getConversationForUser(
@@ -200,6 +213,58 @@ export async function getLatestConversationId(
     .maybeSingle();
 
   return data?.id ?? null;
+}
+
+export async function deleteConversation(
+  conversationId: string,
+  userId: string,
+): Promise<boolean> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("conversations")
+    .delete()
+    .eq("id", conversationId)
+    .eq("user_id", userId)
+    .select("id")
+    .maybeSingle();
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return data != null;
+}
+
+export async function clearConversationMessages(
+  conversationId: string,
+  userId: string,
+): Promise<boolean> {
+  const conversation = await getConversationForUser(conversationId, userId);
+  if (!conversation) {
+    return false;
+  }
+
+  const supabase = await createClient();
+  const { error: deleteError } = await supabase
+    .from("messages")
+    .delete()
+    .eq("conversation_id", conversationId);
+
+  if (deleteError) {
+    throw new Error(deleteError.message);
+  }
+
+  const { error: updateError } = await supabase
+    .from("conversations")
+    .update({ title: DEFAULT_CONVERSATION_TITLE })
+    .eq("id", conversationId)
+    .eq("user_id", userId);
+
+  if (updateError) {
+    throw new Error(updateError.message);
+  }
+
+  return true;
 }
 
 export async function getAssistantForConversation(conversationId: string) {

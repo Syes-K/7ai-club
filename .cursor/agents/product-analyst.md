@@ -94,14 +94,33 @@ description: >
 
 ### Step 5 — 写入 PRD（仅用户确认后）
 
-输出路径（**中英文成对**，命名同 `docs/research/`）：
+**总纲（薄）：**
 
 ```
 docs/features/<slug>/01-product-requirements.md      # English
 docs/features/<slug>/01-product-requirements-cn.md   # 中文
 ```
 
-使用模板结构（见 `.cursor/skills/product-requirements/templates/prd-template.md`）。frontmatter 须填写 `迭代` 与 `路线图阶段`。两份文件顶部互相链接；内容与决策保持一致。
+**子能力细节（按主题拆分，中英文成对）：**
+
+```
+docs/features/<slug>/prd/<topic>.md
+docs/features/<slug>/prd/<topic>-cn.md
+```
+
+**迭代增量：**
+
+```
+docs/features/<slug>/changelog/iter-NN.md
+docs/features/<slug>/changelog/iter-NN-cn.md
+```
+
+- 全局约定、路由、Out of Scope → **总纲**
+- 可独立验收的子能力 → **`prd/<topic>`**
+- 本迭代必读列表与 AC 索引 → **`changelog/iter-NN`**
+- 详见 `docs/README-cn.md` 三层文档模型
+
+使用模板结构（见 `.cursor/skills/product-requirements/templates/prd-template.md`）。frontmatter 须填写 `迭代` 与 `路线图阶段`。
 
 **同步迭代索引（写入 PRD 后）：**
 

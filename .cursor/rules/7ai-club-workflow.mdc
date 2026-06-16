@@ -21,17 +21,31 @@ alwaysApply: true
 | English | `{name}.md` |
 | 中文 | `{name}-cn.md` |
 
-**PRD / 技术设计** 放在 feature 目录（跨迭代修订同一文件，不按迭代号复制）：
+**PRD / 技术设计** 放在 feature 目录，采用 **总纲 + 子文档** 分层（跨迭代修订，不按迭代号复制整份正文）：
 
 ```
 docs/features/<slug>/
-  README.md                      # 可选：功能概览（English）
-  README-cn.md                   # 可选：功能概览（中文）
-  01-product-requirements.md     # PRD（English）
-  01-product-requirements-cn.md  # PRD（中文，product-analyst）
-  02-technical-design.md         # 技术设计（English）
-  02-technical-design-cn.md    # 技术设计（中文，fullstack-developer）
+  README.md                      # 功能概览 + 文档地图（Agent 入口）
+  README-cn.md
+  01-product-requirements.md     # 产品总纲（薄：全局约定、索引）
+  01-product-requirements-cn.md
+  02-technical-design.md         # 技术总纲（薄：架构、跨模块约定、索引）
+  02-technical-design-cn.md
+
+  prd/                           # 产品子文档（按子能力，成对 en/cn）
+    <topic>.md
+    <topic>-cn.md
+
+  design/                        # 技术子文档（按模块，成对 en/cn）
+    <topic>.md
+    <topic>-cn.md
+
+  changelog/                     # 迭代增量（必读列表、验收索引）
+    iter-NN.md
+    iter-NN-cn.md
 ```
+
+**Agent 读文档：** 先 `README` → `iterations/iter-NN` → `changelog/iter-NN` → 仅加载相关 `prd/`、`design/` 子文档。
 
 **迭代** 仅作计划与发布索引（不放 PRD/设计正文）：
 

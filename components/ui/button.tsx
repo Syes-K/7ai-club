@@ -3,14 +3,16 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-2 rounded-lg text-sm font-medium transition-all duration-200 cursor-pointer disabled:pointer-events-none disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#4338CA] focus-visible:ring-offset-2 focus-visible:ring-offset-[#0F0F23]",
+  "inline-flex items-center justify-center gap-2 rounded-lg text-sm font-medium transition-all duration-200 cursor-pointer disabled:pointer-events-none disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--neon-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--bg-base)]",
   {
     variants: {
       variant: {
-        default: "bg-[#22C55E] text-white hover:opacity-90 hover:-translate-y-px",
+        default:
+          "bg-[var(--accent-success)] text-white hover:opacity-90 hover:-translate-y-px",
         secondary:
-          "bg-[#4338CA]/20 text-[#F8FAFC] border border-[#4338CA]/40 hover:bg-[#4338CA]/30",
-        ghost: "text-[#F8FAFC]/80 hover:bg-white/5 hover:text-[#F8FAFC]",
+          "bg-[var(--neon-primary)]/15 text-[var(--text-primary)] border border-[var(--neon-primary)]/40 hover:bg-[var(--neon-primary)]/25",
+        ghost:
+          "text-[var(--text-muted)] hover:bg-white/5 hover:text-[var(--text-primary)]",
         destructive: "bg-red-600 text-white hover:bg-red-700",
       },
       size: {
@@ -44,3 +46,5 @@ export function Button({
     />
   );
 }
+
+export { buttonVariants };

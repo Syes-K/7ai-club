@@ -45,6 +45,7 @@ export default async function ChatConversationPage({
       initialMessages={messages}
       conversations={conversations}
       modelLabel={getLlmDisplayLabel(assistant.model)}
+      user={user}
     />
   );
 }

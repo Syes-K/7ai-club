@@ -1,8 +1,8 @@
 /** Default LLM request timeout (ms). Override via LLM_TIMEOUT_MS. */
 export const DEFAULT_LLM_TIMEOUT_MS = 120_000;
 
-/** Abort if no new stream chunk within this window. */
-export const CHAT_CHUNK_TIMEOUT_MS = 15_000;
+/** Abort if no new stream chunk within this window (raised for thinking models). */
+export const CHAT_CHUNK_TIMEOUT_MS = 60_000;
 
 /** Vercel function cap; should be slightly above getLlmTimeoutMs() for auth/DB overhead. */
 export const CHAT_FUNCTION_MAX_DURATION_SEC = 130;
@@ -26,6 +26,15 @@ export function mergeAbortSignals(
     });
   }
   return controller.signal;
+}
+
+export function getChatChunkTimeoutMs(): number {
+  const raw = process.env.LLM_CHUNK_TIMEOUT_MS?.trim();
+  const parsed = raw ? Number.parseInt(raw, 10) : Number.NaN;
+  if (Number.isFinite(parsed) && parsed > 0) {
+    return parsed;
+  }
+  return CHAT_CHUNK_TIMEOUT_MS;
 }
 
 export function getLlmTimeoutMs(): number {

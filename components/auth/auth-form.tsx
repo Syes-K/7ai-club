@@ -11,8 +11,9 @@ import { Label } from "@/components/ui/label";
 
 type AuthMode = "login" | "register";
 
-export function AuthForm({ mode }: { mode: AuthMode }) {
+export function AuthForm({ mode, next }: { mode: AuthMode; next?: string }) {
   const router = useRouter();
+  const redirectTo = next?.startsWith("/") ? next : "/chat";
   const submittingRef = useRef(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -63,7 +64,7 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
         }
       }
 
-      router.push("/chat");
+      router.push(redirectTo);
       router.refresh();
     } catch (err) {
       const authError = err as { message?: string; code?: string };
@@ -80,10 +81,10 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
   return (
     <div className="w-full max-w-md space-y-8">
       <div className="space-y-2 text-center">
-        <h1 className="text-2xl font-semibold tracking-tight text-[#F8FAFC]">
+        <h1 className="font-mono text-2xl font-semibold tracking-tight text-[var(--text-primary)]">
           {isLogin ? "Sign in to 7ai-club" : "Create your 7ai-club account"}
         </h1>
-        <p className="text-sm text-[#F8FAFC]/60">
+        <p className="text-sm text-[var(--text-muted)]">
           {isLogin
             ? "Sign in with email to start chatting"
             : "Create an account to chat with your AI assistant"}
@@ -125,7 +126,7 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
         )}
 
         {info && (
-          <p className="text-sm text-[#22C55E]" role="status">
+          <p className="text-sm text-[var(--accent-success)]" role="status">
             {info}
           </p>
         )}
@@ -145,11 +146,11 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
         </Button>
       </form>
 
-      <p className="text-center text-sm text-[#F8FAFC]/60">
+      <p className="text-center text-sm text-[var(--text-muted)]">
         {isLogin ? "Don't have an account?" : "Already have an account?"}
         <Link
           href={isLogin ? "/register" : "/login"}
-          className="ml-1 text-[#22C55E] hover:underline cursor-pointer"
+          className="ml-1 text-[var(--neon-primary)] hover:underline cursor-pointer"
         >
           {isLogin ? "Sign up" : "Sign in"}
         </Link>

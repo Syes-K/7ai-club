@@ -15,8 +15,9 @@ description: >
 启动时读取（勿默认读取完整调研原文）：
 
 1. `.cursor/skills/7ai-club-architecture/reference.md` — 架构决策、代码结构、工程约束、Chat Route
-2. `docs/features/<slug>/01-product-requirements.md` 与/或 `01-product-requirements-cn.md` — 当前功能 PRD（成对文档，见 `docs/README.md`）
-3. 仅当设计涉及方案对比或 reference 不足时，按需 Read `docs/research/` 相关章节
+2. `docs/features/<slug>/01-product-requirements.md` 与/或 `01-product-requirements-cn.md` — 产品总纲
+3. 按当前迭代读取 `docs/features/<slug>/changelog/iter-NN*.md` 及其中列出的 **`prd/`、`design/` 子文档**（勿默认加载全部）
+4. 仅当设计涉及方案对比或 reference 不足时，按需 Read `docs/research/` 相关章节
 
 ## 硬性约束
 
@@ -77,12 +78,25 @@ description: >
 
 #### A4. 写入技术设计（仅用户确认后）
 
+**总纲（薄）：**
+
 ```
-docs/features/<slug>/02-technical-design.md      # English
-docs/features/<slug>/02-technical-design-cn.md   # 中文
+docs/features/<slug>/02-technical-design.md
+docs/features/<slug>/02-technical-design-cn.md
 ```
 
-模板：`.cursor/skills/technical-design/templates/tech-design-template.md`。两份文件顶部互相链接；内容与决策保持一致。
+**模块细节（成对）：**
+
+```
+docs/features/<slug>/design/<topic>.md
+docs/features/<slug>/design/<topic>-cn.md
+```
+
+- 跨模块架构、文件清单索引 → **总纲**
+- 单模块 API / 组件 / 迁移 → **`design/<topic>`**
+- 本迭代范围见 `changelog/iter-NN-cn.md`
+
+模板：`.cursor/skills/technical-design/templates/tech-design-template.md`。
 
 写入后提示：
 

@@ -4,66 +4,35 @@
 > **中文：** [README-cn.md](./README-cn.md)
 
 > **Feature slug:** `mvp-chat`  
-> **Iteration:** [`iter-01`](../../iterations/iter-01/README.md)  
-> **Roadmap phase:** 1 — MVP Chat  
-> **Status:** Local iteration complete · Production deploy in progress
+> **Iterations:** [iter-01](../../iterations/iter-01/README.md) (shipped) · [iter-02](../../iterations/iter-02/README.md) (**local complete · pending migrations/QA**)
 
 ---
 
-## Documents
+## Doc Map (Agent Entry)
 
-| Type | English | 中文 |
-|------|---------|------|
-| PRD | [01-product-requirements.md](./01-product-requirements.md) | [01-product-requirements-cn.md](./01-product-requirements-cn.md) |
-| Technical design | [02-technical-design.md](./02-technical-design.md) | [02-technical-design-cn.md](./02-technical-design-cn.md) |
+**iter-02 required reading:**
 
----
+1. [01-product-requirements.md](./01-product-requirements.md) — index §2 globals  
+2. [changelog/iter-02.md](./changelog/iter-02.md) — delta & acceptance  
+3. Topic PRDs: [landing.md](./prd/landing.md) · [chat-experience.md](./prd/chat-experience.md) · [llm-reliability.md](./prd/llm-reliability.md)
 
-## What shipped (iter-01)
-
-- Next.js App Router app: auth, streaming chat UI, conversation history
-- Supabase Auth + RLS + migration `supabase/migrations/20260614000000_mvp_chat.sql`
-- Chat API `POST /api/chat` with Vercel AI SDK `streamText` + `useChat`
-- Switchable LLM providers via env (`lib/llm/provider.ts`):
-  - `siliconflow` — OpenAI-compatible
-  - `nvidia` — NVIDIA NIM (`@ai-sdk/openai-compatible`)
-  - `bailian` — Alibaba Bailian / DashScope (default model `qwen3.6-plus`)
-- LLM timeouts (default 120s) + Vercel function `maxDuration` 130s
-- English UI + English DB seed copy
+| Layer | Index | Topics |
+|-------|-------|--------|
+| Product | [01-product-requirements.md](./01-product-requirements.md) | [prd/](./prd/) |
+| Technical | [02-technical-design.md](./02-technical-design.md) | [design/](./design/) |
 
 ---
 
-## Implementation notes (beyond original PRD)
+## iter-01 Shipped
 
-| Topic | PRD (v0.1) | Implemented |
-|-------|------------|-------------|
-| LLM provider | SiliconFlow only | Env-switchable: SiliconFlow / NVIDIA / Bailian |
-| Default model | `Qwen/Qwen2.5-7B-Instruct` | Provider-specific default; override via `LLM_MODEL` |
-| Chat timeout | `maxDuration = 300` | `maxDuration = 130`, `LLM_TIMEOUT_MS = 120000` |
-
-These extensions are documented in [iter-01 release log](../../iterations/iter-01/README.md#6-release-log). PRD revision deferred to a later pass if product scope is formally expanded.
+See [prd/core-chat.md](./prd/core-chat.md), [design/core-chat.md](./design/core-chat.md).
 
 ---
 
-## Local quick start
+## iter-02 (Local Complete)
 
-```bash
-pnpm install
-cp .env.example .env.local   # Supabase + LLM keys
-# Apply supabase/migrations/20260614000000_mvp_chat.sql on your project
-pnpm dev
-```
-
-See root [README.md](../../../README.md) for full environment variable list.
+Landing C2, header user menu, chat delete/clear/Markdown, Bailian hardening. See [changelog/iter-02.md](./changelog/iter-02.md) and [iter-02 README §7](../../iterations/iter-02/README-cn.md).
 
 ---
 
-## Known gaps (post local iteration)
-
-- Vercel production: NVIDIA NIM may hang or timeout; prefer `bailian` or `siliconflow` on deploy until resolved
-- PRD AC-09 (fixed Qwen model) superseded by multi-provider design
-- Assistant CRUD, RAG, MCP — out of scope for iter-01
-
----
-
-*Iteration index: [docs/iterations/iter-01/README.md](../../iterations/iter-01/README.md)*
+*Layering guide: [docs/README.md](../../README.md)*

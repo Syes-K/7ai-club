@@ -1,67 +1,39 @@
 # docs/ — Documentation
 
-Project documentation lives under `docs/`. **Follow the same bilingual pattern as `docs/research/`:** maintain **English and Chinese** as paired files.
+Project docs live under `docs/`. **Same as `docs/research/`: English + Chinese pairs.**
 
-## Bilingual naming (same as research)
+## Three-layer model (feature index + topic docs + iteration changelog)
 
-| Language | Filename pattern | Example |
-|----------|------------------|---------|
-| English | `{name}.md` | `01-product-requirements.md` |
-| 中文 | `{name}-cn.md` | `01-product-requirements-cn.md` |
-
-Each file should link to its counterpart at the top:
-
-```markdown
-> **English:** [01-product-requirements.md](./01-product-requirements.md)  
-> **中文：** [01-product-requirements-cn.md](./01-product-requirements-cn.md)
-```
-
-When one language is updated, sync the other (same structure and decisions; translate prose).
-
-## Directory layout
+Avoid unbounded growth of monolithic PRD / technical design files.
 
 ```
-docs/
-  README.md                 # This file (English)
-  README-cn.md              # 本说明（中文）
+docs/features/<slug>/
+  README.md                      # Overview + doc map (agent entry)
+  01-product-requirements.md     # Thin index: globals, out of scope, links
+  02-technical-design.md         # Thin index: architecture, cross-module rules
 
-  research/                 # Architecture research (read-only reference)
-    topic.md                # English
-    topic-cn.md             # 中文
+  prd/                           # Product topic docs
+  design/                        # Technical topic docs
+  changelog/                     # Per-iteration delta (required reading list)
 
-  features/<slug>/          # Living PRD + technical design per feature
-    README.md               # Optional feature overview (English)
-    README-cn.md            # Optional feature overview (中文)
-    01-product-requirements.md
-    01-product-requirements-cn.md
-    02-technical-design.md
-    02-technical-design-cn.md
-
-  iterations/<iter-id>/     # Time-box index only (no duplicate PRD bodies)
-    README.md
-    README-cn.md
+docs/iterations/<iter-id>/       # Timebox goals & todos (no full PRD copy)
 ```
 
-## What is *not* bilingual
+### When to create what
 
-| Scope | Language | Notes |
-|-------|----------|--------|
-| User-facing app UI | English | See architecture `reference.md` → Locale |
-| DB seed / defaults | English | migrations, `assistants.system_prompt`, etc. |
-| Cursor rules / skills | 中文为主 | Agent instructions; may cite English terms |
-| Code comments | English preferred | Match codebase |
+| Situation | Action |
+|-----------|--------|
+| New product capability (e.g. RAG) | New **feature slug** |
+| Large area within one feature | **`prd/` + `design/` topic files** |
+| Single iteration changes | **`changelog/iter-NN`** + update topic files |
+| Global rule change | Update **`01` / `02` index** (target ≤150 lines) |
 
-## Research reference
+### Agent reading order
 
-The research pair is the canonical example:
+1. `features/<slug>/README.md` or `iterations/iter-NN/README.md`
+2. `changelog/iter-NN.md` required-reading list
+3. Do **not** load all topic docs by default
 
-- [`research/ai-agent-platform-architecture.md`](./research/ai-agent-platform-architecture.md)
-- [`research/ai-agent-platform-architecture-cn.md`](./research/ai-agent-platform-architecture-cn.md)
+See [README-cn.md](./README-cn.md) for the Chinese version.
 
-Architecture summaries: `.cursor/skills/7ai-club-architecture/reference.md` (sync when research changes).
-
-## Legacy note
-
-Early feature docs may have existed in a single language. **mvp-chat** and **iter-01** now follow the paired `{name}.md` + `{name}-cn.md` convention.
-
-**iter-01 local iteration** is complete — see [`iterations/iter-01/README.md`](./iterations/iter-01/README.md); feature delivery summary in [`features/mvp-chat/README.md`](./features/mvp-chat/README.md).
+**Example:** [features/mvp-chat/README.md](./features/mvp-chat/README.md) · [changelog/iter-02.md](./features/mvp-chat/changelog/iter-02.md)

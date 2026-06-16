@@ -2,10 +2,16 @@ export const dynamic = "force-dynamic";
 
 import { AuthForm } from "@/components/auth/auth-form";
 
-export default function LoginPage() {
+interface LoginPageProps {
+  searchParams: Promise<{ next?: string }>;
+}
+
+export default async function LoginPage({ searchParams }: LoginPageProps) {
+  const { next } = await searchParams;
+
   return (
-    <main className="flex min-h-dvh items-center justify-center bg-[#0F0F23] px-4">
-      <AuthForm mode="login" />
+    <main className="flex min-h-dvh items-center justify-center bg-[var(--bg-base)] px-4">
+      <AuthForm mode="login" next={next} />
     </main>
   );
 }

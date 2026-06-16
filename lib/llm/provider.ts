@@ -42,6 +42,12 @@ export function getLlmProviderId(): LlmProviderId {
   return PROVIDER_ALIASES[raw] ?? "siliconflow";
 }
 
+export function getActiveApiKeyEnv(
+  provider: LlmProviderId = getLlmProviderId(),
+): string {
+  return PROVIDER_CONFIG[provider].apiKeyEnv;
+}
+
 export function getDefaultModel(provider: LlmProviderId = getLlmProviderId()): string {
   return PROVIDER_CONFIG[provider].defaultModel;
 }

@@ -129,7 +129,7 @@ cp .env.example .env.local
 1. Vercel：配置 `LLM_PROVIDER=bailian`、`BAILIAN_API_KEY`、`LLM_TIMEOUT_MS=120000` → Redeploy
 2. Supabase Auth：添加 `https://7ai-club.vercel.app` 到 Site URL / Redirect URLs
 3. 可选：生产聊天验证通过后打 tag `v0.1.0`
-4. iter-02 规划：助理配置 UI 或生产加固 — 待定
+4. **iter-02**（已建 backlog）：百炼 abort 修复与 LLM 错误提示 — 见 [iter-02/README-cn.md](../iter-02/README-cn.md)
 
 ---
 
