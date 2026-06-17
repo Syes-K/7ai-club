@@ -1,16 +1,17 @@
 ---
-description: 7ai-club 两阶段开发工作流门禁（PRD → 技术设计 → 编码）
+description: 7ai-club 三阶段开发工作流门禁（PRD → 技术设计 → 编码 → 测试）
 alwaysApply: true
 ---
 
 # 7ai-club 开发工作流
 
-本项目使用两个自定义 subagent 分阶段交付：
+本项目使用三个自定义 subagent 分阶段交付：
 
 | Subagent | 文件 | 职责 |
 |----------|------|------|
 | `product-analyst` | `.cursor/agents/product-analyst.md` | 需求对焦、PRD |
 | `fullstack-developer` | `.cursor/agents/fullstack-developer.md` | 技术设计、编码 |
+| `qa-engineer` | `.cursor/agents/qa-engineer.md` | 自动化测试、E2E、手工 QA、AC 验收 |
 
 ## 文档约定（Feature 为主 + 迭代索引）
 
@@ -67,9 +68,19 @@ docs/iterations/<iter-id>/
 
 1. **无确认 PRD** → 不进行技术设计、不编写实现代码
 2. **无确认技术设计** → 不编写实现代码（`.ts`、`.tsx`、`.sql` 等）
-3. 用户确认话术：
+3. **编码完成 ≠ 可发布** → 须完成测试阶段（`qa-engineer`）并通过验收后，方可将迭代标为「已发布」
+4. 用户确认话术：
    - PRD：`PRD 已确认，可进入技术设计`
    - 技术设计：`技术设计已确认，可开始编码`
+   - 测试：`测试已通过，可发布`
+
+## 测试约定
+
+- 测试 skill：`.cursor/skills/7ai-club-testing/SKILL.md`
+- 目录：`tests/unit/`（Vitest）、`tests/e2e/`（Playwright）
+- 命令：`pnpm lint` → `pnpm build` → `pnpm test` → `pnpm test:e2e`
+- CI 聚合：`pnpm test:ci`
+- changelog 中 AC checkbox 由 **qa-engineer** 在测试通过后更新
 
 ## 技术栈（已决）
 
@@ -85,4 +96,8 @@ docs/iterations/<iter-id>/
 
 ```
 用 fullstack-developer 读取 docs/features/mvp-chat/01-product-requirements.md，先做技术设计
+```
+
+```
+用 qa-engineer 对 iter-04 执行测试验收
 ```

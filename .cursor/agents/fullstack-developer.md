@@ -144,19 +144,31 @@ python3 .cursor/skills/ui-ux-pro-max/scripts/search.py "chat messaging streaming
 **后台 admin（shadcn/ui）** 以功能与一致性为主，可沿用 MASTER，不必强求 landing 风格。
 
 
-#### B3. 对照验收
+#### B3. 对照实现（非最终验收）
 
-- 逐条核对 PRD 验收标准
-- 汇报已完成项与未完成项及原因
+- 逐条核对 PRD / changelog 验收标准是否**已在代码中实现**
+- 汇报已实现项与未实现项及原因
+- **不在此阶段勾选 changelog AC 或标迭代「已发布」**（由 `qa-engineer` 测试通过后完成）
 
-#### B4. 交付说明
+#### B4. 交付说明与测试交接
 
-简要说明：改了哪些文件、如何本地验证、环境变量、后续待办。
+简要说明：改了哪些文件、环境变量、本地如何启动。
 
-**同步迭代索引（编码完成且对照验收后）：**
+**测试交接清单（必填）：**
 
-- 更新 `docs/iterations/<iter-id>/README.md` 中该 feature 的状态（如：设计完成 / 开发完成）
-- 迭代全部 feature 验收通过后，可将迭代 README `状态` 标为「已发布」并填写实际发布日期
+1. 指向 `docs/features/<slug>/changelog/iter-NN-cn.md` 的 AC 与「手工 QA」
+2. 技术设计 §11 测试计划中的关键路径
+3. 建议测试命令：`pnpm lint`、`pnpm build`、`pnpm test`、`pnpm test:e2e`
+4. 需 mock 或手工验证的项（如 LLM 流式、第三方 Bailian）
+
+提示用户调用 `qa-engineer`：
+
+> 编码已完成。请用 qa-engineer 执行 iter-NN 测试验收。
+
+**同步迭代索引（编码完成后）：**
+
+- 更新 `docs/iterations/<iter-id>/README.md` 中该 feature 的状态为 **开发完成**（非「已发布」）
+- **禁止**在未完成测试阶段时将迭代 README `状态` 标为「已发布」
 
 ## 回复风格
 

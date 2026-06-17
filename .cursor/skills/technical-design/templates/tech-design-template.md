@@ -181,15 +181,25 @@ interface ComponentNameProps {
 
 ## 11. 测试计划
 
+### 11.1 自动化
+
+| 类型 | 路径 / 命令 | 覆盖 |
+|------|-------------|------|
+| 单元 | `tests/unit/` · `pnpm test` | |
+| E2E | `tests/e2e/` · `pnpm test:e2e` | |
+| CI | `pnpm test:ci` | lint + build + unit + e2e |
+
+### 11.2 手工 QA
+
 - [ ] [测试项 1]
 - [ ] [测试项 2]
 
-### 本地验证步骤
+### 11.3 本地验证步骤
 
-1. 
+1. `pnpm lint && pnpm build && pnpm test && pnpm test:e2e`
 2. 
 
-### 环境变量
+### 11.4 环境变量
 
 | 变量 | 说明 |
 |------|------|

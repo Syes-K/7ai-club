@@ -37,8 +37,21 @@
 
 ## 4. 迭代验收标准
 
-- [ ] [跨 feature 的集成交付标准]
-- [ ] [发布/部署标准]
+### 4.1 自动化
+
+- [ ] `pnpm lint` 通过
+- [ ] `pnpm build` 通过
+- [ ] `pnpm test` 通过
+- [ ] `pnpm test:e2e` 通过（或说明跳过原因）
+
+### 4.2 手工 QA
+
+- [ ] [见 feature changelog § 手工 QA]
+
+### 4.3 发布
+
+- [ ] changelog AC 已全部勾选（由 `qa-engineer` 完成）
+- [ ] 用户确认：`测试已通过，可发布`
 
 ## 5. 依赖与风险
 
