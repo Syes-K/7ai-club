@@ -52,8 +52,14 @@ export function getDefaultModel(provider: LlmProviderId = getLlmProviderId()): s
   return PROVIDER_CONFIG[provider].defaultModel;
 }
 
-/** Resolved model id: LLM_MODEL env > active provider default. */
-export function resolveChatModelId(_assistantModel?: string): string {
+/** Resolved model id: profile preference > LLM_MODEL env > active provider default. */
+export function resolveChatModelId(
+  _assistantModel?: string,
+  preferredModel?: string | null,
+): string {
+  if (preferredModel?.trim()) {
+    return preferredModel.trim();
+  }
   if (process.env.LLM_MODEL?.trim()) {
     return process.env.LLM_MODEL.trim();
   }
@@ -90,9 +96,12 @@ function createNvidiaClient() {
 }
 
 /** OpenAI-compatible Chat Completions (not Responses API). */
-export function getChatModel(assistantModel?: string): LanguageModel {
+export function getChatModel(
+  assistantModel?: string,
+  preferredModel?: string | null,
+): LanguageModel {
   const provider = getLlmProviderId();
-  const modelId = resolveChatModelId(assistantModel);
+  const modelId = resolveChatModelId(assistantModel, preferredModel);
 
   if (provider === "nvidia") {
     return createNvidiaClient().chatModel(modelId);
@@ -105,9 +114,12 @@ export function getChatModel(assistantModel?: string): LanguageModel {
   return createChatCompletionsClient("siliconflow").chat(modelId);
 }
 
-export function getLlmDisplayLabel(assistantModel?: string): string {
+export function getLlmDisplayLabel(
+  assistantModel?: string,
+  preferredModel?: string | null,
+): string {
   const provider = getLlmProviderId();
-  const model = resolveChatModelId(assistantModel);
+  const model = resolveChatModelId(assistantModel, preferredModel);
   return `${model} (${provider})`;
 }
 

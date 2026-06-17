@@ -7,12 +7,26 @@ export function getUserInitials(email: string): string {
 }
 
 /** Local part before @, for compact header display. */
-export function getUserShortLabel(email: string, maxLen = 12): string {
-  const local = email.split("@")[0]?.trim() ?? email;
-  if (local.length <= maxLen) return local;
-  return `${local.slice(0, maxLen - 1)}…`;
+export function getUserShortLabel(
+  email: string,
+  nickname?: string | null,
+  maxLen = 12,
+): string {
+  const source = nickname?.trim() || email.split("@")[0]?.trim() || email;
+  if (source.length <= maxLen) return source;
+  return `${source.slice(0, maxLen - 1)}…`;
 }
 
-export function getUserDisplayLabel(email: string): string {
-  return email;
+export function getUserDisplayLabel(
+  email: string,
+  nickname?: string | null,
+): string {
+  return nickname?.trim() || email;
+}
+
+export function getUserDisplayName(
+  email: string,
+  nickname?: string | null,
+): string {
+  return nickname?.trim() || email.split("@")[0]?.trim() || email;
 }

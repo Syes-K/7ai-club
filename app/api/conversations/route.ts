@@ -19,7 +19,7 @@ export async function GET() {
   return NextResponse.json({ conversations });
 }
 
-export async function POST() {
+export async function POST(req: Request) {
   const supabase = await createClient();
   const {
     data: { user },
@@ -29,8 +29,23 @@ export async function POST() {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
+  let body: { assistantId?: string };
   try {
-    const id = await createConversation(user.id);
+    body = await req.json();
+  } catch {
+    return NextResponse.json({ error: "Invalid JSON" }, { status: 422 });
+  }
+
+  const assistantId = body.assistantId?.trim();
+  if (!assistantId) {
+    return NextResponse.json(
+      { error: "assistantId is required" },
+      { status: 422 },
+    );
+  }
+
+  try {
+    const id = await createConversation(user.id, assistantId);
     return NextResponse.json({ id });
   } catch (error) {
     return NextResponse.json(

@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from "react";
 import type { ChatStatus, UIMessage } from "ai";
-import { Bot, User } from "lucide-react";
+import { User } from "lucide-react";
+import { AssistantAvatar } from "@/components/chat/assistant-avatar";
 import { MarkdownContent } from "@/components/chat/markdown-content";
 import { formatChatErrorMessage } from "@/lib/chat/fetch-with-error";
 import { CHAT_AVATAR_CLASS, CHAT_PANEL_X } from "@/lib/constants/chat-layout";
@@ -12,6 +13,7 @@ interface ChatMessagesProps {
   messages: UIMessage[];
   status: ChatStatus;
   error?: Error;
+  assistantIcon?: string | null;
 }
 
 function getMessageText(message: UIMessage): string {
@@ -24,9 +26,11 @@ function getMessageText(message: UIMessage): string {
 function MessageContent({
   message,
   isStreaming,
+  assistantIcon,
 }: {
   message: UIMessage;
   isStreaming: boolean;
+  assistantIcon?: string | null;
 }) {
   const text = getMessageText(message);
   const isUser = message.role === "user";
@@ -39,13 +43,13 @@ function MessageContent({
         isUser ? "flex-row-reverse" : "flex-row",
       )}
     >
-      <div className={cn(CHAT_AVATAR_CLASS, isUser ? "bg-[var(--neon-primary)]" : "bg-[var(--accent-success)]/20")}>
-        {isUser ? (
+      {isUser ? (
+        <div className={cn(CHAT_AVATAR_CLASS, "bg-[var(--neon-primary)]")}>
           <User className="h-4 w-4 text-white" />
-        ) : (
-          <Bot className="h-4 w-4 text-[var(--accent-success)]" />
-        )}
-      </div>
+        </div>
+      ) : (
+        <AssistantAvatar icon={assistantIcon} />
+      )}
       <div
         className={cn(
           "max-w-[80%] rounded-2xl px-4 py-3",
@@ -69,7 +73,7 @@ function MessageContent({
   );
 }
 
-function ThinkingIndicator() {
+function ThinkingIndicator({ assistantIcon }: { assistantIcon?: string | null }) {
   const [dots, setDots] = useState(1);
 
   useEffect(() => {
@@ -81,9 +85,7 @@ function ThinkingIndicator() {
 
   return (
     <div className="flex gap-3" role="status" aria-live="polite">
-      <div className={cn(CHAT_AVATAR_CLASS, "bg-[var(--accent-success)]/20")}>
-        <Bot className="h-4 w-4 text-[var(--accent-success)]" />
-      </div>
+      <AssistantAvatar icon={assistantIcon} />
       <div className="rounded-2xl border border-[var(--neon-primary)]/20 bg-[var(--bg-elevated)]/80 px-4 py-3">
         <div className="flex items-center gap-2.5">
           <span className="inline-flex gap-1" aria-hidden>
@@ -100,7 +102,12 @@ function ThinkingIndicator() {
   );
 }
 
-export function ChatMessages({ messages, status, error }: ChatMessagesProps) {
+export function ChatMessages({
+  messages,
+  status,
+  error,
+  assistantIcon,
+}: ChatMessagesProps) {
   const lastMessage = messages.at(-1);
   const streamingAssistantId =
     status === "streaming" && lastMessage?.role === "assistant"
@@ -111,9 +118,7 @@ export function ChatMessages({ messages, status, error }: ChatMessagesProps) {
     <div className={cn("flex-1 overflow-y-auto py-6", CHAT_PANEL_X)}>
       {messages.length === 0 ? (
         <div className="flex h-full flex-col items-center justify-center text-center">
-          <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-[var(--neon-primary)]/20">
-            <Bot className="h-6 w-6 text-[var(--neon-primary)]" />
-          </div>
+          <AssistantAvatar icon={assistantIcon} variant="hero" className="mb-4" />
           <h2 className="text-lg font-medium text-[var(--text-primary)]">
             Start a new chat
           </h2>
@@ -128,9 +133,12 @@ export function ChatMessages({ messages, status, error }: ChatMessagesProps) {
               key={message.id}
               message={message}
               isStreaming={message.id === streamingAssistantId}
+              assistantIcon={assistantIcon}
             />
           ))}
-          {status === "submitted" && <ThinkingIndicator />}
+          {status === "submitted" && (
+            <ThinkingIndicator assistantIcon={assistantIcon} />
+          )}
         </div>
       )}
 

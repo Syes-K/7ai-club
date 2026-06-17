@@ -7,10 +7,13 @@ import { cn } from "@/lib/utils";
 
 interface SiteHeaderProps {
   user: User | null;
+  nickname?: string | null;
   className?: string;
   /** Hide Chat link when already on chat routes */
   showChatLink?: boolean;
-  /** Full-width bar for app shell (chat) */
+  /** Show Console link for signed-in users */
+  showConsoleLink?: boolean;
+  /** Full-width bar for app shell (chat / console) */
   fullWidth?: boolean;
   /** Avatar-only user menu (landing) */
   compactUserMenu?: boolean;
@@ -18,8 +21,10 @@ interface SiteHeaderProps {
 
 export function SiteHeader({
   user,
+  nickname,
   className,
   showChatLink = true,
+  showConsoleLink = true,
   fullWidth = false,
   compactUserMenu = false,
 }: SiteHeaderProps) {
@@ -53,8 +58,21 @@ export function SiteHeader({
             </Link>
           )}
 
+          {user && showConsoleLink && (
+            <Link
+              href="/console"
+              className="text-sm text-[var(--text-muted)] hover:text-[var(--neon-primary)] transition-colors cursor-pointer"
+            >
+              Console
+            </Link>
+          )}
+
           {user ? (
-            <UserMenu email={user.email ?? "user"} compact={compactUserMenu} />
+            <UserMenu
+              email={user.email ?? "user"}
+              nickname={nickname}
+              compact={compactUserMenu}
+            />
           ) : (
             <>
               <Link

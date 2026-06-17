@@ -24,6 +24,7 @@ import {
   saveAssistantMessage,
   saveUserMessage,
 } from "@/lib/chat/conversations";
+import { getUserProfile } from "@/lib/console/profile";
 import { createClient } from "@/lib/supabase/server";
 
 type ChatRequestBody = {
@@ -84,11 +85,12 @@ export async function POST(req: Request) {
   }
 
   const assistant = await getAssistantForConversation(conversationId);
+  const profile = await getUserProfile(user.id);
   const llmTimeoutMs = getLlmTimeoutMs();
 
   try {
     const result = streamText({
-      model: getChatModel(assistant.model),
+      model: getChatModel(assistant.model, profile?.preferred_model),
       system: assistant.system_prompt,
       messages: await convertToModelMessages(uiMessages),
       providerOptions: getStreamTextProviderOptions(),

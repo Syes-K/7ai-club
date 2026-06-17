@@ -15,6 +15,7 @@ export type ConversationSummary = {
   title: string;
   updated_at: string;
   assistant_name: string;
+  assistant_icon: string | null;
 };
 
 export function getTextFromUIMessage(message: UIMessage): string {
@@ -120,7 +121,7 @@ export async function listConversations(
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("conversations")
-    .select("id, title, updated_at, assistants(name)")
+    .select("id, title, updated_at, assistants(name, icon)")
     .eq("user_id", userId)
     .order("updated_at", { ascending: false })
     .limit(50);
@@ -130,16 +131,18 @@ export async function listConversations(
   }
 
   return (data ?? []).map((row) => {
-    const assistant = row.assistants as { name: string } | { name: string }[] | null;
-    const assistantName = Array.isArray(assistant)
-      ? assistant[0]?.name
-      : assistant?.name;
+    const assistant = row.assistants as
+      | { name: string; icon: string | null }
+      | { name: string; icon: string | null }[]
+      | null;
+    const assistantRow = Array.isArray(assistant) ? assistant[0] : assistant;
 
     return {
       id: row.id,
       title: row.title,
       updated_at: row.updated_at,
-      assistant_name: assistantName ?? "7ai Assistant",
+      assistant_name: assistantRow?.name ?? "7ai Assistant",
+      assistant_icon: assistantRow?.icon ?? null,
     };
   });
 }
@@ -180,21 +183,48 @@ export async function getDefaultAssistant() {
   return data;
 }
 
-export async function createConversation(userId: string) {
+export async function createConversation(userId: string, assistantId: string) {
   const supabase = await createClient();
-  const assistant = await getDefaultAssistant();
+
+  const { data: assistant, error: assistantError } = await supabase
+    .from("assistants")
+    .select("id, opening_message")
+    .eq("id", assistantId)
+    .eq("user_id", userId)
+    .maybeSingle();
+
+  if (assistantError) {
+    throw new Error(assistantError.message);
+  }
+
+  if (!assistant) {
+    throw new Error("Assistant not found");
+  }
 
   const { data, error } = await supabase
     .from("conversations")
     .insert({
       user_id: userId,
-      assistant_id: assistant.id,
+      assistant_id: assistantId,
     })
     .select("id")
     .single();
 
   if (error || !data) {
     throw new Error(error?.message ?? "Failed to create conversation");
+  }
+
+  const openingMessage = assistant.opening_message?.trim();
+  if (openingMessage) {
+    const { error: messageError } = await supabase.from("messages").insert({
+      conversation_id: data.id,
+      role: "assistant",
+      content: openingMessage,
+    });
+
+    if (messageError) {
+      throw new Error(messageError.message);
+    }
   }
 
   return data.id as string;
@@ -281,7 +311,7 @@ export async function getAssistantForConversation(conversationId: string) {
 
   const { data: assistant, error: assistantError } = await supabase
     .from("assistants")
-    .select("id, name, system_prompt, model")
+    .select("id, name, icon, system_prompt, model")
     .eq("id", conversation.assistant_id)
     .single();
 

@@ -1,29 +1,36 @@
 "use client";
 
-import Link from "next/link";
-import { useState } from "react";
-import { Bot, Plus, Trash2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
+import { AssistantAvatar } from "@/components/chat/assistant-avatar";
 import { DeleteConversationDialog } from "@/components/chat/delete-conversation-dialog";
 import type { ConversationSummary } from "@/lib/chat/conversations";
 import { formatConversationTimestamp } from "@/lib/chat/format";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { Plus, Trash2 } from "lucide-react";
+import { useState } from "react";
 
 interface ChatSidebarProps {
   conversations: ConversationSummary[];
   activeId: string;
+  pendingId?: string | null;
+  onSelectConversation: (id: string) => void;
   onNewChat: () => void;
   onDeleteConversation: (id: string) => Promise<void>;
   creating: boolean;
+  navigationDisabled?: boolean;
   onNavigate: () => void;
 }
 
 export function ChatSidebar({
   conversations,
   activeId,
+  pendingId = null,
+  onSelectConversation,
   onNewChat,
   onDeleteConversation,
   creating,
+  navigationDisabled = false,
   onNavigate,
 }: ChatSidebarProps) {
   const [pendingDelete, setPendingDelete] = useState<ConversationSummary | null>(
@@ -50,7 +57,7 @@ export function ChatSidebar({
             variant="secondary"
             className="w-full font-mono tracking-wide shadow-[0_0_16px_rgba(0,128,255,0.1)] hover:shadow-[0_0_20px_rgba(0,128,255,0.2)]"
             onClick={onNewChat}
-            disabled={creating}
+            disabled={creating || navigationDisabled}
           >
             <Plus className="h-4 w-4" />
             {creating ? "Creating…" : "New chat"}
@@ -66,6 +73,7 @@ export function ChatSidebar({
             <ul className="space-y-1.5">
               {conversations.map((conversation) => {
                 const isActive = conversation.id === activeId;
+                const isPending = pendingId === conversation.id;
 
                 return (
                   <li key={conversation.id}>
@@ -74,27 +82,36 @@ export function ChatSidebar({
                         "group relative flex items-start gap-1 rounded-lg transition-colors",
                         isActive
                           ? "bg-[var(--neon-primary)]/15"
-                          : "hover:bg-white/5",
+                          : isPending
+                            ? "bg-[var(--neon-primary)]/10"
+                            : "hover:bg-white/5",
                       )}
                     >
-                      {isActive && (
+                      {(isActive || isPending) && (
                         <span
-                          className="absolute bottom-2 left-0 top-2 w-0.5 rounded-full bg-[var(--neon-primary)]"
+                          className={cn(
+                            "absolute bottom-2 left-0 top-2 w-0.5 rounded-full bg-[var(--neon-primary)]",
+                            isPending && "animate-pulse",
+                          )}
                           aria-hidden
                         />
                       )}
-                      <Link
-                        href={`/chat/${conversation.id}`}
-                        onClick={onNavigate}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          onSelectConversation(conversation.id);
+                          onNavigate();
+                        }}
+                        disabled={navigationDisabled && !isPending}
                         className={cn(
-                          "min-w-0 flex-1 rounded-lg py-2.5 pl-3 pr-1 transition-colors duration-200 cursor-pointer",
+                          "min-w-0 flex-1 rounded-lg py-2.5 pl-3 pr-1 text-left transition-colors duration-200 cursor-pointer disabled:cursor-wait",
                           isActive ? "pl-3.5" : "pl-3",
                         )}
                       >
                         <p
                           className={cn(
                             "truncate text-sm font-medium",
-                            isActive
+                            isActive || isPending
                               ? "text-[var(--text-primary)]"
                               : "text-[var(--text-primary)]/90",
                           )}
@@ -102,17 +119,27 @@ export function ChatSidebar({
                           {conversation.title}
                         </p>
                         <p className="mt-1 flex min-w-0 items-center gap-1.5 truncate text-xs text-[var(--text-muted)]">
-                          <Bot className="h-3.5 w-3.5 shrink-0 text-[var(--accent-success)]" />
-                          <span className="truncate">{conversation.assistant_name}</span>
+                          {isPending ? (
+                            <Loader2 className="h-3.5 w-3.5 shrink-0 animate-spin text-[var(--neon-primary)]" />
+                          ) : (
+                            <AssistantAvatar
+                              icon={conversation.assistant_icon}
+                              variant="inline"
+                            />
+                          )}
+                          <span className="truncate">
+                            {isPending ? "Loading…" : conversation.assistant_name}
+                          </span>
                         </p>
                         <p className="mt-0.5 text-xs text-[var(--text-muted)]/70">
                           {formatConversationTimestamp(conversation.updated_at)}
                         </p>
-                      </Link>
+                      </button>
                       <button
                         type="button"
                         aria-label={`Delete ${conversation.title}`}
-                        className="mt-2 shrink-0 rounded-md p-1.5 text-[var(--text-muted)] opacity-0 transition-opacity hover:bg-red-500/10 hover:text-red-400 group-hover:opacity-100 cursor-pointer"
+                        disabled={navigationDisabled}
+                        className="mt-2 shrink-0 rounded-md p-1.5 text-[var(--text-muted)] opacity-0 transition-opacity hover:bg-red-500/10 hover:text-red-400 group-hover:opacity-100 cursor-pointer disabled:opacity-30"
                         onClick={() => setPendingDelete(conversation)}
                       >
                         <Trash2 className="h-4 w-4" />

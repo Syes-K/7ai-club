@@ -4,24 +4,24 @@
 > **中文：** [README-cn.md](./README-cn.md)
 
 > **Feature slug：** `mvp-chat`  
-> **迭代：** [`iter-01`](../../iterations/iter-01/README-cn.md)（已交付）· [`iter-02`](../../iterations/iter-02/README-cn.md)（**本地完成 · 待 migration/手测**）  
+> **迭代：** [`iter-01`](../../iterations/iter-01/README-cn.md)（已交付）· [`iter-02`](../../iterations/iter-02/README-cn.md)（已交付）· [`iter-03`](../../iterations/iter-03/README-cn.md)（Console + Chat **已交付**）· [`iter-04`](../../iterations/iter-04/README-cn.md)（**计划中 — 混合数据访问**）  
 > **路线图阶段：** 1 — MVP 聊天
 
 ---
 
 ## 文档地图（Agent 入口）
 
-**iter-02 必读：**
+**iter-04 必读（当前）：**
 
-1. [01-product-requirements-cn.md](./01-product-requirements-cn.md) — 总纲 §2 全局约定  
-2. [changelog/iter-02-cn.md](./changelog/iter-02-cn.md) — 本迭代增量与验收  
-3. 子 PRD：[landing-cn.md](./prd/landing-cn.md) · [chat-experience-cn.md](./prd/chat-experience-cn.md) · [llm-reliability-cn.md](./prd/llm-reliability-cn.md)
+1. [changelog/iter-04-cn.md](./changelog/iter-04-cn.md) — 本迭代增量与验收  
+2. [design/data-access-cn.md](./design/data-access-cn.md) — 分层与 BFF 迁移  
+3. [prd/data-access-cn.md](./prd/data-access-cn.md) — 无 UI 变更的产品范围
 
 | 类型 | 总纲 | 子文档 |
 |------|------|--------|
 | 产品 | [01-product-requirements-cn.md](./01-product-requirements-cn.md) | [prd/](./prd/) |
 | 技术 | [02-technical-design-cn.md](./02-technical-design-cn.md) | [design/](./design/) |
-| 迭代 | — | [changelog/iter-02-cn.md](./changelog/iter-02-cn.md) |
+| 迭代 | — | [changelog/iter-04-cn.md](./changelog/iter-04-cn.md) |
 
 ---
 
@@ -34,12 +34,21 @@
 
 ---
 
-## iter-02（本地完成）
+## iter-02（已交付）
 
 - 营销首页 C2、顶栏用户菜单、Chat 删除/清空/Markdown、百炼加固
-- 详见 [changelog/iter-02-cn.md](./changelog/iter-02-cn.md)、[iter-02 README §7](../../iterations/iter-02/README-cn.md)
+- 详见 [changelog/iter-02-cn.md](./changelog/iter-02-cn.md)
 
-**iter-02 设计：** [design/landing-cn.md](./design/landing-cn.md) · [chat-experience-cn.md](./design/chat-experience-cn.md) · [llm-reliability-cn.md](./design/llm-reliability-cn.md)
+## iter-03（Console + Chat 集成 — 已交付）
+
+- Console 侧栏、Profile、Assistants CRUD（Icon/Opening）、New Chat 必选助理
+- ChatAppShell 客户端 session、导航修复
+- 详见 [console README-cn.md](../console/README-cn.md)、[iter-03 changelog §2](../console/changelog/iter-03-cn.md)
+
+## iter-04（计划中）
+
+- CRUD 迁浏览器 Supabase；仅 `/api/chat` 留 Node
+- 详见 [changelog/iter-04-cn.md](./changelog/iter-04-cn.md)、[design/data-access-cn.md](./design/data-access-cn.md)
 
 ---
 

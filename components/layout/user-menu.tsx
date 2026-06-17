@@ -1,8 +1,9 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ChevronDown, LogOut } from "lucide-react";
+import { ChevronDown, LogOut, Settings } from "lucide-react";
 import {
   getUserDisplayLabel,
   getUserInitials,
@@ -12,19 +13,25 @@ import { cn } from "@/lib/utils";
 
 interface UserMenuProps {
   email: string;
+  nickname?: string | null;
   className?: string;
   /** Hide short username beside avatar (header stays compact) */
   compact?: boolean;
 }
 
-export function UserMenu({ email, className, compact = false }: UserMenuProps) {
+export function UserMenu({
+  email,
+  nickname,
+  className,
+  compact = false,
+}: UserMenuProps) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
 
   const initials = getUserInitials(email);
-  const shortLabel = getUserShortLabel(email);
-  const fullLabel = getUserDisplayLabel(email);
+  const shortLabel = getUserShortLabel(email, nickname);
+  const fullLabel = getUserDisplayLabel(email, nickname);
 
   useEffect(() => {
     if (!open) return;
@@ -98,6 +105,15 @@ export function UserMenu({ email, className, compact = false }: UserMenuProps) {
               {fullLabel}
             </p>
           </div>
+          <Link
+            href="/console"
+            role="menuitem"
+            onClick={() => setOpen(false)}
+            className="flex w-full cursor-pointer items-center gap-2 px-3 py-2.5 text-sm text-[var(--text-muted)] transition-colors hover:bg-white/5 hover:text-[var(--text-primary)]"
+          >
+            <Settings className="h-4 w-4" />
+            Console
+          </Link>
           <button
             type="button"
             role="menuitem"
