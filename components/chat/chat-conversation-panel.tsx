@@ -6,7 +6,8 @@ import { useChat } from "@ai-sdk/react";
 import { useEffect, useRef, useState } from "react";
 import { Eraser, Menu, X } from "lucide-react";
 import { useChatShell } from "@/components/chat/chat-shell-context";
-import { chatFetch } from "@/lib/chat/fetch-with-error";
+import { chatFetch } from "@/lib/api/chat-client";
+import { clearChat } from "@/lib/services/browser/clear-chat";
 import { ClearChatDialog } from "@/components/chat/clear-chat-dialog";
 import { CHAT_ACTION_RAIL, CHAT_PANEL_X } from "@/lib/constants/chat-layout";
 import { ChatInput } from "@/components/chat/chat-input";
@@ -67,15 +68,7 @@ export function ChatConversationPanel({
   async function handleClearChat() {
     setClearing(true);
     try {
-      const res = await fetch(`/api/conversations/${conversationId}/messages`, {
-        method: "DELETE",
-      });
-      if (!res.ok) {
-        const body = await res.json().catch(() => ({}));
-        throw new Error(
-          typeof body.error === "string" ? body.error : "Failed to clear chat",
-        );
-      }
+      await clearChat(conversationId);
       setMessages([]);
       setClearDialogOpen(false);
       onConversationUpdated?.();

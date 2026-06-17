@@ -3,8 +3,8 @@
 > **English:** [02-technical-design.md](./02-technical-design.md)  
 > **中文：** [02-technical-design-cn.md](./02-technical-design-cn.md)
 
-> **Status:** iter-01 confirmed; **iter-02 draft pending confirmation**  
-> **Version:** v0.2
+> **Status:** iter-01 confirmed; iter-02/03/04 **shipped**  
+> **Version:** v0.5
 
 ---
 
@@ -18,6 +18,14 @@
 
 **Implementation order:** llm-reliability → landing → chat-experience.
 
+## iter-04 Module Design (implemented)
+
+| Module | Doc |
+|--------|-----|
+| Hybrid browser data access | [design/data-access.md](./design/data-access.md) |
+
+**Acceptance:** [changelog/iter-04.md](./changelog/iter-04.md)
+
 See [02-technical-design-cn.md](./02-technical-design-cn.md) for full index.
 
 ---
@@ -27,3 +35,5 @@ See [02-technical-design-cn.md](./02-technical-design-cn.md) for full index.
 | Date | Version | Change |
 |------|---------|--------|
 | 2026-06-15 | v0.2 | iter-02 module designs |
+| 2026-06-16 | v0.4 | iter-04 data-access design draft |
+| 2026-06-17 | v0.5 | iter-04 implemented |

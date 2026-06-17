@@ -5,17 +5,17 @@ import { Pencil, Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { ASSISTANT_ICON_MAX_LENGTH } from "@/lib/console/assistant-fields";
+import { ASSISTANT_ICON_MAX_LENGTH } from "@/lib/validation/assistant";
+import {
+  createUserAssistant,
+  deleteUserAssistant,
+  listAssistants,
+  updateUserAssistant,
+} from "@/lib/services/browser/assistants";
+import type { AssistantDto } from "@/lib/data/types";
 import { formatConversationTimestamp } from "@/lib/chat/format";
 
-type AssistantRow = {
-  id: string;
-  icon: string | null;
-  name: string;
-  openingMessage: string | null;
-  systemPrompt: string;
-  updatedAt: string;
-};
+type AssistantRow = AssistantDto;
 
 type AssistantFormValues = {
   icon: string;
@@ -44,10 +44,10 @@ function AssistantFormDialog({
   onCancel,
 }: AssistantFormDialogProps) {
   const dialogRef = useRef<HTMLDialogElement>(null);
-  const [icon, setIcon] = useState("");
-  const [name, setName] = useState("");
-  const [openingMessage, setOpeningMessage] = useState("");
-  const [systemPrompt, setSystemPrompt] = useState("");
+  const [icon, setIcon] = useState(initial?.icon ?? "");
+  const [name, setName] = useState(initial?.name ?? "");
+  const [openingMessage, setOpeningMessage] = useState(initial?.openingMessage ?? "");
+  const [systemPrompt, setSystemPrompt] = useState(initial?.systemPrompt ?? "");
 
   useEffect(() => {
     const dialog = dialogRef.current;
@@ -55,15 +55,6 @@ function AssistantFormDialog({
     if (open && !dialog.open) dialog.showModal();
     else if (!open && dialog.open) dialog.close();
   }, [open]);
-
-  useEffect(() => {
-    if (open) {
-      setIcon(initial?.icon ?? "");
-      setName(initial?.name ?? "");
-      setOpeningMessage(initial?.openingMessage ?? "");
-      setSystemPrompt(initial?.systemPrompt ?? "");
-    }
-  }, [open, initial]);
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -178,21 +169,27 @@ export function AssistantsManager() {
 
   async function loadAssistants() {
     setLoadError(null);
-    const res = await fetch("/api/assistants");
-    if (!res.ok) {
-      const body = await res.json().catch(() => ({}));
-      throw new Error(typeof body.error === "string" ? body.error : "Failed to load");
-    }
-    const data = await res.json();
-    setAssistants(data.assistants ?? []);
+    const rows = await listAssistants();
+    setAssistants(rows);
   }
 
   useEffect(() => {
-    loadAssistants()
-      .catch((err) => {
-        setLoadError(err instanceof Error ? err.message : "Failed to load");
+    let cancelled = false;
+    listAssistants()
+      .then((rows) => {
+        if (!cancelled) setAssistants(rows);
       })
-      .finally(() => setLoading(false));
+      .catch((err) => {
+        if (!cancelled) {
+          setLoadError(err instanceof Error ? err.message : "Failed to load");
+        }
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   function openCreate() {
@@ -221,22 +218,10 @@ export function AssistantsManager() {
     };
 
     try {
-      const res =
-        formMode === "create"
-          ? await fetch("/api/assistants", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify(payload),
-            })
-          : await fetch(`/api/assistants/${editingId}`, {
-              method: "PATCH",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify(payload),
-            });
-
-      if (!res.ok) {
-        const body = await res.json().catch(() => ({}));
-        throw new Error(typeof body.error === "string" ? body.error : "Failed to save");
+      if (formMode === "create") {
+        await createUserAssistant(payload);
+      } else if (editingId) {
+        await updateUserAssistant(editingId, payload);
       }
 
       await loadAssistants();
@@ -254,14 +239,7 @@ export function AssistantsManager() {
     setDeleteError(null);
 
     try {
-      const res = await fetch(`/api/assistants/${deleteTarget.id}`, {
-        method: "DELETE",
-      });
-
-      if (!res.ok) {
-        const body = await res.json().catch(() => ({}));
-        throw new Error(typeof body.error === "string" ? body.error : "Failed to delete");
-      }
+      await deleteUserAssistant(deleteTarget.id);
 
       await loadAssistants();
       setDeleteTarget(null);
@@ -367,6 +345,7 @@ export function AssistantsManager() {
       )}
 
       <AssistantFormDialog
+        key={formMode === "create" ? "create" : (editingId ?? "edit")}
         open={formOpen}
         mode={formMode}
         initial={

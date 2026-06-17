@@ -1,15 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 
-export type AssistantRow = {
-  id: string;
-  name: string;
-  icon: string | null;
-  opening_message: string | null;
-  system_prompt: string;
-  model: string;
-  user_id: string | null;
-  updated_at: string;
-};
+import type { AssistantRow } from "@/lib/data/types";
 
 const ASSISTANT_COLUMNS =
   "id, name, icon, opening_message, system_prompt, model, user_id, updated_at";

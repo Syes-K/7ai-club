@@ -2,7 +2,7 @@
 
 import type { User } from "@supabase/supabase-js";
 import { usePathname, useRouter } from "next/navigation";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState, startTransition } from "react";
 import { AssistantPickerDialog } from "@/components/chat/assistant-picker-dialog";
 import { ChatConversationPanel } from "@/components/chat/chat-conversation-panel";
 import {
@@ -12,11 +12,13 @@ import {
 import { ChatShellProvider } from "@/components/chat/chat-shell-context";
 import { ChatSidebar } from "@/components/chat/chat-sidebar";
 import { SiteHeader } from "@/components/layout/site-header";
-import type { ConversationSummary } from "@/lib/chat/conversations";
+import type { ConversationSummary, ConversationSession } from "@/lib/data/types";
 import {
-  type ConversationSession,
-  fetchConversationSession,
-} from "@/lib/chat/fetch-conversation-session";
+  createConversation,
+  deleteConversation,
+  listConversationSummaries,
+  loadConversationSession,
+} from "@/lib/services/browser/conversation-session";
 import { GridBackground } from "@/components/ui/grid-background";
 import { cn } from "@/lib/utils";
 
@@ -31,10 +33,16 @@ function getConversationIdFromPath(pathname: string): string {
 interface ChatAppShellProps {
   user: User;
   nickname?: string | null;
+  preferredModel?: string | null;
   children: React.ReactNode;
 }
 
-export function ChatAppShell({ user, nickname, children }: ChatAppShellProps) {
+export function ChatAppShell({
+  user,
+  nickname,
+  preferredModel = null,
+  children,
+}: ChatAppShellProps) {
   const router = useRouter();
   const pathname = usePathname();
   const pathConversationId = getConversationIdFromPath(pathname);
@@ -53,16 +61,27 @@ export function ChatAppShell({ user, nickname, children }: ChatAppShellProps) {
 
   const isNavigating = pendingId != null;
 
-  const refreshConversations = useCallback(async () => {
-    const res = await fetch("/api/conversations");
-    if (!res.ok) return;
-    const data = await res.json();
-    setConversations(data.conversations ?? []);
+  const refreshConversations = useCallback(async (): Promise<ConversationSummary[]> => {
+    try {
+      const list = await listConversationSummaries();
+      setConversations(list);
+      return list;
+    } catch {
+      return [];
+    }
   }, []);
 
   useEffect(() => {
-    refreshConversations().catch(() => {});
-  }, [refreshConversations]);
+    let cancelled = false;
+    listConversationSummaries()
+      .then((list) => {
+        if (!cancelled) setConversations(list);
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   useEffect(() => {
     if (!pendingId) return;
@@ -81,7 +100,11 @@ export function ChatAppShell({ user, nickname, children }: ChatAppShellProps) {
   }, [pendingId]);
 
   const loadConversation = useCallback(
-    async (id: string, source: "url" | "user" = "user") => {
+    async (
+      id: string,
+      source: "url" | "user" = "user",
+      listOverride?: ConversationSummary[],
+    ) => {
       if (source === "user") {
         clientNavRef.current = true;
       }
@@ -91,8 +114,16 @@ export function ChatAppShell({ user, nickname, children }: ChatAppShellProps) {
       setViewId(id);
       setNavPhase("loading");
 
+      const list = listOverride ?? conversations;
+      const summary = list.find((conversation) => conversation.id === id) ?? null;
+
       try {
-        const data = await fetchConversationSession(id);
+        // Data: triggers Supabase GET /rest/v1/messages (see loadConversationSession).
+        // Assistant header fields come from sidebar list; preferredModel from layout — not re-fetched here.
+        const data = await loadConversationSession(id, {
+          summary,
+          preferredModel,
+        });
         if (seq !== loadSeqRef.current) return;
 
         setSession(data);
@@ -100,6 +131,8 @@ export function ChatAppShell({ user, nickname, children }: ChatAppShellProps) {
         setNavPhase("idle");
 
         if (source === "user") {
+          // URL sync only: Next.js router.replace fetches localhost RSC flight for /chat/[id].
+          // Not a Supabase call; page.tsx is null — content is already in client state above.
           router.replace(`/chat/${id}`, { scroll: false });
         }
       } catch {
@@ -107,17 +140,19 @@ export function ChatAppShell({ user, nickname, children }: ChatAppShellProps) {
         setNavPhase("timeout");
       }
     },
-    [router],
+    [router, conversations, preferredModel],
   );
 
   // Load from URL on first visit / external navigation only (not after client sidebar clicks)
   useEffect(() => {
     if (!pathConversationId) {
       clientNavRef.current = false;
-      setViewId("");
-      setSession(null);
-      setPendingId(null);
-      setNavPhase("idle");
+      startTransition(() => {
+        setViewId("");
+        setSession(null);
+        setPendingId(null);
+        setNavPhase("idle");
+      });
       return;
     }
 
@@ -126,7 +161,9 @@ export function ChatAppShell({ user, nickname, children }: ChatAppShellProps) {
     }
 
     if (pathConversationId === session?.conversationId) {
-      setViewId(pathConversationId);
+      startTransition(() => {
+        setViewId(pathConversationId);
+      });
       return;
     }
 
@@ -134,7 +171,9 @@ export function ChatAppShell({ user, nickname, children }: ChatAppShellProps) {
       return;
     }
 
-    void loadConversation(pathConversationId, "url");
+    void Promise.resolve().then(() => {
+      void loadConversation(pathConversationId, "url");
+    });
   }, [
     pathConversationId,
     session?.conversationId,
@@ -175,22 +214,11 @@ export function ChatAppShell({ user, nickname, children }: ChatAppShellProps) {
   async function createConversationWithAssistant(assistantId: string) {
     setCreating(true);
     try {
-      const res = await fetch("/api/conversations", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ assistantId }),
-      });
-      if (!res.ok) {
-        const body = await res.json().catch(() => ({}));
-        throw new Error(
-          typeof body.error === "string" ? body.error : "Failed to create conversation",
-        );
-      }
-      const { id } = await res.json();
+      const id = await createConversation(assistantId);
       setPickerOpen(false);
       setSidebarOpen(false);
-      await refreshConversations();
-      await loadConversation(id, "user");
+      const list = await refreshConversations();
+      await loadConversation(id, "user", list);
     } catch {
       // Picker stays open
     } finally {
@@ -199,20 +227,14 @@ export function ChatAppShell({ user, nickname, children }: ChatAppShellProps) {
   }
 
   async function handleDeleteConversation(id: string) {
-    const res = await fetch(`/api/conversations/${id}`, { method: "DELETE" });
-    if (!res.ok) {
-      const body = await res.json().catch(() => ({}));
-      throw new Error(
-        typeof body.error === "string" ? body.error : "Failed to delete conversation",
-      );
-    }
+    await deleteConversation(id);
 
-    await refreshConversations();
+    const list = await refreshConversations();
 
     if (id === viewId) {
-      const remaining = conversations.filter((c) => c.id !== id);
+      const remaining = list.filter((conversation) => conversation.id !== id);
       if (remaining.length > 0) {
-        await loadConversation(remaining[0].id, "user");
+        await loadConversation(remaining[0].id, "user", list);
       } else {
         clientNavRef.current = false;
         setSession(null);

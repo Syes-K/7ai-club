@@ -28,7 +28,7 @@
 - Console 壳 + Profile + Assistants（Icon/Opening）+ 占位页  
 - New Chat 必选助理 + 开场白  
 - ChatAppShell 客户端 session + 导航修复  
-- **后续 iter-04：** BFF → 浏览器 Supabase
+- **iter-04（已交付）：** Profile / Assistants CRUD 已迁浏览器 Supabase；见 [mvp-chat changelog iter-04-cn.md](../mvp-chat/changelog/iter-04-cn.md)
 
 ---
 

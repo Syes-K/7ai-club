@@ -7,9 +7,9 @@
 > **Feature slug：** `mvp-chat`  
 > **路线图阶段：** 1 — MVP 聊天  
 > **关联 PRD：** [01-product-requirements-cn.md](./01-product-requirements-cn.md)  
-> **状态：** iter-01 已确认；**iter-02 已实现（本地）**  
-> **技术设计确认日期：** 2026-06-15（iter-02）  
-> **文档版本：** v0.3
+> **状态：** iter-01 已确认；iter-02/03/04 **已实现**  
+> **技术设计确认日期：** 2026-06-15（iter-02）；iter-04 2026-06-17  
+> **文档版本：** v0.5
 
 ---
 
@@ -28,7 +28,15 @@
 | 删除 + Markdown | [design/chat-experience-cn.md](./design/chat-experience-cn.md) | [prd/chat-experience-cn.md](./prd/chat-experience-cn.md) |
 | 百炼 + 错误 | [design/llm-reliability-cn.md](./design/llm-reliability-cn.md) | [prd/llm-reliability-cn.md](./prd/llm-reliability-cn.md) |
 
-### 1.2 全局架构
+### 1.2 iter-04 模块设计（已实现）
+
+| 模块 | 文档 | PRD |
+|------|------|-----|
+| 混合浏览器数据访问 | [design/data-access-cn.md](./design/data-access-cn.md) | [prd/data-access-cn.md](./prd/data-access-cn.md) |
+
+**iter-04 验收：** [changelog/iter-04-cn.md](./changelog/iter-04-cn.md)
+
+### 1.3 全局架构
 
 | 项 | 选择 |
 |----|------|
@@ -50,6 +58,7 @@
 | [design/landing-cn.md](./design/landing-cn.md) | Landing、Header、C2 | **已实现** |
 | [design/chat-experience-cn.md](./design/chat-experience-cn.md) | DELETE、Clear、MD、侧栏 UX | **已实现** |
 | [design/llm-reliability-cn.md](./design/llm-reliability-cn.md) | 超时、百炼、errors | **已实现** |
+| [design/data-access-cn.md](./design/data-access-cn.md) | 浏览器分层、RPC、BFF 迁移 | **已实现（iter-04）** |
 
 ---
 
@@ -88,7 +97,9 @@
 | 2026-06-14 | v0.1 | iter-01 单文件 → `design/core-chat` |
 | 2026-06-15 | v0.2 | iter-02 三模块设计草稿 |
 | 2026-06-16 | v0.3 | iter-02 本地实现完成 |
+| 2026-06-16 | v0.4 | iter-04 混合数据访问设计草稿 |
+| 2026-06-17 | v0.5 | iter-04 实现完成；design/data-access → 已实现 |
 
 ---
 
-*iter-02 编码已完成；发布前执行 migration 与手测（见 [iter-02 README §7](../../iterations/iter-02/README-cn.md)）。*
+*下一迭代编码前请读对应 `changelog/iter-NN`。*

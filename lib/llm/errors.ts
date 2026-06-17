@@ -96,7 +96,6 @@ export function formatLlmErrorMessage(error: Error | undefined): string {
 
   if (lower === "network error" || lower.includes("failed to fetch")) {
     const keyEnv = getKeyEnvLabel();
-    const provider = getLlmProviderId();
     return `Connection to the LLM failed. Confirm ${keyEnv}, LLM_PROVIDER, and redeploy after env changes.`;
   }
 

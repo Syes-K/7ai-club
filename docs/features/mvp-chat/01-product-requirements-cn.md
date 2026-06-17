@@ -61,6 +61,7 @@
 | F-10–F-11 | 首页、顶栏、视觉 C2 | [prd/landing-cn.md](./prd/landing-cn.md) | iter-02 |
 | F-12–F-13 | 删除、Markdown | [prd/chat-experience-cn.md](./prd/chat-experience-cn.md) | iter-02 |
 | F-14–F-15 | 多提供商、百炼稳定 | [prd/llm-reliability-cn.md](./prd/llm-reliability-cn.md) | iter-01/02 |
+| F-30 | 混合数据访问（无 UI 变更） | [prd/data-access-cn.md](./prd/data-access-cn.md) | iter-04 |
 
 ---
 
@@ -74,12 +75,14 @@
 | [prd/landing-cn.md](./prd/landing-cn.md) | Landing、Start chat、顶栏用户、C2 视觉 | iter-02 |
 | [prd/chat-experience-cn.md](./prd/chat-experience-cn.md) | 删除对话、MD 渲染、system_prompt | iter-02 |
 | [prd/llm-reliability-cn.md](./prd/llm-reliability-cn.md) | 多提供商、abort、错误提示 | iter-01/02 |
+| [prd/data-access-cn.md](./prd/data-access-cn.md) | 浏览器 CRUD、BFF 收敛 | iter-04 |
 
 ### 3.2 迭代变更（`changelog/`）
 
 | 文档 | 说明 |
 |------|------|
 | [changelog/iter-02-cn.md](./changelog/iter-02-cn.md) | iter-02 增量、验收 AC-10~20 |
+| [changelog/iter-04-cn.md](./changelog/iter-04-cn.md) | iter-04 混合数据访问、AC-30~34 |
 
 ### 3.3 技术设计
 
@@ -94,6 +97,7 @@
 | AC-01 – AC-08（iter-01，已验收） | [prd/core-chat-cn.md](./prd/core-chat-cn.md) |
 | AC-09（多提供商，已替代 AC-09 v0.1） | [prd/llm-reliability-cn.md](./prd/llm-reliability-cn.md) |
 | AC-10 – AC-20（iter-02） | 各子 PRD + [changelog/iter-02-cn.md](./changelog/iter-02-cn.md) |
+| AC-30 – AC-34（iter-04） | [prd/data-access-cn.md](./prd/data-access-cn.md) + [changelog/iter-04-cn.md](./changelog/iter-04-cn.md) |
 
 ---
 

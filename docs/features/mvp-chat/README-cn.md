@@ -4,17 +4,17 @@
 > **中文：** [README-cn.md](./README-cn.md)
 
 > **Feature slug：** `mvp-chat`  
-> **迭代：** [`iter-01`](../../iterations/iter-01/README-cn.md)（已交付）· [`iter-02`](../../iterations/iter-02/README-cn.md)（已交付）· [`iter-03`](../../iterations/iter-03/README-cn.md)（Console + Chat **已交付**）· [`iter-04`](../../iterations/iter-04/README-cn.md)（**计划中 — 混合数据访问**）  
+> **迭代：** [`iter-01`](../../iterations/iter-01/README-cn.md)（已交付）· [`iter-02`](../../iterations/iter-02/README-cn.md)（已交付）· [`iter-03`](../../iterations/iter-03/README-cn.md)（已交付）· [`iter-04`](../../iterations/iter-04/README-cn.md)（**已交付 — 混合数据访问**）  
 > **路线图阶段：** 1 — MVP 聊天
 
 ---
 
 ## 文档地图（Agent 入口）
 
-**iter-04 必读（当前）：**
+**iter-04（已交付）：**
 
-1. [changelog/iter-04-cn.md](./changelog/iter-04-cn.md) — 本迭代增量与验收  
-2. [design/data-access-cn.md](./design/data-access-cn.md) — 分层与 BFF 迁移  
+1. [changelog/iter-04-cn.md](./changelog/iter-04-cn.md) — 混合数据访问增量与验收  
+2. [design/data-access-cn.md](./design/data-access-cn.md) — 浏览器分层与 BFF 迁移  
 3. [prd/data-access-cn.md](./prd/data-access-cn.md) — 无 UI 变更的产品范围
 
 | 类型 | 总纲 | 子文档 |
@@ -45,10 +45,10 @@
 - ChatAppShell 客户端 session、导航修复
 - 详见 [console README-cn.md](../console/README-cn.md)、[iter-03 changelog §2](../console/changelog/iter-03-cn.md)
 
-## iter-04（计划中）
+## iter-04（已交付）
 
-- CRUD 迁浏览器 Supabase；仅 `/api/chat` 留 Node
-- 详见 [changelog/iter-04-cn.md](./changelog/iter-04-cn.md)、[design/data-access-cn.md](./design/data-access-cn.md)
+- CRUD 迁浏览器 Supabase；`app/api/` 仅余 `POST /api/chat`
+- 详见 [iter-04 README-cn.md](../../iterations/iter-04/README-cn.md)、[changelog/iter-04-cn.md](./changelog/iter-04-cn.md)
 
 ---
 

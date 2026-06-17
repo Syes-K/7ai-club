@@ -65,7 +65,9 @@ test("AC-32: console assistants CRUD", async ({ page }) => { ... });
 
 E2E 本地：`pnpm build && pnpm test:e2e`（Playwright 会启动 `pnpm start`）。
 
-测试账号：在 Supabase 创建专用 test user；凭证放 `.env.local`，E2E 用 `tests/e2e/auth.setup.ts`（待补充）。
+测试账号：在 Supabase 创建专用 test user；凭证放 `.env.local`（`E2E_TEST_EMAIL` / `E2E_TEST_PASSWORD`）。
+
+**iter-04 E2E：** `tests/e2e/iter04-data-access.spec.ts`（AC-30/31/32/34）；`afterEach` 自动删除本用例新建的会话。首次运行需 `pnpm exec playwright install chromium`。
 
 ## MCP（测试阶段）
 

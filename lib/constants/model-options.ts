@@ -5,6 +5,45 @@ export type ModelOption = {
   label: string;
 };
 
+const PROVIDER_ALIASES: Record<string, LlmProviderId> = {
+  siliconflow: "siliconflow",
+  nvidia: "nvidia",
+  bailian: "bailian",
+  dashscope: "bailian",
+  aliyun: "bailian",
+};
+
+const PROVIDER_DEFAULT_MODELS: Record<LlmProviderId, string> = {
+  siliconflow: "deepseek-ai/DeepSeek-OCR",
+  nvidia: "deepseek-ai/deepseek-v4-flash",
+  bailian: "qwen3.6-plus",
+};
+
+export function getPublicLlmProviderId(): LlmProviderId {
+  const raw = process.env.NEXT_PUBLIC_LLM_PROVIDER?.trim().toLowerCase() ?? "";
+  return PROVIDER_ALIASES[raw] ?? "siliconflow";
+}
+
+export function getDefaultModelForProvider(
+  provider: LlmProviderId = getPublicLlmProviderId(),
+): string {
+  return PROVIDER_DEFAULT_MODELS[provider];
+}
+
+/** Browser: profile preference > public default model env > provider default. */
+export function resolveBrowserChatModelId(
+  _assistantModel?: string,
+  preferredModel?: string | null,
+): string {
+  if (preferredModel?.trim()) {
+    return preferredModel.trim();
+  }
+  if (process.env.NEXT_PUBLIC_LLM_MODEL?.trim()) {
+    return process.env.NEXT_PUBLIC_LLM_MODEL.trim();
+  }
+  return getDefaultModelForProvider();
+}
+
 const MODEL_OPTIONS: Record<LlmProviderId, ModelOption[]> = {
   siliconflow: [
     { id: "deepseek-ai/DeepSeek-V3", label: "DeepSeek V3" },

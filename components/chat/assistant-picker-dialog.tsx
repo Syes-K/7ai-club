@@ -3,12 +3,10 @@
 import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import type { AssistantOption } from "@/lib/data/types";
+import { listAssistantOptions } from "@/lib/services/browser/assistants";
 
-export type AssistantOption = {
-  id: string;
-  icon: string | null;
-  name: string;
-};
+export type { AssistantOption };
 
 interface AssistantPickerDialogProps {
   open: boolean;
@@ -40,33 +38,18 @@ export function AssistantPickerDialog({
   }, [open]);
 
   useEffect(() => {
-    if (!open) {
-      setSelectedId(null);
-      setError(null);
-      return;
-    }
+    if (!open) return;
 
     let cancelled = false;
-    setLoading(true);
-    setError(null);
+    void Promise.resolve().then(() => {
+      if (cancelled) return;
+      setLoading(true);
+      setError(null);
+    });
 
-    fetch("/api/assistants")
-      .then(async (res) => {
-        if (!res.ok) {
-          const body = await res.json().catch(() => ({}));
-          throw new Error(
-            typeof body.error === "string" ? body.error : "Failed to load assistants",
-          );
-        }
-        return res.json();
-      })
-      .then((data: { assistants: AssistantOption[] }) => {
+    listAssistantOptions()
+      .then((list) => {
         if (cancelled) return;
-        const list = data.assistants.map((row) => ({
-          id: row.id,
-          icon: row.icon ?? null,
-          name: row.name,
-        }));
         setAssistants(list);
         if (list.length === 1) {
           setSelectedId(list[0].id);
@@ -88,6 +71,8 @@ export function AssistantPickerDialog({
 
   function handleCancel() {
     if (creating) return;
+    setSelectedId(null);
+    setError(null);
     onOpenChange(false);
   }
 

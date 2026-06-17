@@ -19,4 +19,4 @@
 ## iter-03 shipped
 
 Console shell, Profile, Assistants (icon/opening), placeholders, New Chat picker, ChatAppShell.  
-**Next:** iter-04 hybrid browser data access.
+**iter-04 (shipped):** Profile / Assistants CRUD via browser Supabase — [mvp-chat changelog iter-04.md](../mvp-chat/changelog/iter-04.md).

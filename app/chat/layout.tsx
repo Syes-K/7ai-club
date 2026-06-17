@@ -21,8 +21,13 @@ export default async function ChatLayout({
 
   const profile = await getUserProfile(user.id).catch(() => null);
 
+  // preferredModel is passed once from layout — not re-fetched on each chat switch.
   return (
-    <ChatAppShell user={user} nickname={profile?.nickname}>
+    <ChatAppShell
+      user={user}
+      nickname={profile?.nickname}
+      preferredModel={profile?.preferred_model ?? null}
+    >
       {children}
     </ChatAppShell>
   );

@@ -2,21 +2,9 @@ import type { UIMessage } from "ai";
 import { DEFAULT_CONVERSATION_TITLE, TITLE_MAX_LENGTH } from "@/lib/constants";
 import { createClient } from "@/lib/supabase/server";
 
-export type DbMessage = {
-  id: string;
-  conversation_id: string;
-  role: "user" | "assistant" | "system";
-  content: string;
-  created_at: string;
-};
+import type { ConversationSummary, DbMessage } from "@/lib/data/types";
 
-export type ConversationSummary = {
-  id: string;
-  title: string;
-  updated_at: string;
-  assistant_name: string;
-  assistant_icon: string | null;
-};
+export type { ConversationSummary, DbMessage };
 
 export function getTextFromUIMessage(message: UIMessage): string {
   return message.parts
@@ -121,7 +109,7 @@ export async function listConversations(
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("conversations")
-    .select("id, title, updated_at, assistants(name, icon)")
+    .select("id, title, updated_at, assistants(name, icon, model)")
     .eq("user_id", userId)
     .order("updated_at", { ascending: false })
     .limit(50);
@@ -132,8 +120,8 @@ export async function listConversations(
 
   return (data ?? []).map((row) => {
     const assistant = row.assistants as
-      | { name: string; icon: string | null }
-      | { name: string; icon: string | null }[]
+      | { name: string; icon: string | null; model: string }
+      | { name: string; icon: string | null; model: string }[]
       | null;
     const assistantRow = Array.isArray(assistant) ? assistant[0] : assistant;
 
@@ -143,6 +131,7 @@ export async function listConversations(
       updated_at: row.updated_at,
       assistant_name: assistantRow?.name ?? "7ai Assistant",
       assistant_icon: assistantRow?.icon ?? null,
+      assistant_model: assistantRow?.model ?? "",
     };
   });
 }

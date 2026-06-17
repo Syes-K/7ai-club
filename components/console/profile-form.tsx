@@ -1,41 +1,28 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import type { ProfileDto } from "@/lib/data/types";
+import { saveProfile } from "@/lib/services/browser/profile";
 
-type ModelOption = { id: string; label: string };
+interface ProfileFormProps {
+  initialProfile: ProfileDto;
+}
 
-export function ProfileForm() {
+export function ProfileForm({ initialProfile }: ProfileFormProps) {
   const router = useRouter();
-  const [email, setEmail] = useState("");
-  const [nickname, setNickname] = useState("");
-  const [preferredModel, setPreferredModel] = useState("");
-  const [modelOptions, setModelOptions] = useState<ModelOption[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [email] = useState(initialProfile.email);
+  const [nickname, setNickname] = useState(initialProfile.nickname ?? "");
+  const initialPreferredModel =
+    initialProfile.preferredModel ?? initialProfile.modelOptions[0]?.id ?? "";
+  const [preferredModel, setPreferredModel] = useState(initialPreferredModel);
+  const [modelOptions] = useState(initialProfile.modelOptions);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    fetch("/api/profile")
-      .then(async (res) => {
-        if (!res.ok) throw new Error("Failed to load profile");
-        return res.json();
-      })
-      .then((data) => {
-        setEmail(data.email ?? "");
-        setNickname(data.nickname ?? "");
-        setPreferredModel(data.preferredModel ?? data.modelOptions?.[0]?.id ?? "");
-        setModelOptions(data.modelOptions ?? []);
-      })
-      .catch((err) => {
-        setError(err instanceof Error ? err.message : "Failed to load profile");
-      })
-      .finally(() => setLoading(false));
-  }, []);
 
   async function handleSave(e: React.FormEvent) {
     e.preventDefault();
@@ -44,19 +31,18 @@ export function ProfileForm() {
     setError(null);
 
     try {
-      const res = await fetch("/api/profile", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          nickname,
-          preferredModel: preferredModel || null,
-        }),
-      });
-
-      if (!res.ok) {
-        const body = await res.json().catch(() => ({}));
-        throw new Error(typeof body.error === "string" ? body.error : "Failed to save");
+      const patch: { nickname?: string; preferredModel?: string | null } = {};
+      if (nickname !== (initialProfile.nickname ?? "")) {
+        patch.nickname = nickname;
       }
+      if (preferredModel !== initialPreferredModel) {
+        patch.preferredModel = preferredModel || null;
+      }
+      if (Object.keys(patch).length === 0) {
+        setSaved(true);
+        return;
+      }
+      await saveProfile(patch);
 
       setSaved(true);
       router.refresh();
@@ -65,10 +51,6 @@ export function ProfileForm() {
     } finally {
       setSaving(false);
     }
-  }
-
-  if (loading) {
-    return <p className="text-sm text-[var(--text-muted)]">Loading profile…</p>;
   }
 
   return (

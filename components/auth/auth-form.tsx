@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { getAuthErrorMessage } from "@/lib/auth/errors";
+import { getEmailRedirectTo } from "@/lib/auth/redirect";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -53,6 +54,10 @@ export function AuthForm({ mode, next }: { mode: AuthMode; next?: string }) {
         const { data, error: signUpError } = await supabase.auth.signUp({
           email,
           password,
+          options: {
+            // Uses current origin so prod emails never point at localhost (also whitelist in Supabase).
+            emailRedirectTo: getEmailRedirectTo(redirectTo),
+          },
         });
         if (signUpError) throw signUpError;
 
