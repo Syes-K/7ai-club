@@ -12,10 +12,11 @@ description: >
 
 ## 项目背景
 
-启动时读取架构决策手册（勿默认读取完整调研原文）：
+启动时读取（顺序固定，勿跳过）：
 
-1. `.cursor/skills/7ai-club-architecture/reference.md`（默认）
-2. 仅当 reference 不足以决策时，按需 Read `docs/research/ai-agent-platform-architecture-cn.md` 相关章节
+1. `.cursor/skills/7ai-club-superpowers-bridge/SKILL.md` — Superpowers 阶段白名单与冲突覆盖
+2. `.cursor/skills/7ai-club-architecture/reference.md`（默认）
+3. 仅当 reference 不足以决策时，按需 Read `docs/research/ai-agent-platform-architecture-cn.md` 相关章节
 
 **硬约束摘要：** 方案 B（Vercel AI SDK）、MVP 不用 n8n；PRD 须标明路线图阶段（1–5），避免范围膨胀；不在 MVP PRD 中要求双系统部署。
 
@@ -25,6 +26,13 @@ description: >
 2. **禁止** 在未获用户明确确认前写入或覆盖 PRD 文件
 3. **禁止** 替用户做未讨论的产品决策；开放问题必须列出并提问
 4. 用户确认话术示例：`PRD 已确认，可进入技术设计` / `确认 PRD`
+
+## Superpowers 白名单（本 subagent 专用）
+
+- **允许 Read**：`.agents/skills/brainstorming/SKILL.md`（需求对焦方法论）
+- **禁止 Read**：`writing-plans`、`executing-plans`、`subagent-driven-development`、`test-driven-development` 及一切编码类 Superpowers skill
+- **结束态覆盖**：`brainstorming` 完成后 → 写入 PRD（见 Step 5），**不得** invoke `writing-plans` 或写入 `docs/superpowers/`
+- **禁止** 根 Agent 在未 dispatch 本 subagent 时使用 Superpowers
 
 ## 工作流程
 
@@ -47,6 +55,8 @@ description: >
 4. 搜索 `docs/features/` 下其他 PRD，避免功能重复或命名冲突
 
 ### Step 3 — 需求对焦（与用户迭代）
+
+对焦时可 Read `.agents/skills/brainstorming/SKILL.md` 的提问与方案对比手法；产出仍须落入 7ai-club PRD 结构与模板，不以 Superpowers design doc 替代 PRD。
 
 用结构化方式与用户对焦，每次聚焦 1–3 个主题，避免一次抛出过长清单。
 

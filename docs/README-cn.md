@@ -44,7 +44,7 @@ docs/
 | 新的独立产品能力（如 RAG、助理 CRUD） | 新 **feature slug** + 新目录 |
 | 同一 feature 内的大块（首页 vs Chat vs LLM） | 同 slug 下 **`prd/`、`design/` 子文档** |
 | 单次迭代改动 | **`changelog/iter-NN`** + 更新相关子文档 |
-| 全局规则变更 | 更新 **`01` / `02` 总纲**（保持 ≤150 行目标）或 **[loading-ux-cn.md](./loading-ux-cn.md)**（异步 loading） |
+| 全局规则变更 | 更新 **`01` / `02` 总纲**（保持 ≤150 行目标）或 **[loading-ux-cn.md](./loading-ux-cn.md)**（异步 loading）或 **[superpowers-subagent-integration-cn.md](./superpowers-subagent-integration-cn.md)**（Superpowers + subagent 工作流） |
 
 ### Agent 读文档约定
 
@@ -58,10 +58,18 @@ docs/
 docs/
   README.md / README-cn.md
   loading-ux.md / loading-ux-cn.md   # 全局：异步 loading UX
+  superpowers-subagent-integration.md / superpowers-subagent-integration-cn.md  # Agent 工作流：Superpowers + subagent
   research/
   features/<slug>/          # 见上
   iterations/<iter-id>/
 ```
+
+## 全局文档（跨 feature）
+
+| 主题 | English | 中文 |
+|------|---------|------|
+| 异步 loading UX | [loading-ux.md](./loading-ux.md) | [loading-ux-cn.md](./loading-ux-cn.md) |
+| Superpowers + subagent 工作流 | [superpowers-subagent-integration.md](./superpowers-subagent-integration.md) | [superpowers-subagent-integration-cn.md](./superpowers-subagent-integration-cn.md) |
 
 ## 不需要双语的范围
 

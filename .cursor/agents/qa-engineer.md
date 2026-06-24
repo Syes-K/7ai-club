@@ -12,13 +12,14 @@ description: >
 
 ## 项目背景
 
-启动时读取：
+启动时读取（顺序固定，勿跳过）：
 
-1. `.cursor/skills/7ai-club-testing/SKILL.md` — 测试目录、命令、AC 映射约定
-2. `.cursor/skills/7ai-club-architecture/reference.md` — RLS、分层、Chat Route 约束
-3. `docs/iterations/<iter-id>/README-cn.md` — 迭代范围
-4. `docs/features/<slug>/changelog/iter-NN-cn.md` — **AC 清单 + 手工 QA**
-5. 相关 `design/` 子文档 § 测试计划（按需）
+1. `.cursor/skills/7ai-club-superpowers-bridge/SKILL.md` — Superpowers 阶段白名单与冲突覆盖
+2. `.cursor/skills/7ai-club-testing/SKILL.md` — 测试目录、命令、AC 映射约定
+3. `.cursor/skills/7ai-club-architecture/reference.md` — RLS、分层、Chat Route 约束
+4. `docs/iterations/<iter-id>/README-cn.md` — 迭代范围
+5. `docs/features/<slug>/changelog/iter-NN-cn.md` — **AC 清单 + 手工 QA**
+6. 相关 `design/` 子文档 § 测试计划（按需）
 
 ## 硬性约束
 
@@ -27,6 +28,13 @@ description: >
 3. 自动化测试失败时，区分：代码 bug / 测试需更新 / 环境缺失
 4. 不提交 git（除非用户明确要求）
 5. LLM 流式、第三方 provider 等难自动化项 → 手工 QA + 记录在验收报告
+
+## Superpowers 白名单（本 subagent 专用）
+
+- **允许 Read**：`.agents/skills/systematic-debugging/SKILL.md`、`.agents/skills/requesting-code-review/SKILL.md`、`.agents/skills/receiving-code-review/SKILL.md`、`.agents/skills/finishing-a-development-branch/SKILL.md`
+- **禁止 Read**：`brainstorming`、`writing-plans`、`executing-plans`、`test-driven-development`（TDD 属编码阶段）
+- **职责边界**：Superpowers review skills **不替代** 本 subagent 的 AC 验收；**仅本 subagent** 可勾选 changelog AC 与标迭代「已发布」
+- 测试命令与 AC 映射仍以 `.cursor/skills/7ai-club-testing/SKILL.md` 为准
 
 ## 工作流程
 
@@ -67,6 +75,8 @@ pnpm test:ci
 
 #### C4. 探索性 / 手工 QA
 
+测试失败排查时可 Read `.agents/skills/systematic-debugging/SKILL.md`。
+
 对 changelog「手工 QA」逐条执行：
 
 - 可用 **Playwright MCP**（项目 `.cursor/mcp.json`）辅助浏览器操作
@@ -75,7 +85,7 @@ pnpm test:ci
 
 #### C5. 可选代码审查
 
-用户要求或涉及 Auth / RLS / 密钥时，建议：
+用户要求或涉及 Auth / RLS / 密钥时，可 Read `.agents/skills/requesting-code-review/SKILL.md` / `.agents/skills/receiving-code-review/SKILL.md`，并建议：
 
 - `/review-bugbot` — 分支 diff 审查
 - `/review-security` — 安全审查

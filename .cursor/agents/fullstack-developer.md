@@ -12,12 +12,13 @@ description: >
 
 ## 项目背景
 
-启动时读取（勿默认读取完整调研原文）：
+启动时读取（顺序固定，勿跳过）：
 
-1. `.cursor/skills/7ai-club-architecture/reference.md` — 架构决策、代码结构、工程约束、Chat Route
-2. `docs/features/<slug>/01-product-requirements.md` 与/或 `01-product-requirements-cn.md` — 产品总纲
-3. 按当前迭代读取 `docs/features/<slug>/changelog/iter-NN*.md` 及其中列出的 **`prd/`、`design/` 子文档**（勿默认加载全部）
-4. 仅当设计涉及方案对比或 reference 不足时，按需 Read `docs/research/` 相关章节
+1. `.cursor/skills/7ai-club-superpowers-bridge/SKILL.md` — Superpowers 阶段白名单与冲突覆盖
+2. `.cursor/skills/7ai-club-architecture/reference.md` — 架构决策、代码结构、工程约束、Chat Route
+3. `docs/features/<slug>/01-product-requirements.md` 与/或 `01-product-requirements-cn.md` — 产品总纲
+4. 按当前迭代读取 `docs/features/<slug>/changelog/iter-NN*.md` 及其中列出的 **`prd/`、`design/` 子文档**（勿默认加载全部）
+5. 仅当设计涉及方案对比或 reference 不足时，按需 Read `docs/research/` 相关章节
 
 ## 硬性约束
 
@@ -39,6 +40,21 @@ description: >
 - 不擅自扩大 PRD 范围
 - 不提交 git（除非用户明确要求）
 
+## Superpowers 白名单（按 Phase 区分）
+
+### Phase A — 技术设计
+
+- **允许 Read**：`.agents/skills/brainstorming/SKILL.md`（方案对比）、`.agents/skills/writing-plans/SKILL.md`（设计/任务拆解）
+- **禁止 Read**：`executing-plans`、`subagent-driven-development`、`test-driven-development`
+- **输出覆盖**：计划写入 `docs/features/<slug>/design/` 或 `02-technical-design*.md`，**禁止** `docs/superpowers/plans/`
+
+### Phase B — 编码实现
+
+- **前置**：用户已确认「技术设计已确认，可开始编码」
+- **允许 Read**：`.agents/skills/test-driven-development/SKILL.md`、`.agents/skills/executing-plans/SKILL.md` 或 `.agents/skills/subagent-driven-development/SKILL.md`、`.agents/skills/using-git-worktrees/SKILL.md`、`.agents/skills/dispatching-parallel-agents/SKILL.md`
+- **禁止**：在未确认技术设计前 Read 任何 Superpowers 编码类 skill
+- **AC 勾选**：编码阶段不得勾选 changelog AC 或标「已发布」（属 qa-engineer）
+
 ## 工作流程
 
 ### Phase A — 技术设计
@@ -57,6 +73,8 @@ description: >
 - 不重复造轮子
 
 #### A3. 产出技术设计草案并与用户对焦
+
+可 Read `.agents/skills/writing-plans/SKILL.md` 将设计拆为可验收任务；任务清单写入 `design/` 或技术设计总纲，不写入 `docs/superpowers/`。
 
 向用户呈现设计摘要，涵盖：
 
@@ -109,6 +127,8 @@ docs/features/<slug>/design/<topic>-cn.md
 用户已确认技术设计后方可编码。
 
 #### B2. 按设计实现
+
+编码时遵循 `.agents/skills/test-driven-development/SKILL.md`；多任务可用 `executing-plans` 或 `subagent-driven-development` 按 changelog 逐项执行。
 
 顺序建议：
 

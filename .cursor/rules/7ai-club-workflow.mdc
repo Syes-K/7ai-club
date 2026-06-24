@@ -88,6 +88,41 @@ docs/iterations/<iter-id>/
 - MVP 不使用 n8n 编排
 - **用户可见 UI / DB seed 文案：English**（详见 `.cursor/skills/7ai-club-architecture/reference.md` → Locale）
 
+## Superpowers 整合
+
+Superpowers（obra/superpowers）提供 TDD、调试、计划拆分等**战术技能**；**不替代** subagent 门禁与 `docs/features/` 文档体系。
+
+| 层级 | 职责 | 位置 |
+|------|------|------|
+| Subagent | 阶段编排 + 门禁（谁做 / 何时做） | `.cursor/agents/*.md` |
+| 7ai-club skills | 项目约定（架构、PRD、测试、UI） | `.cursor/skills/` |
+| Superpowers | 阶段内方法论（怎么做） | `.agents/skills/`（CLI 安装） |
+| Bridge | 白名单 + 冲突覆盖 | `.cursor/skills/7ai-club-superpowers-bridge/SKILL.md` |
+
+**安装与更新：**
+
+```bash
+pnpm skills:install   # 从 skills-lock.json 恢复 + 自动 patch 门禁
+pnpm skills:update    # 更新项目 skills + 自动 patch 门禁
+```
+
+Superpowers 全部 `disable-model-invocation: true` — **根 Agent 不得自动调用**；仅 subagent 在白名单内显式 Read。
+
+**阶段白名单摘要：**
+
+| Subagent | 允许的 Superpowers |
+|----------|-------------------|
+| `product-analyst` | `brainstorming` |
+| `fullstack-developer` Phase A | `brainstorming`、`writing-plans` |
+| `fullstack-developer` Phase B | `test-driven-development`、`executing-plans` / `subagent-driven-development`、`using-git-worktrees`、`dispatching-parallel-agents` |
+| `qa-engineer` | `systematic-debugging`、`requesting-code-review`、`receiving-code-review`、`finishing-a-development-branch` |
+
+**主对话规则：** 用户直接说「写代码 / 加功能」时，先检查 PRD / 技术设计门禁，**dispatch 对应 subagent**；不得跳过门禁直接触发 Superpowers TDD 或 `executing-plans`。
+
+**勿同时安装** Cursor 插件版 Superpowers 与 CLI 版（易重复、难控版本）。
+
+完整说明见 [`docs/superpowers-subagent-integration-cn.md`](../../docs/superpowers-subagent-integration-cn.md)。
+
 ## 调用示例
 
 ```
