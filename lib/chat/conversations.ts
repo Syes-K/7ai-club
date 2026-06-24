@@ -1,10 +1,14 @@
 import type { UIMessage } from "ai";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { DEFAULT_CONVERSATION_TITLE, TITLE_MAX_LENGTH } from "@/lib/constants";
 import { createClient } from "@/lib/supabase/server";
 
 import type { ConversationSummary, DbMessage } from "@/lib/data/types";
 
 export type { ConversationSummary, DbMessage };
+
+const UUID_RE =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 export function getTextFromUIMessage(message: UIMessage): string {
   return message.parts
@@ -21,9 +25,12 @@ export function dbMessageToUIMessage(message: DbMessage): UIMessage {
   };
 }
 
-export async function loadMessages(conversationId: string): Promise<UIMessage[]> {
-  const supabase = await createClient();
-  const { data, error } = await supabase
+export async function loadMessages(
+  conversationId: string,
+  supabase?: SupabaseClient,
+): Promise<UIMessage[]> {
+  const client = supabase ?? (await createClient());
+  const { data, error } = await client
     .from("messages")
     .select("id, conversation_id, role, content, created_at")
     .eq("conversation_id", conversationId)
@@ -61,19 +68,31 @@ export async function saveUserMessage(
 export async function saveAssistantMessage(
   conversationId: string,
   message: UIMessage,
+  supabase?: SupabaseClient,
 ): Promise<void> {
-  const supabase = await createClient();
+  const client = supabase ?? (await createClient());
   const content = getTextFromUIMessage(message);
 
   if (!content.trim()) {
     return;
   }
 
-  const { error } = await supabase.from("messages").insert({
+  const row: {
+    conversation_id: string;
+    role: "assistant";
+    content: string;
+    id?: string;
+  } = {
     conversation_id: conversationId,
     role: "assistant",
     content,
-  });
+  };
+
+  if (UUID_RE.test(message.id)) {
+    row.id = message.id;
+  }
+
+  const { error } = await client.from("messages").insert(row);
 
   if (error) {
     throw new Error(error.message);
@@ -139,9 +158,10 @@ export async function listConversations(
 export async function getConversationForUser(
   conversationId: string,
   userId: string,
+  supabase?: SupabaseClient,
 ) {
-  const supabase = await createClient();
-  const { data, error } = await supabase
+  const client = supabase ?? (await createClient());
+  const { data, error } = await client
     .from("conversations")
     .select("id, user_id, assistant_id, title")
     .eq("id", conversationId)
@@ -286,9 +306,12 @@ export async function clearConversationMessages(
   return true;
 }
 
-export async function getAssistantForConversation(conversationId: string) {
-  const supabase = await createClient();
-  const { data: conversation, error: convError } = await supabase
+export async function getAssistantForConversation(
+  conversationId: string,
+  supabase?: SupabaseClient,
+) {
+  const client = supabase ?? (await createClient());
+  const { data: conversation, error: convError } = await client
     .from("conversations")
     .select("assistant_id")
     .eq("id", conversationId)
@@ -298,7 +321,7 @@ export async function getAssistantForConversation(conversationId: string) {
     throw new Error("Conversation not found");
   }
 
-  const { data: assistant, error: assistantError } = await supabase
+  const { data: assistant, error: assistantError } = await client
     .from("assistants")
     .select("id, name, icon, system_prompt, model")
     .eq("id", conversation.assistant_id)

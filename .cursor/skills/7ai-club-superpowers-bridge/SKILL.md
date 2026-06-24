@@ -65,6 +65,19 @@ Superpowers skills 路径：`.agents/skills/<skill-name>/SKILL.md`
 
 无对应话术 → **停止**，提示用户完成上一阶段或调用正确 subagent。
 
+### 门禁状态 ↔ 下一步提示（各 subagent 向用户说明时必须一致）
+
+完整表见 `.cursor/rules/7ai-club-workflow.mdc` §门禁状态。**核心规则：**
+
+| 当前状态 | 应提示的下一步 | 应请用户回复的话术 |
+|----------|----------------|-------------------|
+| PRD 已确认 | 技术设计（Phase A） | `PRD 已确认，可进入技术设计` 或 dispatch fullstack-developer 做技术设计 |
+| 技术设计已确认 | 编码（Phase B） | `技术设计已确认，可开始编码` |
+| 编码完成 | qa-engineer 测试 | `用 qa-engineer 对 iter-NN 执行测试验收` |
+| 测试已通过 | 发布 | `测试已通过，可发布` |
+
+**禁止混用：** PRD 已确认后 **不得** 提示 `技术设计已确认，可开始编码`（那是下一阶段话术）。
+
 ## 与现有 7ai-club skills 叠加
 
 | 用途 | 优先 skill |

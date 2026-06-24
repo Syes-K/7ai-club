@@ -1,3 +1,4 @@
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { generateText } from "ai";
 import { decryptApiKey } from "@/lib/llm/encryption";
 import {
@@ -32,13 +33,14 @@ type ModelConfigRow = {
 export async function resolveUserModelForChat(
   userId: string,
   preferredConfigId: string | null,
+  supabase?: SupabaseClient,
 ): Promise<ResolvedUserModel | null> {
   if (!preferredConfigId) {
     return buildPlatformDefaultResolved();
   }
 
-  const supabase = await createClient();
-  const { data, error } = await supabase
+  const client = supabase ?? (await createClient());
+  const { data, error } = await client
     .from("user_model_configs")
     .select("id, user_id, provider, model_name, test_status, api_key_set")
     .eq("id", preferredConfigId)

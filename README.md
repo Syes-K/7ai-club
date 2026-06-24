@@ -57,17 +57,24 @@ See [`docs/README.md`](docs/README.md) (Chinese: [`docs/README-cn.md`](docs/READ
 
 ## Cursor Development Workflow
 
-This project uses a two-stage subagent flow with human confirmation gates:
+This project uses a **three-subagent flow with four human confirmation gates** (PRD → technical design → implementation → QA):
 
 | Stage | Subagent | Output |
 |-------|----------|--------|
 | 1 | `product-analyst` | PRD |
-| 2 | `fullstack-developer` | Technical design → implementation |
+| 2a | `fullstack-developer` Phase A | Technical design |
+| 2b | `fullstack-developer` Phase B | Implementation |
+| 3 | `qa-engineer` | Test sign-off → release |
 
-**Confirmation phrases:**
+**Confirmation phrases (fixed wording, in order):**
 
-- PRD: `PRD 已确认，可进入技术设计` (PRD confirmed; proceed to technical design)
-- Technical design: `技术设计已确认，可开始编码` (Technical design confirmed; start coding)
+| Current state | User reply | Unlocks |
+|---------------|------------|---------|
+| PRD confirmed | `PRD 已确认，可进入技术设计` | Technical design |
+| Technical design confirmed | `技术设计已确认，可开始编码` | Implementation |
+| Tests passed | `测试已通过，可发布` | Mark iteration released |
+
+**Note:** After PRD is confirmed, prompt **technical design** — do **not** use `技术设计已确认，可开始编码` at that point. Full state table: `.cursor/rules/7ai-club-workflow.mdc`.
 
 **Example prompts:**
 

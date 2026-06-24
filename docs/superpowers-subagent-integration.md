@@ -86,6 +86,19 @@ Superpowers skill path: `.agents/skills/<skill-name>/SKILL.md`
 
 Without the matching phrase → **stop** and prompt the user to complete the prior phase or dispatch the correct subagent.
 
+### 3.1 Gate state ↔ next-step prompts (must stay consistent)
+
+See [`.cursor/rules/7ai-club-workflow.mdc`](../.cursor/rules/7ai-club-workflow.mdc) §门禁状态. Summary:
+
+| Current state | Next step | User should reply |
+|---------------|-----------|-------------------|
+| PRD confirmed | Technical design | `PRD 已确认，可进入技术设计` or dispatch fullstack-developer |
+| Technical design confirmed | Implementation | `技术设计已确认，可开始编码` |
+| Implementation done | QA | dispatch qa-engineer |
+| Tests passed | Release | `测试已通过，可发布` |
+
+**Common mistake:** After PRD is confirmed, prompting `技术设计已确认，可开始编码` — **forbidden** (that phrase is for after technical design sign-off only).
+
 ---
 
 ## 4. Conflict overrides
@@ -175,6 +188,7 @@ The root agent will not auto-load Superpowers from keyword matches; subagents ta
 - Installing both Cursor plugin Superpowers and the CLI copy (duplication, version drift)
 - Replacing the three subagents with Superpowers `brainstorming → writing-plans → execute` (bypasses PRD / design / QA gates)
 - Writing plans under `docs/superpowers/` in parallel with `docs/features/` (split source of truth)
+- **Mixed gate phrases:** After PRD is confirmed, prompting `技术设计已确认，可开始编码` instead of technical design entry (see §3.1)
 
 ---
 

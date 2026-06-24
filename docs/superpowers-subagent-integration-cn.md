@@ -86,6 +86,19 @@ Superpowers skill 路径：`.agents/skills/<skill-name>/SKILL.md`
 
 无对应话术 → **停止**，提示用户完成上一阶段或调用正确 subagent。
 
+### 3.1 门禁状态 ↔ 下一步提示（Agent 向用户说明时必须一致）
+
+详见 [`.cursor/rules/7ai-club-workflow.mdc`](../.cursor/rules/7ai-club-workflow.mdc) §门禁状态。摘要：
+
+| 当前状态 | 下一步 | 用户应回复 |
+|----------|--------|-----------|
+| PRD 已确认 | 技术设计 | `PRD 已确认，可进入技术设计` 或 dispatch fullstack-developer |
+| 技术设计已确认 | 编码 | `技术设计已确认，可开始编码` |
+| 编码完成 | 测试验收 | dispatch qa-engineer |
+| 测试已通过 | 发布 | `测试已通过，可发布` |
+
+**常见错误：** PRD 已确认后提示 `技术设计已确认，可开始编码` — **禁止**（该话术仅用于技术设计评审通过之后）。
+
 ---
 
 ## 4. 冲突覆盖规则
@@ -175,6 +188,7 @@ disable-model-invocation: true
 - 同时安装 Cursor 插件版 Superpowers + CLI 版（易重复、难控版本）
 - 用 Superpowers 的 `brainstorming → writing-plans → execute` 串行替代三 subagent（绕过 PRD/设计/QA 门禁）
 - 把计划写到 `docs/superpowers/`，与 `docs/features/` 并行（单一事实来源分裂）
+- **门禁话术混用：** PRD 已确认后提示 `技术设计已确认，可开始编码`（应提示进入技术设计，见 §3.1）
 
 ---
 

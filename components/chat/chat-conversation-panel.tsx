@@ -7,6 +7,8 @@ import { useEffect, useRef, useState } from "react";
 import { Eraser, Menu, X } from "lucide-react";
 import { useChatShell } from "@/components/chat/chat-shell-context";
 import { chatFetch } from "@/lib/api/chat-client";
+import { shouldResumeChatStream } from "@/lib/chat/stream-resume";
+import { useTurnWorkflow } from "@/lib/chat/use-turn-workflow";
 import { clearChat } from "@/lib/services/browser/clear-chat";
 import { ClearChatDialog } from "@/components/chat/clear-chat-dialog";
 import { CHAT_ACTION_RAIL, CHAT_PANEL_X } from "@/lib/constants/chat-layout";
@@ -35,10 +37,18 @@ export function ChatConversationPanel({
   const { sidebarOpen, toggleSidebar } = useChatShell();
   const [clearDialogOpen, setClearDialogOpen] = useState(false);
   const [clearing, setClearing] = useState(false);
+  const handleWorkflowDataRef = useRef<
+    (dataPart: { type: string; data: unknown }) => void
+  >(() => {});
+  const resumeAttemptedRef = useRef(false);
 
-  const { messages, sendMessage, status, error, setMessages } = useChat({
+  const canResumeStream = shouldResumeChatStream(initialMessages);
+
+  const { messages, sendMessage, status, error, setMessages, resumeStream } =
+    useChat({
     id: conversationId,
     messages: initialMessages,
+    resume: false,
     transport: new DefaultChatTransport({
       api: "/api/chat",
       fetch: chatFetch,
@@ -49,7 +59,35 @@ export function ChatConversationPanel({
         },
       }),
     }),
+    onData: (dataPart) => {
+      handleWorkflowDataRef.current(dataPart);
+    },
   });
+
+  useEffect(() => {
+    resumeAttemptedRef.current = false;
+  }, [conversationId]);
+
+  useEffect(() => {
+    if (!canResumeStream || resumeAttemptedRef.current) {
+      return;
+    }
+
+    resumeAttemptedRef.current = true;
+    void resumeStream();
+  }, [canResumeStream, conversationId, resumeStream]);
+
+  const { store, handleWorkflowData, clearAll } = useTurnWorkflow(
+    conversationId,
+    {
+      chatStatus: status,
+      messages,
+    },
+  );
+
+  useEffect(() => {
+    handleWorkflowDataRef.current = handleWorkflowData;
+  }, [handleWorkflowData]);
 
   const prevStatusRef = useRef(status);
 
@@ -70,6 +108,7 @@ export function ChatConversationPanel({
     try {
       await clearChat(conversationId);
       setMessages([]);
+      clearAll();
       setClearDialogOpen(false);
       onConversationUpdated?.();
     } finally {
@@ -79,6 +118,10 @@ export function ChatConversationPanel({
 
   const canClearChat =
     messages.length > 0 && status !== "streaming" && status !== "submitted";
+
+  function handleSend(text: string) {
+    sendMessage({ text });
+  }
 
   return (
     <>
@@ -130,9 +173,10 @@ export function ChatConversationPanel({
         status={status}
         error={error}
         assistantIcon={assistantIcon}
+        workflowStore={store}
       />
       <ChatInput
-        onSend={(text) => sendMessage({ text })}
+        onSend={handleSend}
         disabled={status !== "ready"}
       />
 

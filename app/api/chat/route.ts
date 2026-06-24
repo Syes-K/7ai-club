@@ -2,42 +2,60 @@ export const runtime = "nodejs";
 /** Keep in sync with CHAT_FUNCTION_MAX_DURATION_SEC in lib/llm/timeout.ts and vercel.json */
 export const maxDuration = 130;
 
+import { randomUUID } from "node:crypto";
 import {
-  convertToModelMessages,
-  streamText,
+  createUIMessageStream,
+  createUIMessageStreamResponse,
+  generateId,
   type UIMessage,
 } from "ai";
+import { after } from "next/server";
+import { getChatLlmConfigError } from "@/lib/llm/provider";
 import {
-  getChatModelForResolvedConfig,
-  getChatLlmConfigError,
-} from "@/lib/llm/provider";
-import { getStreamTextProviderOptions } from "@/lib/llm/stream-options";
-import { classifyLlmError } from "@/lib/llm/errors";
-import {
-  ModelNotReadyError,
-  resolveUserModelForChat,
-} from "@/lib/llm/resolve-user-model";
-import {
-  getChatChunkTimeoutMs,
-  getLlmTimeoutMs,
-  mergeAbortSignals,
-} from "@/lib/llm/timeout";
-import {
-  getAssistantForConversation,
-  getConversationForUser,
   getTextFromUIMessage,
-  loadMessages,
   maybeUpdateConversationTitle,
-  saveAssistantMessage,
   saveUserMessage,
 } from "@/lib/chat/conversations";
-import { getUserProfile } from "@/lib/console/profile";
+import { isRedisConfigured } from "@/lib/redis/client";
+import { purgeResumableStream } from "@/lib/redis/purge";
+import { getResumableStreamContext } from "@/lib/redis/stream-context";
 import { createClient } from "@/lib/supabase/server";
+import { createServiceClient } from "@/lib/supabase/service";
+import { makeStepEmitter } from "@/lib/workflow/emit-step";
+import {
+  loadContextNode,
+  ModelNotReadyError,
+  resolveModelNode,
+  runLlmStreamNode,
+  validateRequestNode,
+} from "@/lib/workflow/nodes";
+import {
+  cancelStaleRuns,
+  clearActiveStreamId,
+  createWorkflowRun,
+  finishWorkflowRun,
+  setActiveStreamId,
+  upsertWorkflowStepLog,
+} from "@/lib/workflow/persistence";
+import { runWorkflow } from "@/lib/workflow/runner";
+import type { WorkflowContext } from "@/lib/workflow/types";
 
 type ChatRequestBody = {
   conversationId?: string;
   message?: UIMessage;
 };
+
+function scheduleRunCleanup(runId: string, streamId: string): void {
+  after(async () => {
+    await purgeResumableStream(streamId);
+    try {
+      const service = createServiceClient();
+      await clearActiveStreamId(service, runId);
+    } catch (error) {
+      console.error("Failed to clear active stream id:", error);
+    }
+  });
+}
 
 export async function POST(req: Request) {
   const configError = getChatLlmConfigError();
@@ -73,14 +91,6 @@ export async function POST(req: Request) {
     return new Response("Empty message", { status: 422 });
   }
 
-  const conversation = await getConversationForUser(conversationId, user.id);
-  if (!conversation) {
-    return new Response("Conversation not found", { status: 404 });
-  }
-
-  const previousMessages = await loadMessages(conversationId);
-  const uiMessages: UIMessage[] = [...previousMessages, message];
-
   try {
     await saveUserMessage(conversationId, message);
     await maybeUpdateConversationTitle(conversationId, userText);
@@ -91,62 +101,119 @@ export async function POST(req: Request) {
     );
   }
 
-  const assistant = await getAssistantForConversation(conversationId);
-  const profile = await getUserProfile(user.id);
-
-  let resolved;
-  try {
-    resolved = await resolveUserModelForChat(
-      user.id,
-      profile?.preferred_model_config_id ?? null,
-    );
-  } catch (error) {
-    if (error instanceof ModelNotReadyError) {
-      return new Response(error.message, { status: 502 });
+  const staleRuns = await cancelStaleRuns(supabase, conversationId, user.id);
+  after(async () => {
+    for (const stale of staleRuns) {
+      await purgeResumableStream(stale.streamId);
     }
-    throw error;
-  }
+  });
 
-  if (!resolved) {
-    return new Response(
-      "No model configured. Add and test a model in Console → Models.",
-      { status: 503 },
-    );
-  }
-
-  const llmTimeoutMs = getLlmTimeoutMs();
-
+  let runId: string;
   try {
-    const result = streamText({
-      model: getChatModelForResolvedConfig(resolved),
-      system: assistant.system_prompt,
-      messages: await convertToModelMessages(uiMessages),
-      providerOptions: getStreamTextProviderOptions(),
-      abortSignal: mergeAbortSignals(req.signal, AbortSignal.timeout(llmTimeoutMs)),
-      timeout: { totalMs: llmTimeoutMs, chunkMs: getChatChunkTimeoutMs() },
-      onError: ({ error }) => {
-        console.error("LLM stream error:", {
-          kind: classifyLlmError(error),
-          error,
-        });
-      },
-    });
-
-    return result.toUIMessageStreamResponse({
-      originalMessages: uiMessages,
-      onFinish: async ({ responseMessage }) => {
-        try {
-          await saveAssistantMessage(conversationId, responseMessage);
-        } catch (error) {
-          console.error("Failed to save assistant message:", error);
-        }
-      },
+    runId = await createWorkflowRun(supabase, {
+      conversationId,
+      userId: user.id,
     });
   } catch (error) {
-    console.error("LLM error:", error);
     return new Response(
-      error instanceof Error ? error.message : "LLM request failed",
-      { status: 502 },
+      error instanceof Error ? error.message : "Failed to start workflow",
+      { status: 500 },
     );
   }
+
+  const streamId = generateId();
+  const assistantMessageId = randomUUID();
+
+  const uiStream = createUIMessageStream({
+    execute: async ({ writer }) => {
+      writer.write({
+        type: "start",
+        messageId: assistantMessageId,
+      });
+
+      const emit = makeStepEmitter({
+        writer,
+        runId,
+        persistStep: (event) => upsertWorkflowStepLog(supabase, event),
+      });
+
+      const ctx: WorkflowContext = {
+        runId,
+        userId: user.id,
+        conversationId,
+        message,
+        userText,
+        supabase,
+      };
+
+      try {
+        await runWorkflow(
+          [validateRequestNode, loadContextNode, resolveModelNode],
+          ctx,
+          emit,
+        );
+        await runLlmStreamNode(ctx, writer, emit);
+      } catch (error) {
+        const errorMessage =
+          error instanceof Error ? error.message : "Workflow failed";
+
+        try {
+          const service = createServiceClient();
+          await finishWorkflowRun(service, runId, "error", errorMessage);
+        } catch (finishError) {
+          console.error("Failed to finish workflow run:", finishError);
+        }
+
+        scheduleRunCleanup(runId, streamId);
+        throw error;
+      }
+    },
+    onFinish: async ({ isAborted, finishReason }) => {
+      const status =
+        isAborted || finishReason === "error" ? "error" : "completed";
+
+      try {
+        const service = createServiceClient();
+        await finishWorkflowRun(
+          service,
+          runId,
+          status,
+          status === "error" ? "Generation failed" : undefined,
+        );
+      } catch (error) {
+        console.error("Failed to finish workflow run:", error);
+      }
+
+      scheduleRunCleanup(runId, streamId);
+    },
+    onError: (error) => {
+      if (error instanceof ModelNotReadyError) {
+        return error.message;
+      }
+
+      return error instanceof Error ? error.message : "An error occurred.";
+    },
+  });
+
+  return createUIMessageStreamResponse({
+    stream: uiStream,
+    async consumeSseStream({ stream }) {
+      if (!isRedisConfigured()) {
+        return;
+      }
+
+      const streamContext = await getResumableStreamContext();
+      if (!streamContext) {
+        return;
+      }
+
+      await streamContext.createNewResumableStream(streamId, () => stream);
+
+      try {
+        await setActiveStreamId(supabase, runId, streamId);
+      } catch (error) {
+        console.error("Failed to persist active stream id:", error);
+      }
+    },
+  });
 }

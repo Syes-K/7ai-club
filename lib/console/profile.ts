@@ -1,3 +1,4 @@
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/server";
 
 export type UserProfile = {
@@ -6,9 +7,12 @@ export type UserProfile = {
   preferred_model_config_id: string | null;
 };
 
-export async function getUserProfile(userId: string): Promise<UserProfile | null> {
-  const supabase = await createClient();
-  const { data, error } = await supabase
+export async function getUserProfile(
+  userId: string,
+  supabase?: SupabaseClient,
+): Promise<UserProfile | null> {
+  const client = supabase ?? (await createClient());
+  const { data, error } = await client
     .from("user_profiles")
     .select("user_id, nickname, preferred_model_config_id")
     .eq("user_id", userId)

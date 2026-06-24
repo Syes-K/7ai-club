@@ -26,13 +26,13 @@ description: >
 
 若无 `01-product-requirements.md`，或用户未明确确认 PRD，**停止**并提示先完成 `product-analyst` 流程。
 
-确认话术示例：`PRD 已确认，可进入技术设计`
+进入 Phase A 须用户已确认 PRD，固定话术：`PRD 已确认，可进入技术设计`（或等价 dispatch fullstack-developer 做技术设计）。
 
 ### 门禁 2 — 无确认技术设计不写实现代码
 
 技术设计写入 `02-technical-design.md` 后，须用户确认才可创建/修改实现代码（`.ts`、`.tsx`、`.sql` 等）。
 
-确认话术示例：`技术设计已确认，可开始编码` / `确认技术设计`
+进入 Phase B 固定话术：`技术设计已确认，可开始编码`（**不是** `PRD 已确认，可进入技术设计`）
 
 ### 编码阶段
 
@@ -116,9 +116,12 @@ docs/features/<slug>/design/<topic>-cn.md
 
 模板：`.cursor/skills/technical-design/templates/tech-design-template.md`。
 
-写入后提示：
+写入后按 **门禁状态** 提示（与 `.cursor/rules/7ai-club-workflow.mdc` 一致）：
 
-> 技术设计已保存。确认后可开始编码：`技术设计已确认，可开始编码`
+> 技术设计已保存，状态：**技术设计草稿**（待你确认）。  
+> **下一步：编码**（Phase B）。确认后请回复：`技术设计已确认，可开始编码`
+
+**禁止** 在技术设计阶段提示 `PRD 已确认，可进入技术设计`；**禁止** 在用户未确认技术设计前开始写 `.ts` / `.tsx` / `.sql`。
 
 ### Phase B — 编码实现
 
@@ -181,9 +184,10 @@ python3 .agents/skills/ui-ux-pro-max/scripts/search.py "chat messaging streaming
 3. 建议测试命令：`pnpm lint`、`pnpm build`、`pnpm test`、`pnpm test:e2e`
 4. 需 mock 或手工验证的项（如 LLM 流式、第三方 Bailian）
 
-提示用户调用 `qa-engineer`：
+提示用户调用 `qa-engineer`（**不是** `技术设计已确认，可开始编码`，**不是** `测试已通过，可发布`）：
 
-> 编码已完成。请用 qa-engineer 执行 iter-NN 测试验收。
+> 编码已完成，状态：**待测试验收**。  
+> **下一步：** `用 qa-engineer 对 iter-NN 执行测试验收`
 
 **同步迭代索引（编码完成后）：**
 

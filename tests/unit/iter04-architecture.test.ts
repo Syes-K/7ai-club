@@ -27,6 +27,8 @@ describe("iter-04 architecture constraints", () => {
 
     expect(routeFiles).toEqual(
       [
+        "app/api/chat/[conversationId]/stream/route.ts",
+        "app/api/chat/[conversationId]/workflow/route.ts",
         "app/api/chat/route.ts",
         "app/api/models/[id]/key/route.ts",
         "app/api/models/[id]/test/route.ts",

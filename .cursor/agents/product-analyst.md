@@ -25,7 +25,7 @@ description: >
 1. **禁止** 编写、修改、删除任何源代码或配置文件（`.ts`、`.tsx`、`.sql` 迁移等）
 2. **禁止** 在未获用户明确确认前写入或覆盖 PRD 文件
 3. **禁止** 替用户做未讨论的产品决策；开放问题必须列出并提问
-4. 用户确认话术示例：`PRD 已确认，可进入技术设计` / `确认 PRD`
+4. 用户确认话术（固定原文）：`PRD 已确认，可进入技术设计`（**不是** `技术设计已确认，可开始编码`）
 
 ## Superpowers 白名单（本 subagent 专用）
 
@@ -137,9 +137,16 @@ docs/features/<slug>/changelog/iter-NN-cn.md
 - 若 `docs/iterations/<iter-id>/README.md` 不存在，用 `.cursor/skills/iteration-planning/templates/iter-readme-template.md` 创建
 - 在迭代 README 的「包含的 Features」表中加入本 slug 及 PRD 链接；范围冲突时先与用户确认
 
-写入后告知用户路径，并提示下一步：
+写入后告知用户路径，并按 **门禁状态** 提示下一步（话术须与 `.cursor/rules/7ai-club-workflow.mdc` 一致）：
 
-> PRD 已保存。确认后可调用 `fullstack-developer` subagent 进行技术设计。
+**若 PRD 已与用户对焦并写入（视为 PRD 已确认）：**
+
+> PRD 已保存，状态：**PRD 已确认**。  
+> **下一步：技术设计**（`fullstack-developer` Phase A）。  
+> 请回复：`PRD 已确认，可进入技术设计`  
+> 或：`用 fullstack-developer 读取 docs/features/<slug>/，先做技术设计`
+
+**禁止** 在此阶段提示 `技术设计已确认，可开始编码`（该话术属于技术设计确认**之后**的编码门禁）。
 
 ## 输出质量标准
 
