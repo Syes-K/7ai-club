@@ -456,11 +456,11 @@ return result.toUIMessageStreamResponse({
 编码阶段执行（Phase B）：
 
 ```bash
-python3 .cursor/skills/ui-ux-pro-max/scripts/search.py \
+python3 .agents/skills/ui-ux-pro-max/scripts/search.py \
   "SaaS AI chat assistant platform professional minimal dark" \
   --design-system --persist -p "7ai-club" -f markdown
 
-python3 .cursor/skills/ui-ux-pro-max/scripts/search.py \
+python3 .agents/skills/ui-ux-pro-max/scripts/search.py \
   "chat messaging streaming realtime dark sidebar" \
   --design-system --persist -p "7ai-club" --page "chat" -f markdown
 ```

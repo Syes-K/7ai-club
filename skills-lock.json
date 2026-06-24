@@ -5,91 +5,91 @@
       "source": "git@github.com:obra/superpowers.git",
       "sourceType": "git",
       "skillPath": "skills/brainstorming/SKILL.md",
-      "computedHash": "26a8eb33d548f0c4ead9e7bc13a90c3853398d30345c651245a61a12b869f130"
+      "computedHash": "e0e9beb96cfbef456e315d45585e7cdaffba090e0bba1c147c5daa24962ee81d"
     },
     "dispatching-parallel-agents": {
       "source": "git@github.com:obra/superpowers.git",
       "sourceType": "git",
       "skillPath": "skills/dispatching-parallel-agents/SKILL.md",
-      "computedHash": "85df55d2235a7623b315dac4bc340c14a37dcdc57c869c80a829e1a53a174689"
+      "computedHash": "4d5a90f23a62b71ecdaf9418266a8d50e32ff2704d50593e8ba73306731ce793"
     },
     "executing-plans": {
       "source": "git@github.com:obra/superpowers.git",
       "sourceType": "git",
       "skillPath": "skills/executing-plans/SKILL.md",
-      "computedHash": "d3e5b64b97d4713e3a7f33625cae12ed9305898d85a1c6309f46765c39a9d789"
+      "computedHash": "08fa4627fd4b08fedc92c7806ae8307cbf5e7ecf57d5d0ffe139c77b528a289d"
     },
     "finishing-a-development-branch": {
       "source": "git@github.com:obra/superpowers.git",
       "sourceType": "git",
       "skillPath": "skills/finishing-a-development-branch/SKILL.md",
-      "computedHash": "aa2632ed96df59c36348bd8f8ec1ff0fb0c5cc68b60691834687bf4cedc6be3f"
+      "computedHash": "07533f7f73719f19e07fc53717846114bc6022f0bd506b3098fc51014a5b9908"
     },
     "receiving-code-review": {
       "source": "git@github.com:obra/superpowers.git",
       "sourceType": "git",
       "skillPath": "skills/receiving-code-review/SKILL.md",
-      "computedHash": "3f56080356c62e4f74a183d7371686babc661e41a952dc67a97c2c76fe8a9329"
+      "computedHash": "bed6cf01e851df521cd67f04e9a59a1749f9d29a67d0045e26befa6cf4692eec"
     },
     "requesting-code-review": {
       "source": "git@github.com:obra/superpowers.git",
       "sourceType": "git",
       "skillPath": "skills/requesting-code-review/SKILL.md",
-      "computedHash": "cde520e9118d7e6b74b5ab0123cff2f68d9c07bddb3f82c997753b6126600aed"
+      "computedHash": "8941c6506bf7a1d833d9f84fc59d87f9976fc4e2aa47220c9199dfa25503806f"
     },
     "subagent-driven-development": {
       "source": "git@github.com:obra/superpowers.git",
       "sourceType": "git",
       "skillPath": "skills/subagent-driven-development/SKILL.md",
-      "computedHash": "aaeb6686111c76b3c38e09156fe18af44d73b324ee055e5cb0ab63dc776f216f"
+      "computedHash": "0bfa67b23ff23dc0347bd2ff860f8a8837fcdbd75c26eb5d07f7b958448638e0"
     },
     "supabase": {
       "source": "git@github.com:supabase/agent-skills.git",
       "sourceType": "git",
       "skillPath": "skills/supabase/SKILL.md",
-      "computedHash": "d414d598b9428b3e851c4ce61898649906b19e55aa7415bb42a286bd9ca2ab32"
+      "computedHash": "fb75ad71161f1258b726de08aba8a707db53eb404ebd5e798ceaea35f4642658"
     },
     "supabase-postgres-best-practices": {
       "source": "git@github.com:supabase/agent-skills.git",
       "sourceType": "git",
       "skillPath": "skills/supabase-postgres-best-practices/SKILL.md",
-      "computedHash": "0d2c4857a7d6fdcd3fbc46e458fa4c497f029cab89a01548b3defce203003932"
+      "computedHash": "c20a12d0e664c182130e75dfed6af46d81623930d15935f27353a39429724306"
     },
     "systematic-debugging": {
       "source": "git@github.com:obra/superpowers.git",
       "sourceType": "git",
       "skillPath": "skills/systematic-debugging/SKILL.md",
-      "computedHash": "792a368e074981d7e3138edb439e138489b2ac247cd1e5739fab52af680fb17b"
+      "computedHash": "2a9ed8ee1c1a2bb092c6e409d0600bae070e2b0a1f0b82e722a6b29f9befaccc"
     },
     "test-driven-development": {
       "source": "git@github.com:obra/superpowers.git",
       "sourceType": "git",
       "skillPath": "skills/test-driven-development/SKILL.md",
-      "computedHash": "eee144aea35d783296d178017e9fe843c6d16cc8b240e106f5e50910f6caf329"
+      "computedHash": "b78f2374940e9607b5b1a4131cf7333e13872241be253848db083dfab727f919"
     },
     "ui-ux-pro-max": {
-      "source": "git@github.com:nexu-io/open-design.git",
+      "source": "git@github.com:nextlevelbuilder/ui-ux-pro-max-skill.git",
       "sourceType": "git",
       "skillPath": "skills/ui-ux-pro-max/SKILL.md",
-      "computedHash": "13887b516bebbd2e97885435ea022b2aec36cc77224f639d098a47f2723865cb"
+      "computedHash": "135cc4759e9c2a2a9a962a96fea7f268e3f5b05e36f6867a83943afe9492a757"
     },
     "using-git-worktrees": {
       "source": "git@github.com:obra/superpowers.git",
       "sourceType": "git",
       "skillPath": "skills/using-git-worktrees/SKILL.md",
-      "computedHash": "212ad917e5543e84ea3adf4e3fab537675db976fdab05d4de432870e38b49e80"
+      "computedHash": "b4f312c2dc4b9ef6085e6578b21ea8fe586113cdc94ce7e03e71935dc745dd43"
     },
     "vercel-react-best-practices": {
       "source": "git@github.com:vercel-labs/agent-skills.git",
       "sourceType": "git",
       "skillPath": "skills/react-best-practices/SKILL.md",
-      "computedHash": "3219a1944e404ffc14d1d9d6aef6dd2e3855b81387ee0a044ccbfe14d34c2357"
+      "computedHash": "16b2055c5f9da13685718c1dd71978f1584a249513e1f341df3edceb08842f1b"
     },
     "writing-plans": {
       "source": "git@github.com:obra/superpowers.git",
       "sourceType": "git",
       "skillPath": "skills/writing-plans/SKILL.md",
-      "computedHash": "b73b59d43c34c3fc225bfae419c458bb216af80df25fc0c545dfa7fd2a161722"
+      "computedHash": "e9a6b07f833b5c01ca07a5ec78e09b59195c244ccd69fa1b0218b2ed19a88490"
     }
   }
 }

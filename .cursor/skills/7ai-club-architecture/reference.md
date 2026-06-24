@@ -12,7 +12,7 @@
 |----|------|
 | 前端 | Next.js App Router + Tailwind（首页、聊天 UI） |
 | 后台 UI | shadcn/ui |
-| 面向用户 UI | `ui-ux-pro-max` skill → `design-system/MASTER.md` + 页面 override |
+| 面向用户 UI | `.agents/skills/ui-ux-pro-max/` → `design-system/MASTER.md` + 页面 override |
 | 数据 | Supabase（Auth、PostgreSQL、pgvector、Storage） |
 | 鉴权 | **Supabase Auth JWT** + `@supabase/ssr`（见下「JWT 鉴权」） |
 | 部署 | Vercel |

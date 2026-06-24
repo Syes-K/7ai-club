@@ -69,7 +69,7 @@ Superpowers skill 路径：`.agents/skills/<skill-name>/SKILL.md`
 | 架构 / 范围 | `.cursor/skills/7ai-club-architecture/reference.md` |
 | PRD 模板 | `.cursor/skills/product-requirements/templates/` |
 | 技术设计模板 | `.cursor/skills/technical-design/templates/` |
-| UI 实现 | `.cursor/skills/ui-ux-pro-max/SKILL.md`（Phase B） |
+| UI 实现 | `.agents/skills/ui-ux-pro-max/SKILL.md`（Phase B） |
 | 测试约定 | `.cursor/skills/7ai-club-testing/SKILL.md`（qa-engineer） |
 | React 性能 | `.agents/skills/vercel-react-best-practices/SKILL.md`（Phase B，按需） |
 | Supabase | `.agents/skills/supabase/SKILL.md`（Phase A/B，按需） |
@@ -137,8 +137,9 @@ bash scripts/patch-superpowers-gating.sh
 
 | 文件 | 说明 |
 |------|------|
-| `skills-lock.json` | CLI skills 版本锁定 |
-| `.agents/skills/` | Superpowers 等外部 skills（含 patch 后的 frontmatter） |
+| `skills-lock.json` | CLI 外部 skills 版本锁定（`.agents/skills/`） |
+| `.agents/skills/` | Superpowers、Supabase、Vercel、ui-ux-pro-max 等外部 skills |
+| `.cursor/skills/` | 7ai-club 项目自有 skills（架构、PRD 模板、测试、bridge 等，不在 lock 内） |
 | `scripts/patch-superpowers-gating.sh` | 为 Superpowers 设置 `disable-model-invocation: true` |
 | `.cursor/skills/7ai-club-superpowers-bridge/SKILL.md` | subagent 启动必读：白名单与覆盖规则 |
 | `.cursor/agents/product-analyst.md` 等 | 各阶段 Superpowers 白名单 |

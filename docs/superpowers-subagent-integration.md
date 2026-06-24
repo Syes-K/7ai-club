@@ -69,7 +69,7 @@ Superpowers skill path: `.agents/skills/<skill-name>/SKILL.md`
 | Architecture / scope | `.cursor/skills/7ai-club-architecture/reference.md` |
 | PRD templates | `.cursor/skills/product-requirements/templates/` |
 | Tech design templates | `.cursor/skills/technical-design/templates/` |
-| UI implementation | `.cursor/skills/ui-ux-pro-max/SKILL.md` (Phase B) |
+| UI implementation | `.agents/skills/ui-ux-pro-max/SKILL.md` (Phase B) |
 | Testing conventions | `.cursor/skills/7ai-club-testing/SKILL.md` (qa-engineer) |
 | React performance | `.agents/skills/vercel-react-best-practices/SKILL.md` (Phase B, as needed) |
 | Supabase | `.agents/skills/supabase/SKILL.md` (Phase A/B, as needed) |
@@ -137,8 +137,9 @@ bash scripts/patch-superpowers-gating.sh
 
 | File | Purpose |
 |------|---------|
-| `skills-lock.json` | CLI skill version lock |
-| `.agents/skills/` | External skills including patched Superpowers |
+| `skills-lock.json` | CLI external skill version lock (`.agents/skills/`) |
+| `.agents/skills/` | Superpowers, Supabase, Vercel, ui-ux-pro-max, etc. |
+| `.cursor/skills/` | 7ai-club project skills (architecture, PRD templates, testing, bridge — not in lock) |
 | `scripts/patch-superpowers-gating.sh` | Sets `disable-model-invocation: true` on Superpowers skills |
 | `.cursor/skills/7ai-club-superpowers-bridge/SKILL.md` | Subagent entry: allowlists and overrides |
 | `.cursor/agents/product-analyst.md` etc. | Per-phase Superpowers allowlists |

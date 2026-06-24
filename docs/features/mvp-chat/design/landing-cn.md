@@ -145,7 +145,7 @@ import { JetBrains_Mono, Inter } from "next/font/google";
 实现前运行（或手写等价 tokens）：
 
 ```bash
-python3 .cursor/skills/ui-ux-pro-max/scripts/search.py \
+python3 .agents/skills/ui-ux-pro-max/scripts/search.py \
   "AI learning developer dark electric blue neon" \
   --design-system --persist -p "7ai-club" -f markdown
 ```

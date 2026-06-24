@@ -140,21 +140,21 @@ docs/features/<slug>/design/<topic>-cn.md
 
 #### B2b. UI/UX — 首页、聊天页等面向用户页面
 
-实现任何用户可见页面或组件时，遵循 `.cursor/skills/ui-ux-pro-max/SKILL.md`（勿把全文复制进上下文；按需 Read）。
+实现任何用户可见页面或组件时，遵循 `.agents/skills/ui-ux-pro-max/SKILL.md`（勿把全文复制进上下文；按需 Read）。
 
 **流程：**
 
 1. 若不存在 `design-system/MASTER.md`，先运行 design-system 并持久化：
 
 ```bash
-python3 .cursor/skills/ui-ux-pro-max/scripts/search.py "SaaS AI chat assistant platform professional modern" --design-system --persist -p "7ai-club" -f markdown
+python3 .agents/skills/ui-ux-pro-max/scripts/search.py "SaaS AI chat assistant platform professional modern" --design-system --persist -p "7ai-club" -f markdown
 ```
 
 2. 为单页生成 override（首页、聊天页各一次）：
 
 ```bash
-python3 .cursor/skills/ui-ux-pro-max/scripts/search.py "landing hero SaaS AI" --design-system --persist -p "7ai-club" --page "home" -f markdown
-python3 .cursor/skills/ui-ux-pro-max/scripts/search.py "chat messaging streaming realtime" --design-system --persist -p "7ai-club" --page "chat" -f markdown
+python3 .agents/skills/ui-ux-pro-max/scripts/search.py "landing hero SaaS AI" --design-system --persist -p "7ai-club" --page "home" -f markdown
+python3 .agents/skills/ui-ux-pro-max/scripts/search.py "chat messaging streaming realtime" --design-system --persist -p "7ai-club" --page "chat" -f markdown
 ```
 
 3. 实现前读取：`design-system/pages/<page>.md`（若存在）否则 `design-system/MASTER.md`

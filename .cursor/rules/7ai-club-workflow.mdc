@@ -104,6 +104,7 @@ Superpowers（obra/superpowers）提供 TDD、调试、计划拆分等**战术�
 ```bash
 pnpm skills:install   # 从 skills-lock.json 恢复 + 自动 patch 门禁
 pnpm skills:update    # 更新项目 skills + 自动 patch 门禁
+pnpm skills:lock      # 从 .agents/skills/ 重新生成 skills-lock.json
 ```
 
 Superpowers 全部 `disable-model-invocation: true` — **根 Agent 不得自动调用**；仅 subagent 在白名单内显式 Read。

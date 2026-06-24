@@ -72,7 +72,7 @@ Superpowers skills 路径：`.agents/skills/<skill-name>/SKILL.md`
 | 架构 / 范围 | `.cursor/skills/7ai-club-architecture/reference.md` |
 | PRD 模板 | `.cursor/skills/product-requirements/templates/` |
 | 技术设计模板 | `.cursor/skills/technical-design/templates/` |
-| UI 实现 | `.cursor/skills/ui-ux-pro-max/SKILL.md`（Phase B） |
+| UI 实现 | `.agents/skills/ui-ux-pro-max/SKILL.md`（Phase B） |
 | 测试约定 | `.cursor/skills/7ai-club-testing/SKILL.md`（qa-engineer） |
 | React 性能 | `.agents/skills/vercel-react-best-practices/SKILL.md`（Phase B，按需） |
 | Supabase | `.agents/skills/supabase/SKILL.md`（Phase A/B，按需） |
@@ -82,6 +82,7 @@ Superpowers skills 路径：`.agents/skills/<skill-name>/SKILL.md`
 ```bash
 pnpm skills:install   # 从 skills-lock.json 恢复 + 自动 patch 门禁
 pnpm skills:update    # 更新项目 skills + 自动 patch 门禁
+pnpm skills:lock      # 从 .agents/skills/ 重新生成 skills-lock.json
 ```
 
 Superpowers 来源：`git@github.com:obra/superpowers.git`（见根目录 `skills-lock.json`）。
