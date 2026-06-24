@@ -27,6 +27,7 @@ export function UserMenu({
 }: UserMenuProps) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
+  const [signingOut, setSigningOut] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
 
   const initials = getUserInitials(email);
@@ -54,6 +55,8 @@ export function UserMenu({
   }, [open]);
 
   async function handleSignOut() {
+    if (signingOut) return;
+    setSigningOut(true);
     setOpen(false);
     const { createClient } = await import("@/lib/supabase/client");
     const supabase = createClient();
@@ -118,10 +121,11 @@ export function UserMenu({
             type="button"
             role="menuitem"
             onClick={handleSignOut}
-            className="flex w-full cursor-pointer items-center gap-2 px-3 py-2.5 text-sm text-[var(--text-muted)] transition-colors hover:bg-white/5 hover:text-[var(--text-primary)]"
+            disabled={signingOut}
+            className="flex w-full cursor-pointer items-center gap-2 px-3 py-2.5 text-sm text-[var(--text-muted)] transition-colors hover:bg-white/5 hover:text-[var(--text-primary)] disabled:opacity-50"
           >
             <LogOut className="h-4 w-4" />
-            Sign out
+            {signingOut ? "Signing out…" : "Sign out"}
           </button>
         </div>
       )}

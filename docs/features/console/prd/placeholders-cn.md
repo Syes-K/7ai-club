@@ -24,17 +24,17 @@ F-20 — Console 布局、侧栏、鉴权、占位页、C2 视觉、导航入口
 
 ### 2.2 侧栏顺序
 
-1. Profile  
-2. Models  
-3. Assistants  
-4. Knowledge Base  
-5. MCP  
+1. Profile
+2. Models
+3. Assistants
+4. Knowledge Base
+5. MCP
 
 当前路由高亮（neon 强调色）。
 
 ### 2.3 鉴权
 
-- 未登录访问 `/console/*` → `/login?next=<path>`
+- 未登录访问 `/console/`* → `/login?next=<path>`
 - `middleware` matcher 包含 `/console/:path*`
 
 ### 2.4 入口
@@ -46,11 +46,14 @@ F-20 — Console 布局、侧栏、鉴权、占位页、C2 视觉、导航入口
 
 ## 3. 占位页
 
-| 路由 | 标题 | 正文（English） |
-|------|------|-----------------|
-| `/console/models` | Model management | 简短说明 + **Coming soon** |
+> **iter-05：** `/console/models` 已迁 [models-cn.md](./models-cn.md)（F-24），**不再**为占位页。
+
+
+| 路由                   | 标题             | 正文（English）            |
+| -------------------- | -------------- | ---------------------- |
 | `/console/knowledge` | Knowledge Base | 简短说明 + **Coming soon** |
-| `/console/mcp` | MCP | 简短说明 + **Coming soon** |
+| `/console/mcp`       | MCP            | 简短说明 + **Coming soon** |
+
 
 占位页无表单、无 API。
 
@@ -64,16 +67,19 @@ F-20 — Console 布局、侧栏、鉴权、占位页、C2 视觉、导航入口
 
 ## 5. 验收标准
 
-- [ ] **AC-01** — `/console/*` 未登录重定向
-- [ ] **AC-02** — 顶栏 + UserMenu Console 入口
-- [ ] **AC-03** — 侧栏 5 项、高亮、移动端可用
-- [ ] **AC-11** — 占位页正常渲染
-- [ ] **AC-12** — C2 视觉；英文文案
+- [x] **AC-01** — `/console/`* 未登录重定向
+- [x] **AC-02** — 顶栏 + UserMenu Console 入口
+- [x] **AC-03** — 侧栏 5 项、高亮、移动端可用
+- [x] **AC-11** — 占位页正常渲染
+- [x] **AC-12** — C2 视觉；英文文案
 
 ---
 
 ## 6. 修订记录
 
-| 日期 | 变更 |
-|------|------|
-| 2026-06-16 | 初稿 |
+
+| 日期         | 变更  |
+| ---------- | --- |
+| 2026-06-16 | 初稿  |
+
+

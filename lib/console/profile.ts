@@ -3,14 +3,14 @@ import { createClient } from "@/lib/supabase/server";
 export type UserProfile = {
   user_id: string;
   nickname: string | null;
-  preferred_model: string | null;
+  preferred_model_config_id: string | null;
 };
 
 export async function getUserProfile(userId: string): Promise<UserProfile | null> {
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("user_profiles")
-    .select("user_id, nickname, preferred_model")
+    .select("user_id, nickname, preferred_model_config_id")
     .eq("user_id", userId)
     .maybeSingle();
 
@@ -23,7 +23,10 @@ export async function getUserProfile(userId: string): Promise<UserProfile | null
 
 export async function upsertUserProfile(
   userId: string,
-  fields: { nickname?: string | null; preferredModel?: string | null },
+  fields: {
+    nickname?: string | null;
+    preferredModelConfigId?: string | null;
+  },
 ): Promise<UserProfile> {
   const supabase = await createClient();
   const row: Record<string, unknown> = { user_id: userId };
@@ -31,14 +34,14 @@ export async function upsertUserProfile(
   if ("nickname" in fields) {
     row.nickname = fields.nickname;
   }
-  if ("preferredModel" in fields) {
-    row.preferred_model = fields.preferredModel;
+  if ("preferredModelConfigId" in fields) {
+    row.preferred_model_config_id = fields.preferredModelConfigId ?? null;
   }
 
   const { data, error } = await supabase
     .from("user_profiles")
     .upsert(row, { onConflict: "user_id" })
-    .select("user_id, nickname, preferred_model")
+    .select("user_id, nickname, preferred_model_config_id")
     .single();
 
   if (error || !data) {

@@ -4,31 +4,32 @@
 > **中文:** [README-cn.md](./README-cn.md)
 
 > **Feature slug:** `console`  
-> **迭代:** [iter-03](../../iterations/iter-03/README-cn.md)（**已交付**）
+> **迭代:** [iter-05](../../iterations/iter-05/README-cn.md)（**进行中 — PRD 已确认**）
 
 ---
 
 ## 文档地图（Agent 入口）
 
-**iter-03 已交付 — 差异分析见 changelog §2：**
+**iter-05 进行中 — 先读 changelog，再读子 PRD：**
 
 1. [01-product-requirements-cn.md](./01-product-requirements-cn.md) — 总纲 §2 全局约定  
-2. [changelog/iter-03-cn.md](./changelog/iter-03-cn.md) — **需求 vs 实现** + AC-01–12  
-3. 子 PRD：[profile-cn.md](./prd/profile-cn.md) · [assistants-cn.md](./prd/assistants-cn.md) · [chat-assistant-picker-cn.md](./prd/chat-assistant-picker-cn.md) · [placeholders-cn.md](./prd/placeholders-cn.md)
+2. [changelog/iter-05-cn.md](./changelog/iter-05-cn.md) — **iter-05 AC-40–48**  
+3. 子 PRD：[models-cn.md](./prd/models-cn.md) · [profile-cn.md](./prd/profile-cn.md)（修订）
 
 | 层级 | 总纲 | 子文档 |
 |------|------|--------|
 | 产品 | [01-product-requirements-cn.md](./01-product-requirements-cn.md) | [prd/](./prd/) |
-| 技术 | [02-technical-design-cn.md](./02-technical-design-cn.md) | [design/](./design/) |
+| 技术 | [02-technical-design-cn.md](./02-technical-design-cn.md) | [design/models-cn.md](./design/models-cn.md) · [design/profile-cn.md](./design/profile-cn.md) |
+
+**历史迭代：** [iter-03 changelog](./changelog/iter-03-cn.md) · [iter-04 mvp-chat changelog](../mvp-chat/changelog/iter-04-cn.md)
 
 ---
 
-## iter-03 交付摘要
+## iter-05 范围摘要
 
-- Console 壳 + Profile + Assistants（Icon/Opening）+ 占位页  
-- New Chat 必选助理 + 开场白  
-- ChatAppShell 客户端 session + 导航修复  
-- **iter-04（已交付）：** Profile / Assistants CRUD 已迁浏览器 Supabase；见 [mvp-chat changelog iter-04-cn.md](../mvp-chat/changelog/iter-04-cn.md)
+- **Models** — BYOK、加密 Key、独立 Update key、测试状态、平台默认 Bailian  
+- **Profile** — Account / Preferences 双 Card、Detail/Edit、独立 Save  
+- **Chat 集成** — 见 [mvp-chat/prd/chat-model-config-cn.md](../mvp-chat/prd/chat-model-config-cn.md)
 
 ---
 

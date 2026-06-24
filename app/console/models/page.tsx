@@ -1,10 +1,18 @@
-import { PlaceholderPage } from "@/components/console/placeholder-page";
+import { ModelsManager } from "@/components/console/models-manager";
+import { listModelConfigsForUser } from "@/lib/console/model-configs-server";
+import { createClient } from "@/lib/supabase/server";
 
-export default function ConsoleModelsPage() {
-  return (
-    <PlaceholderPage
-      title="Model management"
-      description="Configure LLM providers and model catalogs. This will arrive in a future release."
-    />
-  );
+export default async function ConsoleModelsPage() {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    return null;
+  }
+
+  const configs = await listModelConfigsForUser(user.id).catch(() => []);
+
+  return <ModelsManager initialConfigs={configs} />;
 }

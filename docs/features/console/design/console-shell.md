@@ -3,7 +3,7 @@
 > **English:** [console-shell.md](./console-shell.md)  
 > **中文：** [console-shell-cn.md](./console-shell-cn.md)  
 > **Index:** [02-technical-design.md](../02-technical-design.md)  
-> **Iteration:** iter-03
+> **Iteration:** iter-03 · **iter-05** (busy loading, `ConsolePage`)
 
 ---
 
@@ -97,18 +97,71 @@ interface ConsoleShellProps {
 
 ---
 
-## 6. Files
+## 8. Async / busy loading (iter-05)
+
+> **Global spec:** [loading-ux.md](../../../loading-ux.md) · [loading-ux-cn.md](../../../loading-ux-cn.md)  
+> Console-specific components below. Chat patterns: [chat-integration.md](./chat-integration.md) §6.
+
+### 8.1 Console levels (summary)
+
+| Level | When | Components |
+|-------|------|------------|
+| **Route initial (RSC)** | `page.tsx` async fetch | `app/console/<route>/loading.tsx` + `ConsolePageLoading` |
+| **Route initial (client)** | Mount `useEffect` fetch | `usePageBusy` on mount |
+| **Page** | List CRUD + header CTA | `ConsolePage` + `usePageBusy` |
+| **Section** | Multi-card independent save | `ConsoleSection` |
+| **Action-only** | **Avoid** for mutations |
+| **Global overlay** | **Not** for Console mutations |
+
+See global doc §3 decision tree for new actions.
+
+### 8.2 Files
+
+```
+components/console/console-page.tsx
+components/console/console-section.tsx
+components/console/console-busy-overlay.tsx
+components/console/console-page-loading.tsx      # RSC loading.tsx
+components/console/use-page-busy.ts
+app/console/models/loading.tsx
+app/console/profile/loading.tsx
+```
+
+### 8.3 Behavior
+
+- While `busy`: content `pointer-events-none`, overlay with English label (`aria-busy`, `role="status"`).
+- Header CTA and row actions disabled when `busy`; `if (busy) return` before dialogs.
+- One mutation per page — `runBusy("Testing model…", async () => { api + refresh })`.
+- Dialog submit: page busy underneath; dialog buttons show **Saving…** / **Deleting…**.
+
+### 8.4 Adoption
+
+| Surface | Initial | Mutations |
+|---------|---------|-----------|
+| `ModelsManager` | `loading.tsx` (RSC) | Page busy |
+| `AssistantsManager` | `runBusy` on mount | Page busy |
+| `AccountCard` / `PreferencesCard` | `loading.tsx` (RSC) | Section busy |
+
+New Console list pages: **page busy (C)** by default; RSC routes add **`loading.tsx` (A)**.
+
+---
+
+## 9. Files
 
 | Action | Path |
 |--------|------|
 | Add | `app/console/layout.tsx`, `page.tsx`, `models/page.tsx`, `knowledge/page.tsx`, `mcp/page.tsx` |
 | Add | `components/console/console-shell.tsx`, `console-nav.tsx`, `placeholder-page.tsx` |
+| Add (iter-05) | `console-page.tsx`, `console-section.tsx`, `console-busy-overlay.tsx`, `console-page-loading.tsx`, `use-page-busy.ts` |
+| Add (iter-05) | `app/console/models/loading.tsx`, `app/console/profile/loading.tsx` |
 | Mod | `middleware.ts`, `site-header.tsx`, `user-menu.tsx` |
 
 ---
 
-## 7. Revision History
+## 10. Revision History
 
 | Date | Change |
 |------|--------|
 | 2026-06-16 | Initial |
+| 2026-06-17 | §8 async / busy loading (iter-05); `ConsolePage` / `ConsoleSection` |
+| 2026-06-17 | §8 → global [loading-ux.md](../../../loading-ux.md); RSC `loading.tsx` |

@@ -48,6 +48,8 @@
 
 `AssistantsManager`：表格（Icon、Name、Opening preview、Updated、Actions）+ 内嵌 `<dialog>` 表单 + 删除确认。
 
+异步操作（含首屏加载）使用 **页面级 busy** — 见 [console-shell-cn.md](./console-shell-cn.md) §8。
+
 ---
 
 ## 5. 历史数据
@@ -72,3 +74,4 @@
 |------|------|
 | 2026-06-16 | 初稿 |
 | 2026-06-16 | icon/opening migration；RLS legacy；标记已交付 |
+| 2026-06-17 | §4 引用 console-shell §8 busy loading |

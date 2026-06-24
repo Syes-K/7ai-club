@@ -1,4 +1,5 @@
 import type { UIMessage } from "ai";
+import type { UserLlmProviderId } from "@/lib/llm/provider";
 
 export type DbMessage = {
   id: string;
@@ -54,12 +55,43 @@ export type AssistantOption = {
 export type UserProfile = {
   user_id: string;
   nickname: string | null;
-  preferred_model: string | null;
+  preferred_model_config_id: string | null;
+};
+
+export type ModelConfigRow = {
+  id: string;
+  user_id: string;
+  provider: UserLlmProviderId;
+  model_name: string;
+  test_status: "untested" | "passed" | "failed";
+  tested_at: string | null;
+  test_error: string | null;
+  api_key_set: boolean;
+  created_at: string;
+  updated_at: string;
+};
+
+export type ModelConfigDto = {
+  id: string;
+  provider: UserLlmProviderId;
+  modelName: string;
+  providerLabel: string;
+  testStatus: "untested" | "passed" | "failed";
+  testedAt: string | null;
+  testError: string | null;
+  apiKeySet: boolean;
+  isPlatformDefault: boolean;
+};
+
+export type ModelConfigOption = {
+  id: string;
+  label: string;
 };
 
 export type ProfileDto = {
   email: string;
   nickname: string | null;
-  preferredModel: string | null;
-  modelOptions: { id: string; label: string }[];
+  preferredModelConfigId: string | null;
+  preferredLabel: string;
+  modelOptions: ModelConfigOption[];
 };

@@ -16,10 +16,6 @@ vi.mock("@/lib/data/browser/conversations", () => ({
   createConversationWithOpening: vi.fn(),
 }));
 
-vi.mock("@/lib/services/browser/model-label", () => ({
-  getDisplayModelLabel: () => "qwen3.6-plus (bailian)",
-}));
-
 import { loadConversationSession } from "@/lib/services/browser/conversation-session";
 
 const summary: ConversationSummary = {
@@ -39,20 +35,23 @@ describe("AC-30 loadConversationSession", () => {
   });
 
   it("uses sidebar summary and only fetches messages (no session BFF path)", async () => {
-    await loadConversationSession("conv-1", {
+    const session = await loadConversationSession("conv-1", {
       summary,
-      preferredModel: "qwen-plus",
+      preferredModelLabel: "qwen-plus (bailian)",
     });
 
     expect(listMessages).toHaveBeenCalledOnce();
     expect(listMessages).toHaveBeenCalledWith("conv-1");
     expect(getConversationSummaryById).not.toHaveBeenCalled();
+    expect(session.modelLabel).toBe("qwen-plus (bailian)");
   });
 
   it("cold load fetches messages and conversation summary in parallel", async () => {
     getConversationSummaryById.mockResolvedValue(summary);
 
-    await loadConversationSession("conv-1", { preferredModel: null });
+    await loadConversationSession("conv-1", {
+      preferredModelLabel: "qwen3.6-plus (bailian)",
+    });
 
     expect(listMessages).toHaveBeenCalledWith("conv-1");
     expect(getConversationSummaryById).toHaveBeenCalledWith("conv-1");

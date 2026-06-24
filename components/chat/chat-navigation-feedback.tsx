@@ -3,7 +3,7 @@
 import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
-export type ChatNavPhase = "idle" | "loading" | "slow" | "timeout";
+export type ChatNavPhase = "idle" | "loading" | "slow" | "timeout" | "deleting";
 
 interface ChatNavigationFeedbackProps {
   phase: ChatNavPhase;
@@ -32,6 +32,7 @@ export function ChatNavigationFeedback({
       <p className="text-center font-mono text-sm text-[var(--text-primary)]">
         {phase === "loading" && "Loading conversation…"}
         {phase === "slow" && "Still loading…"}
+        {phase === "deleting" && "Deleting conversation…"}
         {phase === "timeout" && "Having trouble loading this chat"}
       </p>
 

@@ -64,13 +64,31 @@ iter-03 用 **`ChatAppShell`** 替代原 SSR `chat-layout.tsx`：
 
 ---
 
-## 6. Chat Route
+## 6. Loading UX
+
+> **Global spec:** [loading-ux-cn.md](../../../loading-ux-cn.md) §5.
+
+| 操作 | 机制 |
+|------|------|
+| 侧栏首屏列表 | `listLoading` → `Loading conversations…` |
+| 切换会话 | `pendingId` + 侧栏 `Loading…` + `ChatNavigationFeedback` |
+| 删除会话 | `deletingId` → 主面板 `deleting` 阶段 + dialog `Deleting…` |
+| 新建会话 | `creating` 按钮文案 |
+| 选择器打开 | `Loading assistants…` |
+| 发消息 | `useChat` status + `Thinking…` |
+| 清空聊天 | dialog `Clearing…`（主面板遮罩可选） |
+
+**导航修复：** `clientNavRef`、`loadSeqRef`；`ChatNavigationFeedback` 含 `loading` / `slow` / `timeout` / `deleting`。
+
+---
+
+## 7. Chat Route
 
 读取用户 profile → `getChatModel(..., preferred_model)`；`system_prompt` 仍来自对话绑定的 assistant。
 
 ---
 
-## 7. 助手展示
+## 8. 助手展示
 
 | 位置 | 组件 |
 |------|------|
@@ -79,7 +97,7 @@ iter-03 用 **`ChatAppShell`** 替代原 SSR `chat-layout.tsx`：
 
 ---
 
-## 8. 文件
+## 9. 文件
 
 | 操作 | 路径 |
 |------|------|
@@ -96,9 +114,10 @@ iter-03 用 **`ChatAppShell`** 替代原 SSR `chat-layout.tsx`：
 
 ---
 
-## 9. 修订记录
+## 10. 修订记录
 
 | 日期 | 变更 |
 |------|------|
 | 2026-06-16 | 初稿 |
 | 2026-06-16 | ChatAppShell、session API、AssistantAvatar；标记已交付 |
+| 2026-06-17 | §6 Loading UX；引用全局 [loading-ux-cn.md](../../../loading-ux-cn.md) |

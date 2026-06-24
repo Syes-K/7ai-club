@@ -1,8 +1,7 @@
 import {
-  getModelOptionsForProvider,
-  getPublicLlmProviderId,
-  isValidModelForProvider,
-} from "@/lib/constants/model-options";
+  normalizePreferredConfigId,
+  PLATFORM_DEFAULT_CONFIG_ID,
+} from "@/lib/constants/model-providers";
 
 export const NICKNAME_MAX_LENGTH = 32;
 
@@ -15,52 +14,60 @@ export function validateNickname(value: string | null | undefined): string | nul
   return null;
 }
 
-export function validatePreferredModel(value: string | null | undefined): string | null {
-  if (!value) return null;
-  const provider = getPublicLlmProviderId();
-  if (!isValidModelForProvider(provider, value)) {
-    return "Invalid model";
-  }
-  return null;
-}
-
-export function parseProfilePatch(body: {
+export function parseAccountPatch(body: {
   nickname?: unknown;
-  preferredModel?: unknown;
 }): {
-  fields?: { nickname?: string | null; preferredModel?: string | null };
+  fields?: { nickname: string | null };
   error?: string;
 } {
-  const fields: { nickname?: string | null; preferredModel?: string | null } = {};
-
-  if ("nickname" in body) {
-    const raw = body.nickname;
-    if (raw != null && typeof raw !== "string") {
-      return { error: "Invalid nickname" };
-    }
-    const trimmed = raw?.trim() ?? "";
-    const nicknameError = validateNickname(trimmed || null);
-    if (nicknameError) return { error: nicknameError };
-    fields.nickname = trimmed || null;
-  }
-
-  if ("preferredModel" in body) {
-    const model = body.preferredModel;
-    if (model != null && typeof model !== "string") {
-      return { error: "Invalid model" };
-    }
-    const modelError = validatePreferredModel(model || null);
-    if (modelError) return { error: modelError };
-    fields.preferredModel = model || null;
-  }
-
-  if (!("nickname" in fields) && !("preferredModel" in fields)) {
+  if (!("nickname" in body)) {
     return { error: "No fields to update" };
   }
 
-  return { fields };
+  const raw = body.nickname;
+  if (raw != null && typeof raw !== "string") {
+    return { error: "Invalid nickname" };
+  }
+
+  const trimmed = raw?.trim() ?? "";
+  const nicknameError = validateNickname(trimmed || null);
+  if (nicknameError) {
+    return { error: nicknameError };
+  }
+
+  return { fields: { nickname: trimmed || null } };
 }
 
-export function getModelOptions() {
-  return getModelOptionsForProvider(getPublicLlmProviderId());
+export function parsePreferencesPatch(
+  body: { preferredModelConfigId?: unknown },
+  allowedIds: Set<string>,
+): {
+  fields?: { preferredModelConfigId: string | null };
+  error?: string;
+} {
+  if (!("preferredModelConfigId" in body)) {
+    return { error: "No fields to update" };
+  }
+
+  const raw = body.preferredModelConfigId;
+
+  if (raw == null || raw === "") {
+    return { fields: { preferredModelConfigId: null } };
+  }
+
+  if (typeof raw !== "string") {
+    return { error: "Invalid model preference" };
+  }
+
+  if (raw === PLATFORM_DEFAULT_CONFIG_ID) {
+    return { fields: { preferredModelConfigId: null } };
+  }
+
+  if (!allowedIds.has(raw)) {
+    return { error: "Selected model is not available" };
+  }
+
+  return {
+    fields: { preferredModelConfigId: normalizePreferredConfigId(raw) },
+  };
 }

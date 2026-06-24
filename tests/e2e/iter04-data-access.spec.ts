@@ -1,5 +1,10 @@
 import type { Page } from "@playwright/test";
 import { expect, test } from "@playwright/test";
+import { login } from "./helpers/auth";
+import {
+  sidebarNewChatButton,
+  waitForChatSidebarReady,
+} from "./helpers/chat";
 
 const hasAuthCredentials =
   Boolean(process.env.E2E_TEST_EMAIL) && Boolean(process.env.E2E_TEST_PASSWORD);
@@ -15,46 +20,13 @@ function getConversationIdFromPage(page: Page): string {
   return match[1];
 }
 
-async function login(page: Page) {
-  const email = process.env.E2E_TEST_EMAIL!;
-  const password = process.env.E2E_TEST_PASSWORD!;
-
-  for (let attempt = 0; attempt < 3; attempt++) {
-    await page.goto("/login", { waitUntil: "domcontentloaded" });
-    await page.getByLabel("Email").fill(email);
-    await page.getByLabel("Password").fill(password);
-    await page.getByRole("button", { name: "Sign in" }).click();
-    try {
-      await page.waitForURL(/\/chat/, {
-        timeout: 20_000,
-        waitUntil: "domcontentloaded",
-      });
-      return;
-    } catch {
-      if (attempt === 2) {
-        throw new Error("Login failed after 3 attempts");
-      }
-    }
-  }
-}
-
-function sidebarNewChatButton(page: Page) {
-  return page
-    .getByRole("complementary")
-    .getByRole("button", { name: "New chat", exact: true });
-}
-
 async function conversationCount(page: Page): Promise<number> {
-  if (!/\/chat/.test(page.url())) {
-    await page.goto("/chat", { waitUntil: "domcontentloaded" });
-  }
+  await waitForChatSidebarReady(page);
   return page.locator("aside nav ul li").count();
 }
 
 async function createConversation(page: Page): Promise<string> {
-  if (!/\/chat/.test(page.url())) {
-    await page.goto("/chat", { waitUntil: "domcontentloaded" });
-  }
+  await waitForChatSidebarReady(page);
   const newChatBtn = sidebarNewChatButton(page);
   await newChatBtn.click();
   await expect(
@@ -128,9 +100,7 @@ async function waitForConversationShell(page: Page) {
 }
 
 async function openFirstConversation(page: Page) {
-  if (!/\/chat/.test(page.url())) {
-    await page.goto("/chat", { waitUntil: "domcontentloaded" });
-  }
+  await waitForChatSidebarReady(page);
   const first = page.locator("aside nav ul li").first();
   if ((await first.count()) === 0) return false;
   await first.locator("div > button").first().click();
@@ -165,6 +135,7 @@ test.describe("iter-04 data access", () => {
     });
 
     await page.goto("/chat");
+    await waitForChatSidebarReady(page);
     const items = page.locator("aside nav ul li");
     await items.nth(0).locator("div > button").first().click();
     await page.getByPlaceholder("Type a message").waitFor({ state: "visible" });
@@ -189,11 +160,15 @@ test.describe("iter-04 data access", () => {
     await page.goto("/console/profile");
     await expect(page.getByRole("heading", { name: "Profile" })).toBeVisible();
 
-    const nickname = page.getByLabel("Nickname");
+    const account = page.locator("section").filter({
+      has: page.getByRole("heading", { name: "Account" }),
+    });
+    await account.getByRole("button", { name: "Edit" }).click();
+
     const uniqueNick = `E2E ${Date.now()}`;
-    await nickname.fill(uniqueNick);
-    await page.getByRole("button", { name: /save/i }).click();
-    await expect(page.getByText("Saved.")).toBeVisible({ timeout: 15_000 });
+    await account.getByLabel("Nickname").fill(uniqueNick);
+    await account.getByRole("button", { name: "Save" }).click();
+    await expect(account.getByText("Saved.")).toBeVisible({ timeout: 15_000 });
 
     expect(profileApiRequests).toEqual([]);
   });

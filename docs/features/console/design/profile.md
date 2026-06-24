@@ -3,158 +3,59 @@
 > **English:** [profile.md](./profile.md)  
 > **中文:** [profile-cn.md](./profile-cn.md)  
 > **Index:** [02-technical-design.md](../02-technical-design.md)  
-> **Iteration:** iter-03
+> **PRD:** [prd/profile.md](../prd/profile.md)  
+> **Iteration:** iter-03 (base) · **iter-05 (Preferences refactor)**
 
 ---
 
-## 1. Database
+## 1. iter-03 Delivered (summary)
 
-```sql
-CREATE TABLE public.user_profiles (
-  user_id          UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
-  nickname         TEXT,
-  preferred_model  TEXT,
-  created_at       TIMESTAMPTZ NOT NULL DEFAULT now(),
-  updated_at       TIMESTAMPTZ NOT NULL DEFAULT now()
-);
-
-CREATE TRIGGER user_profiles_updated_at
-  BEFORE UPDATE ON public.user_profiles
-  FOR EACH ROW EXECUTE FUNCTION public.set_updated_at();
-
-ALTER TABLE public.user_profiles ENABLE ROW LEVEL SECURITY;
-
-CREATE POLICY "user_profiles_select_own"
-  ON public.user_profiles FOR SELECT TO authenticated
-  USING (user_id = auth.uid());
-
-CREATE POLICY "user_profiles_insert_own"
-  ON public.user_profiles FOR INSERT TO authenticated
-  WITH CHECK (user_id = auth.uid());
-
-CREATE POLICY "user_profiles_update_own"
-  ON public.user_profiles FOR UPDATE TO authenticated
-  USING (user_id = auth.uid())
-  WITH CHECK (user_id = auth.uid());
-```
+- `user_profiles.nickname`, single `ProfileForm`, static env-based `modelOptions`
 
 ---
 
-## 2. Model Options Constant
+## 2. iter-05 Changes
 
-`lib/constants/model-options.ts`:
+### 2.1 Schema
 
-```typescript
-export function getModelOptionsForProvider(provider: LlmProviderId): { id: string; label: string }[]
-```
+Replace `preferred_model` TEXT with `preferred_model_config_id UUID FK` (NULL = platform default). See [models-cn.md](./models-cn.md) §3.3.
 
-Curated lists per provider (3–5 models each), e.g.:
+### 2.2 Validation
 
-| Provider | Example ids |
-|----------|-------------|
-| siliconflow | `deepseek-ai/DeepSeek-V3`, `Qwen/Qwen2.5-7B-Instruct`, … |
-| nvidia | `deepseek-ai/deepseek-v4-flash`, … |
-| bailian | `qwen3.6-plus`, `qwen-plus`, … |
+Split `parseAccountPatch` / `parsePreferencesPatch`. Preference must reference Passed config or NULL (platform default).
 
----
+### 2.3 Services
 
-## 3. API
-
-### `GET /api/profile`
-
-**Response 200:**
-
-```json
-{
-  "email": "user@example.com",
-  "nickname": "Angela",
-  "preferredModel": "qwen3.6-plus",
-  "modelOptions": [{ "id": "...", "label": "..." }]
-}
-```
-
-- Upsert not required on GET; return nulls if no row
-
-### `PATCH /api/profile`
-
-**Request:**
-
-```json
-{ "nickname": "Angela", "preferredModel": "qwen3.6-plus" }
-```
-
-- Validate nickname length ≤ 32; empty string → `null`
-- Validate `preferredModel` against curated list for active provider
-- Upsert `user_profiles`
+- `saveAccount({ nickname })`
+- `savePreferences({ preferredModelConfigId })`
+- `getPassedModelOptions()` from model configs service
 
 ---
 
-## 4. lib
+## 3. UI
 
-`lib/console/profile.ts`:
+Dual cards: `AccountCard` + `PreferencesCard`, each with View/Edit/Save/Cancel.
 
-- `getUserProfile(userId)`
-- `upsertUserProfile(userId, { nickname?, preferredModel? })`
-
-`lib/llm/provider.ts` change:
-
-```typescript
-export function resolveChatModelId(
-  assistantModel?: string,
-  preferredModel?: string | null,
-): string {
-  if (preferredModel?.trim()) return preferredModel.trim();
-  if (process.env.LLM_MODEL?.trim()) return process.env.LLM_MODEL.trim();
-  return getDefaultModel();
-}
-```
-
-Chat route loads profile for `user.id` and passes to `getChatModel(undefined, profile.preferred_model)`.
+Each card uses **section-level busy** on save — [console-shell.md](./console-shell.md) §8.
 
 ---
 
-## 5. Display Helpers
+## 4. Files
 
-`lib/auth/user-display.ts`:
-
-```typescript
-export function getUserDisplayName(email: string, nickname?: string | null): string
-export function getUserShortLabel(email: string, nickname?: string | null, maxLen?: number): string
-```
-
-Priority: nickname → email local-part.
-
-Pass nickname from server layouts into `SiteHeader` / `UserMenu` / chat shell (fetch profile in layout or parallel).
+See [profile-cn.md](./profile-cn.md) §6.
 
 ---
 
-## 6. UI
+## 5. Acceptance
 
-`components/console/profile-form.tsx` (client):
-
-- Load via `GET /api/profile` on mount
-- Fields: Email (disabled), Nickname, Preferred model (select)
-- Save → `PATCH /api/profile` → `router.refresh()` for header
-
-`app/console/profile/page.tsx` — renders `ProfileForm` inside shell.
+AC-43, AC-44, AC-45 — see [profile-cn.md](./profile-cn.md) §7.
 
 ---
 
-## 7. Files
-
-| Action | Path |
-|--------|------|
-| Add | migration (in shared file) |
-| Add | `lib/constants/model-options.ts`, `lib/console/profile.ts` |
-| Add | `app/api/profile/route.ts`, `components/console/profile-form.tsx` |
-| Add | `app/console/profile/page.tsx` |
-| Mod | `lib/llm/provider.ts`, `lib/auth/user-display.ts` |
-| Mod | Layouts that render `SiteHeader` — pass nickname |
-
----
-
-## 8. Revision History
+## 6. Revision History
 
 | Date | Change |
 |------|--------|
-| 2026-06-16 | Initial |
+| 2026-06-16 | iter-03 initial |
+| 2026-06-17 | iter-05 dual cards, FK preference |
+| 2026-06-17 | §3 — console-shell §8 section-level busy |

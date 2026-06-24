@@ -19,6 +19,7 @@ import {
   listConversationSummaries,
   loadConversationSession,
 } from "@/lib/services/browser/conversation-session";
+import { formatModelConfigLabel, PLATFORM_DEFAULT_MODEL_NAME, PLATFORM_DEFAULT_PROVIDER } from "@/lib/constants/model-providers";
 import { GridBackground } from "@/components/ui/grid-background";
 import { cn } from "@/lib/utils";
 
@@ -33,14 +34,17 @@ function getConversationIdFromPath(pathname: string): string {
 interface ChatAppShellProps {
   user: User;
   nickname?: string | null;
-  preferredModel?: string | null;
+  preferredModelLabel?: string;
   children: React.ReactNode;
 }
 
 export function ChatAppShell({
   user,
   nickname,
-  preferredModel = null,
+  preferredModelLabel = formatModelConfigLabel(
+    PLATFORM_DEFAULT_PROVIDER,
+    PLATFORM_DEFAULT_MODEL_NAME,
+  ),
   children,
 }: ChatAppShellProps) {
   const router = useRouter();
@@ -48,18 +52,22 @@ export function ChatAppShell({
   const pathConversationId = getConversationIdFromPath(pathname);
 
   const [conversations, setConversations] = useState<ConversationSummary[]>([]);
+  const [listLoading, setListLoading] = useState(true);
   const [viewId, setViewId] = useState(pathConversationId);
   const [session, setSession] = useState<ConversationSession | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [pickerOpen, setPickerOpen] = useState(false);
   const [creating, setCreating] = useState(false);
   const [pendingId, setPendingId] = useState<string | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
   const [navPhase, setNavPhase] = useState<ChatNavPhase>("idle");
   const loadSeqRef = useRef(0);
   /** True after sidebar-driven nav; blocks stale pathname from re-triggering loads. */
   const clientNavRef = useRef(false);
 
   const isNavigating = pendingId != null;
+  const isDeleting = deletingId != null;
+  const navigationDisabled = isNavigating || isDeleting;
 
   const refreshConversations = useCallback(async (): Promise<ConversationSummary[]> => {
     try {
@@ -77,7 +85,10 @@ export function ChatAppShell({
       .then((list) => {
         if (!cancelled) setConversations(list);
       })
-      .catch(() => {});
+      .catch(() => {})
+      .finally(() => {
+        if (!cancelled) setListLoading(false);
+      });
     return () => {
       cancelled = true;
     };
@@ -122,7 +133,7 @@ export function ChatAppShell({
         // Assistant header fields come from sidebar list; preferredModel from layout — not re-fetched here.
         const data = await loadConversationSession(id, {
           summary,
-          preferredModel,
+          preferredModelLabel,
         });
         if (seq !== loadSeqRef.current) return;
 
@@ -140,7 +151,7 @@ export function ChatAppShell({
         setNavPhase("timeout");
       }
     },
-    [router, conversations, preferredModel],
+    [router, conversations, preferredModelLabel],
   );
 
   // Load from URL on first visit / external navigation only (not after client sidebar clicks)
@@ -227,22 +238,30 @@ export function ChatAppShell({
   }
 
   async function handleDeleteConversation(id: string) {
-    await deleteConversation(id);
+    setDeletingId(id);
+    try {
+      await deleteConversation(id);
 
-    const list = await refreshConversations();
+      const list = await refreshConversations();
 
-    if (id === viewId) {
-      const remaining = list.filter((conversation) => conversation.id !== id);
-      if (remaining.length > 0) {
-        await loadConversation(remaining[0].id, "user", list);
+      if (id === viewId) {
+        const remaining = list.filter((conversation) => conversation.id !== id);
+        setDeletingId(null);
+        if (remaining.length > 0) {
+          await loadConversation(remaining[0].id, "user", list);
+        } else {
+          clientNavRef.current = false;
+          setSession(null);
+          setViewId("");
+          setPendingId(null);
+          setNavPhase("idle");
+          router.replace("/chat");
+        }
       } else {
-        clientNavRef.current = false;
-        setSession(null);
-        setViewId("");
-        setPendingId(null);
-        setNavPhase("idle");
-        router.replace("/chat");
+        setDeletingId(null);
       }
+    } catch {
+      setDeletingId(null);
     }
   }
 
@@ -297,11 +316,12 @@ export function ChatAppShell({
               conversations={conversations}
               activeId={viewId}
               pendingId={pendingId}
+              listLoading={listLoading}
               onSelectConversation={handleSelectConversation}
               onNewChat={handleNewChat}
               onDeleteConversation={handleDeleteConversation}
               creating={creating}
-              navigationDisabled={isNavigating}
+              navigationDisabled={navigationDisabled}
               onNavigate={() => setSidebarOpen(false)}
             />
           </aside>
@@ -330,7 +350,13 @@ export function ChatAppShell({
               !pathConversationId && children
             )}
             <ChatNavigationFeedback
-              phase={pendingId ? navPhase : "idle"}
+              phase={
+                deletingId
+                  ? "deleting"
+                  : pendingId
+                    ? navPhase
+                    : "idle"
+              }
               onRetry={handleNavRetry}
               onCancel={handleNavCancel}
             />

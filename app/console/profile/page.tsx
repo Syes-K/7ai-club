@@ -1,7 +1,9 @@
-import { ProfileForm } from "@/components/console/profile-form";
-import { getModelOptionsForProvider } from "@/lib/constants/model-options";
+import { ProfilePage } from "@/components/console/profile-page";
+import {
+  listPassedModelOptionsForUser,
+} from "@/lib/console/model-configs-server";
+import { resolvePreferenceLabel } from "@/lib/console/model-configs";
 import { getUserProfile } from "@/lib/console/profile";
-import { getLlmProviderId } from "@/lib/llm/provider";
 import { createClient } from "@/lib/supabase/server";
 
 export default async function ConsoleProfilePage() {
@@ -15,14 +17,16 @@ export default async function ConsoleProfilePage() {
   }
 
   const profile = await getUserProfile(user.id).catch(() => null);
-  const modelOptions = getModelOptionsForProvider(getLlmProviderId());
+  const modelOptions = await listPassedModelOptionsForUser(user.id).catch(() => []);
+  const preferredConfigId = profile?.preferred_model_config_id ?? null;
 
   return (
-    <ProfileForm
-      initialProfile={{
+    <ProfilePage
+      profile={{
         email: user.email ?? "",
         nickname: profile?.nickname ?? null,
-        preferredModel: profile?.preferred_model ?? modelOptions[0]?.id ?? null,
+        preferredModelConfigId: preferredConfigId,
+        preferredLabel: resolvePreferenceLabel(preferredConfigId, modelOptions),
         modelOptions,
       }}
     />

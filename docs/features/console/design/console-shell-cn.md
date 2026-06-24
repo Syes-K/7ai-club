@@ -3,7 +3,7 @@
 > **English:** [console-shell.md](./console-shell.md)  
 > **中文：** [console-shell-cn.md](./console-shell-cn.md)  
 > **总纲：** [02-technical-design-cn.md](../02-technical-design-cn.md)  
-> **迭代：** iter-03
+> **迭代：** iter-03 · **iter-05**（busy loading、`ConsolePage`）
 
 ---
 
@@ -81,18 +81,71 @@ components/console/placeholder-page.tsx  (占位共用)
 
 ---
 
-## 6. 文件
+## 8. 异步 / busy loading（iter-05）
+
+> **全局规范：** [loading-ux-cn.md](../../../loading-ux-cn.md) · [loading-ux.md](../../../loading-ux.md)  
+> 下文为 Console 组件索引。Chat 见 [chat-integration-cn.md](./chat-integration-cn.md) §6。
+
+### 8.1 Console 层级（摘要）
+
+| 层级 | 场景 | 组件 |
+|------|------|------|
+| **路由首屏（RSC）** | `page.tsx` async | `app/console/<route>/loading.tsx` + `ConsolePageLoading` |
+| **路由首屏（客户端）** | mount `useEffect` | mount 时 `usePageBusy` |
+| **页面级** | 列表 CRUD + 页头 CTA | `ConsolePage` + `usePageBusy` |
+| **区块级** | 多 Card 独立保存 | `ConsoleSection` |
+| **仅 Action** | mutation **避免** |
+| **全站遮罩** | Console mutation **不用** |
+
+新 action 选型见全局文档 §3 决策树。
+
+### 8.2 文件
+
+```
+components/console/console-page.tsx
+components/console/console-section.tsx
+components/console/console-busy-overlay.tsx
+components/console/console-page-loading.tsx      # RSC loading.tsx
+components/console/use-page-busy.ts
+app/console/models/loading.tsx
+app/console/profile/loading.tsx
+```
+
+### 8.3 行为
+
+- `busy`：内容 `pointer-events-none`、遮罩 + 英文文案（`aria-busy`、`role="status"`）。
+- `busy` 时禁用页头与行操作；打开 dialog 前 `if (busy) return`。
+- 每页一个 mutation — `runBusy("Testing model…", async () => { API + 刷新 })`。
+- Dialog 提交：页面保持 busy；dialog 内 **Saving…** / **Deleting…**。
+
+### 8.4 采用
+
+| 页面 | 首屏 | Mutation |
+|------|------|----------|
+| `ModelsManager` | `loading.tsx`（RSC） | 页面 busy |
+| `AssistantsManager` | mount `runBusy` | 页面 busy |
+| `AccountCard` / `PreferencesCard` | `loading.tsx`（RSC） | 区块 busy |
+
+新增 Console 列表页默认 **页面 busy（C）**；RSC 路由须加 **`loading.tsx`（A）**。
+
+---
+
+## 9. 文件
 
 | 操作 | 路径 |
 |------|------|
 | 新增 | `app/console/layout.tsx`、`page.tsx`、占位 `page.tsx` |
 | 新增 | `components/console/console-shell.tsx` 等 |
+| 新增（iter-05） | `console-page.tsx`、`console-section.tsx`、`console-busy-overlay.tsx`、`console-page-loading.tsx`、`use-page-busy.ts` |
+| 新增（iter-05） | `app/console/models/loading.tsx`、`app/console/profile/loading.tsx` |
 | 修改 | `middleware.ts`、`site-header.tsx`、`user-menu.tsx` |
 
 ---
 
-## 7. 修订记录
+## 10. 修订记录
 
 | 日期 | 变更 |
 |------|------|
 | 2026-06-16 | 初稿 |
+| 2026-06-17 | §8 异步 / busy loading（iter-05）；`ConsolePage` / `ConsoleSection` |
+| 2026-06-17 | §8 → 全局 [loading-ux-cn.md](../../../loading-ux-cn.md)；RSC `loading.tsx` |

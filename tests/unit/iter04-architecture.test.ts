@@ -18,15 +18,21 @@ function walkFiles(dir: string, acc: string[] = []): string[] {
 }
 
 describe("iter-04 architecture constraints", () => {
-  it("AC-34: only POST /api/chat remains under app/api", () => {
+  it("AC-34: chat and model API routes under app/api", () => {
     const apiDir = join(ROOT, "app/api");
-    const routeFiles = walkFiles(apiDir).filter((file) =>
-      file.endsWith("route.ts"),
-    );
+    const routeFiles = walkFiles(apiDir)
+      .filter((file) => file.endsWith("route.ts"))
+      .map((file) => relative(ROOT, file))
+      .sort();
 
-    expect(routeFiles.map((file) => relative(ROOT, file))).toEqual([
-      "app/api/chat/route.ts",
-    ]);
+    expect(routeFiles).toEqual(
+      [
+        "app/api/chat/route.ts",
+        "app/api/models/[id]/key/route.ts",
+        "app/api/models/[id]/test/route.ts",
+        "app/api/models/route.ts",
+      ].sort(),
+    );
   });
 
   it("AC-34: chat panel is the only component that calls /api/chat", () => {

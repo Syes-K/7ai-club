@@ -108,7 +108,23 @@ sequenceDiagram
 
 ---
 
-## 6. Files
+## 6. Loading UX
+
+> **Global spec:** [loading-ux.md](../../../loading-ux.md) §5.
+
+| Operation | Mechanism |
+|-----------|-----------|
+| Sidebar initial list | `listLoading` → `Loading conversations…` |
+| Switch conversation | `pendingId` + sidebar `Loading…` + `ChatNavigationFeedback` |
+| Delete conversation | `deletingId` → panel `deleting` phase + dialog `Deleting…` |
+| New chat | `creating` button copy |
+| Picker open | `Loading assistants…` |
+| Send message | `useChat` status + `Thinking…` |
+| Clear chat | dialog `Clearing…` (panel overlay optional) |
+
+---
+
+## 7. Files
 
 | Action | Path |
 |--------|------|
@@ -121,8 +137,9 @@ sequenceDiagram
 
 ---
 
-## 7. Revision History
+## 8. Revision History
 
 | Date | Change |
 |------|--------|
 | 2026-06-16 | Initial |
+| 2026-06-17 | §6 Loading UX; link to [loading-ux.md](../../../loading-ux.md) |

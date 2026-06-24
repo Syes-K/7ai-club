@@ -14,6 +14,14 @@ import {
 } from "@/lib/services/browser/assistants";
 import type { AssistantDto } from "@/lib/data/types";
 import { formatConversationTimestamp } from "@/lib/chat/format";
+import {
+  ConsolePage,
+  ConsoleTable,
+  ConsoleTableBody,
+  ConsoleTableHead,
+  ConsoleTh,
+} from "@/components/console/console-page";
+import { usePageBusy } from "@/components/console/use-page-busy";
 
 type AssistantRow = AssistantDto;
 
@@ -153,8 +161,8 @@ function truncate(text: string | null, maxLen: number): string {
 }
 
 export function AssistantsManager() {
+  const { busy, busyLabel, runBusy } = usePageBusy();
   const [assistants, setAssistants] = useState<AssistantRow[]>([]);
-  const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
 
   const [formOpen, setFormOpen] = useState(false);
@@ -175,24 +183,21 @@ export function AssistantsManager() {
 
   useEffect(() => {
     let cancelled = false;
-    listAssistants()
-      .then((rows) => {
-        if (!cancelled) setAssistants(rows);
-      })
-      .catch((err) => {
-        if (!cancelled) {
-          setLoadError(err instanceof Error ? err.message : "Failed to load");
-        }
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false);
-      });
+    void runBusy("Loading assistants…", async () => {
+      const rows = await listAssistants();
+      if (!cancelled) setAssistants(rows);
+    }).catch((err) => {
+      if (!cancelled) {
+        setLoadError(err instanceof Error ? err.message : "Failed to load");
+      }
+    });
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [runBusy]);
 
   function openCreate() {
+    if (busy) return;
     setFormMode("create");
     setEditingId(null);
     setFormError(null);
@@ -200,6 +205,7 @@ export function AssistantsManager() {
   }
 
   function openEdit(row: AssistantRow) {
+    if (busy) return;
     setFormMode("edit");
     setEditingId(row.id);
     setFormError(null);
@@ -217,15 +223,18 @@ export function AssistantsManager() {
       systemPrompt: values.systemPrompt,
     };
 
-    try {
-      if (formMode === "create") {
-        await createUserAssistant(payload);
-      } else if (editingId) {
-        await updateUserAssistant(editingId, payload);
-      }
+    const label = formMode === "create" ? "Creating assistant…" : "Saving assistant…";
 
-      await loadAssistants();
-      setFormOpen(false);
+    try {
+      await runBusy(label, async () => {
+        if (formMode === "create") {
+          await createUserAssistant(payload);
+        } else if (editingId) {
+          await updateUserAssistant(editingId, payload);
+        }
+        await loadAssistants();
+        setFormOpen(false);
+      });
     } catch (err) {
       setFormError(err instanceof Error ? err.message : "Failed to save");
     } finally {
@@ -239,10 +248,11 @@ export function AssistantsManager() {
     setDeleteError(null);
 
     try {
-      await deleteUserAssistant(deleteTarget.id);
-
-      await loadAssistants();
-      setDeleteTarget(null);
+      await runBusy("Deleting assistant…", async () => {
+        await deleteUserAssistant(deleteTarget.id);
+        await loadAssistants();
+        setDeleteTarget(null);
+      });
     } catch (err) {
       setDeleteError(err instanceof Error ? err.message : "Failed to delete");
     } finally {
@@ -253,95 +263,85 @@ export function AssistantsManager() {
   const editingAssistant = assistants.find((row) => row.id === editingId);
 
   return (
-    <div className="mx-auto max-w-5xl">
-      <div className="flex flex-wrap items-start justify-between gap-4">
-        <div>
-          <h1 className="font-mono text-2xl font-semibold">Assistants</h1>
-          <p className="mt-1 text-sm text-[var(--text-muted)]">
-            Configure personas with icon, opening message, and system prompt.
-          </p>
-        </div>
-        <Button onClick={openCreate} className="shrink-0">
+    <ConsolePage
+      title="Assistants"
+      description="Configure personas with icon, opening message, and system prompt."
+      busy={busy}
+      busyLabel={busyLabel}
+      action={
+        <Button onClick={openCreate} disabled={busy} className="whitespace-nowrap">
           <Plus className="h-4 w-4" />
           Create assistant
         </Button>
-      </div>
-
-      {loading && (
-        <p className="mt-8 text-sm text-[var(--text-muted)]">Loading assistants…</p>
-      )}
+      }
+    >
       {loadError && <p className="mt-8 text-sm text-red-400">{loadError}</p>}
 
-      {!loading && !loadError && assistants.length === 0 && (
+      {!busy && !loadError && assistants.length === 0 && (
         <p className="mt-8 text-sm text-[var(--text-muted)]">
           No assistants yet. Create your first one above.
         </p>
       )}
 
-      {!loading && assistants.length > 0 && (
-        <div className="mt-8 overflow-x-auto rounded-xl border border-[var(--neon-primary)]/15">
-          <table className="w-full min-w-[640px] text-left text-sm">
-            <thead className="border-b border-[var(--neon-primary)]/15 bg-[var(--bg-elevated)]/80">
-              <tr>
-                <th className="px-4 py-3 font-mono text-xs font-medium uppercase tracking-wide text-[var(--text-muted)]">
-                  Icon
-                </th>
-                <th className="px-4 py-3 font-mono text-xs font-medium uppercase tracking-wide text-[var(--text-muted)]">
-                  Name
-                </th>
-                <th className="px-4 py-3 font-mono text-xs font-medium uppercase tracking-wide text-[var(--text-muted)]">
-                  Opening message
-                </th>
-                <th className="px-4 py-3 font-mono text-xs font-medium uppercase tracking-wide text-[var(--text-muted)]">
-                  Updated
-                </th>
-                <th className="px-4 py-3 text-right font-mono text-xs font-medium uppercase tracking-wide text-[var(--text-muted)]">
-                  Actions
-                </th>
+      {!busy && assistants.length > 0 && (
+        <ConsoleTable>
+          <ConsoleTableHead>
+            <tr>
+              <ConsoleTh>Icon</ConsoleTh>
+              <ConsoleTh>Name</ConsoleTh>
+              <ConsoleTh>Opening message</ConsoleTh>
+              <ConsoleTh>Updated</ConsoleTh>
+              <ConsoleTh>Actions</ConsoleTh>
+            </tr>
+          </ConsoleTableHead>
+          <ConsoleTableBody>
+            {assistants.map((row) => (
+              <tr key={row.id} className="hover:bg-white/[0.02]">
+                <td className="px-4 py-3 text-xl leading-none">
+                  {row.icon ?? (
+                    <span className="text-sm text-[var(--text-muted)]">—</span>
+                  )}
+                </td>
+                <td className="px-4 py-3 font-medium text-[var(--text-primary)]">
+                  {row.name}
+                </td>
+                <td className="max-w-xs px-4 py-3 text-[var(--text-muted)]">
+                  {truncate(row.openingMessage, 80)}
+                </td>
+                <td className="whitespace-nowrap px-4 py-3 text-[var(--text-muted)]">
+                  {formatConversationTimestamp(row.updatedAt)}
+                </td>
+                <td className="px-4 py-3">
+                  <div className="flex flex-wrap gap-2">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      disabled={busy}
+                      onClick={() => openEdit(row)}
+                    >
+                      <Pencil className="h-4 w-4" />
+                      Edit
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      disabled={busy}
+                      onClick={() => {
+                        if (busy) return;
+                        setDeleteError(null);
+                        setDeleteTarget(row);
+                      }}
+                      className="text-red-400 hover:text-red-300"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                      Delete
+                    </Button>
+                  </div>
+                </td>
               </tr>
-            </thead>
-            <tbody className="divide-y divide-[var(--neon-primary)]/10">
-              {assistants.map((row) => (
-                <tr key={row.id} className="hover:bg-white/[0.02]">
-                  <td className="px-4 py-3 text-xl leading-none">
-                    {row.icon ?? (
-                      <span className="text-sm text-[var(--text-muted)]">—</span>
-                    )}
-                  </td>
-                  <td className="px-4 py-3 font-medium text-[var(--text-primary)]">
-                    {row.name}
-                  </td>
-                  <td className="max-w-xs px-4 py-3 text-[var(--text-muted)]">
-                    {truncate(row.openingMessage, 80)}
-                  </td>
-                  <td className="whitespace-nowrap px-4 py-3 text-[var(--text-muted)]">
-                    {formatConversationTimestamp(row.updatedAt)}
-                  </td>
-                  <td className="px-4 py-3">
-                    <div className="flex justify-end gap-2">
-                      <Button variant="ghost" size="sm" onClick={() => openEdit(row)}>
-                        <Pencil className="h-4 w-4" />
-                        Edit
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => {
-                          setDeleteError(null);
-                          setDeleteTarget(row);
-                        }}
-                        className="text-red-400 hover:text-red-300"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                        Delete
-                      </Button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+            ))}
+          </ConsoleTableBody>
+        </ConsoleTable>
       )}
 
       <AssistantFormDialog
@@ -390,6 +390,6 @@ export function AssistantsManager() {
           </div>
         </dialog>
       )}
-    </div>
+    </ConsolePage>
   );
 }

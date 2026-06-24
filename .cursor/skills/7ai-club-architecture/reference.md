@@ -225,6 +225,21 @@ PRD / 技术设计须标明功能所属阶段。
 
 原则：业务配置在 Supabase；流程逻辑在代码。不在节点/路由中硬编码提示词。
 
+## Loading UX（已决）
+
+新增用户可见异步操作前必读 **[docs/loading-ux-cn.md](../../../docs/loading-ux-cn.md)**（英文：[loading-ux.md](../../../docs/loading-ux.md)）。
+
+| 区域 | 要点 |
+|------|------|
+| Console 列表 mutation | `ConsolePage` + `usePageBusy` — 禁止仅按钮 loading |
+| Console 多 Card 保存 | `ConsoleSection` 区块 busy |
+| RSC 首屏 | `app/.../loading.tsx` + `ConsolePageLoading` |
+| Chat 切换/删除 | `ChatNavigationFeedback` + `deletingId` / `pendingId` |
+| Chat 侧栏首屏 | `listLoading`，不闪空态 |
+| 文案 | 用户可见 loading 为 **English**（`Saving…`、`Loading models…`） |
+
+Console 组件索引：`docs/features/console/design/console-shell-cn.md` §8。Chat 索引：`chat-integration-cn.md` §6。
+
 ## 待决问题（PRD 相关功能须对焦）
 
 1. LLM 提供商：OpenAI / Anthropic / 多提供商？

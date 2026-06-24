@@ -11,12 +11,16 @@ const PROVIDER_ALIASES: Record<string, LlmProviderId> = {
   bailian: "bailian",
   dashscope: "bailian",
   aliyun: "bailian",
+  deepseek: "deepseek",
+  openai: "openai",
 };
 
 const PROVIDER_DEFAULT_MODELS: Record<LlmProviderId, string> = {
   siliconflow: "deepseek-ai/DeepSeek-OCR",
   nvidia: "deepseek-ai/deepseek-v4-flash",
   bailian: "qwen3.6-plus",
+  deepseek: "deepseek-chat",
+  openai: "gpt-4o-mini",
 };
 
 export function getPublicLlmProviderId(): LlmProviderId {
@@ -59,6 +63,8 @@ const MODEL_OPTIONS: Record<LlmProviderId, ModelOption[]> = {
     { id: "qwen-plus", label: "Qwen Plus" },
     { id: "qwen-turbo", label: "Qwen Turbo" },
   ],
+  deepseek: [{ id: "deepseek-chat", label: "DeepSeek Chat" }],
+  openai: [{ id: "gpt-4o-mini", label: "GPT-4o mini" }],
 };
 
 export function getModelOptionsForProvider(provider: LlmProviderId): ModelOption[] {

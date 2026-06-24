@@ -60,7 +60,9 @@ export function ConsoleShell({ user, nickname, children }: ConsoleShellProps) {
             </Button>
             <span className="font-mono text-sm text-[var(--text-muted)]">Console</span>
           </div>
-          <div className="flex-1 p-6 md:p-8">{children}</div>
+          <div className="flex-1 p-6 md:p-8">
+            <div className="w-full">{children}</div>
+          </div>
         </main>
       </div>
     </div>

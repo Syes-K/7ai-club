@@ -2,7 +2,13 @@ export const dynamic = "force-dynamic";
 
 import { redirect } from "next/navigation";
 import { ChatAppShell } from "@/components/chat/chat-app-shell";
+import {
+  formatModelConfigLabel,
+  PLATFORM_DEFAULT_MODEL_NAME,
+  PLATFORM_DEFAULT_PROVIDER,
+} from "@/lib/constants/model-providers";
 import { getUserProfile } from "@/lib/console/profile";
+import { resolveUserModelForChat } from "@/lib/llm/resolve-user-model";
 import { createClient } from "@/lib/supabase/server";
 
 export default async function ChatLayout({
@@ -20,13 +26,19 @@ export default async function ChatLayout({
   }
 
   const profile = await getUserProfile(user.id).catch(() => null);
+  const resolved = await resolveUserModelForChat(
+    user.id,
+    profile?.preferred_model_config_id ?? null,
+  ).catch(() => null);
 
-  // preferredModel is passed once from layout — not re-fetched on each chat switch.
   return (
     <ChatAppShell
       user={user}
       nickname={profile?.nickname}
-      preferredModel={profile?.preferred_model ?? null}
+      preferredModelLabel={
+        resolved?.label ??
+        formatModelConfigLabel(PLATFORM_DEFAULT_PROVIDER, PLATFORM_DEFAULT_MODEL_NAME)
+      }
     >
       {children}
     </ChatAppShell>

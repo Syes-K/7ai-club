@@ -54,6 +54,7 @@
 
 | 文档 | 范围 | 状态 |
 |------|------|------|
+| [loading-ux-cn.md](../../loading-ux-cn.md) | 全局异步 loading（Chat §5） | iter-05 |
 | [design/core-chat-cn.md](./design/core-chat-cn.md) | iter-01 核心 | 已确认 |
 | [design/landing-cn.md](./design/landing-cn.md) | Landing、Header、C2 | **已实现** |
 | [design/chat-experience-cn.md](./design/chat-experience-cn.md) | DELETE、Clear、MD、侧栏 UX | **已实现** |
@@ -99,6 +100,7 @@
 | 2026-06-16 | v0.3 | iter-02 本地实现完成 |
 | 2026-06-16 | v0.4 | iter-04 混合数据访问设计草稿 |
 | 2026-06-17 | v0.5 | iter-04 实现完成；design/data-access → 已实现 |
+| 2026-06-17 | v0.6 | 引用全局 [loading-ux-cn.md](../../loading-ux-cn.md) |
 
 ---
 

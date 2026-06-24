@@ -7,9 +7,16 @@ import {
   streamText,
   type UIMessage,
 } from "ai";
-import { getChatModel, getLlmConfigError } from "@/lib/llm/provider";
+import {
+  getChatModelForResolvedConfig,
+  getChatLlmConfigError,
+} from "@/lib/llm/provider";
 import { getStreamTextProviderOptions } from "@/lib/llm/stream-options";
 import { classifyLlmError } from "@/lib/llm/errors";
+import {
+  ModelNotReadyError,
+  resolveUserModelForChat,
+} from "@/lib/llm/resolve-user-model";
 import {
   getChatChunkTimeoutMs,
   getLlmTimeoutMs,
@@ -33,7 +40,7 @@ type ChatRequestBody = {
 };
 
 export async function POST(req: Request) {
-  const configError = getLlmConfigError();
+  const configError = getChatLlmConfigError();
   if (configError) {
     console.error("LLM config error:", configError);
     return new Response(configError, { status: 503 });
@@ -86,11 +93,32 @@ export async function POST(req: Request) {
 
   const assistant = await getAssistantForConversation(conversationId);
   const profile = await getUserProfile(user.id);
+
+  let resolved;
+  try {
+    resolved = await resolveUserModelForChat(
+      user.id,
+      profile?.preferred_model_config_id ?? null,
+    );
+  } catch (error) {
+    if (error instanceof ModelNotReadyError) {
+      return new Response(error.message, { status: 502 });
+    }
+    throw error;
+  }
+
+  if (!resolved) {
+    return new Response(
+      "No model configured. Add and test a model in Console → Models.",
+      { status: 503 },
+    );
+  }
+
   const llmTimeoutMs = getLlmTimeoutMs();
 
   try {
     const result = streamText({
-      model: getChatModel(assistant.model, profile?.preferred_model),
+      model: getChatModelForResolvedConfig(resolved),
       system: assistant.system_prompt,
       messages: await convertToModelMessages(uiMessages),
       providerOptions: getStreamTextProviderOptions(),

@@ -5,11 +5,11 @@
 
 > **项目:** 7ai-club  
 > **Feature slug:** `console`  
-> **迭代:** `iter-03`  
+> **迭代:** `iter-03`（已交付）· **`iter-05`（技术设计）**  
 > **路线图阶段:** 1  
 > **关联 PRD:** [01-product-requirements-cn.md](./01-product-requirements-cn.md)  
-> **状态:** 已确认 · **已交付**  
-> **文档版本:** v0.2
+> **状态:** iter-03 已交付 · **iter-05 技术设计草案**  
+> **文档版本:** v0.3
 
 ---
 
@@ -17,9 +17,19 @@
 
 ### 1.1 设计目标
 
-实现 Console（侧栏壳、Profile、Assistants CRUD、占位页），并与聊天集成：每用户多助理、New Chat 选择器、Profile 模型解析、Icon/Opening message、客户端 Chat 壳。
+实现 Console（侧栏壳、Profile、Assistants CRUD、占位页），并与聊天集成。**iter-05** 新增 Models BYOK、Profile 双 Card、Chat 按用户模型配置路由。
 
-### 1.2 架构对齐
+### 1.2 iter-05 架构对齐
+
+| 项 | 选择 |
+|----|------|
+| Models 元数据 | 浏览器 Supabase + RLS（iter-04 分层） |
+| API Key | 加密存 `user_model_config_secrets`；写/测走 Node API + `service_role` |
+| 加密 | AES-256-GCM，`LLM_ENCRYPTION_KEY` env |
+| 平台默认 | 虚拟行 + `BAILIAN_API_KEY`；`preferred_model_config_id NULL` |
+| Chat | `resolveUserModelForChat` → `getChatModelForResolvedConfig` |
+
+### 1.3 iter-03 架构对齐
 
 | 项 | 选择 |
 |----|------|
@@ -35,14 +45,28 @@
 
 | 主题 | 设计子文档 |
 |------|------------|
-| 壳、路由、middleware、占位 | [design/console-shell-cn.md](./design/console-shell-cn.md) |
+| **全局 Loading UX** | [loading-ux-cn.md](../../loading-ux-cn.md) |
+| 壳、路由、middleware、占位 | [design/console-shell-cn.md](./design/console-shell-cn.md) — Console §8 |
 | Profile API + UI | [design/profile-cn.md](./design/profile-cn.md) |
+| **Models BYOK + 测试（iter-05）** | [design/models-cn.md](./design/models-cn.md) |
 | Assistants schema + API + UI | [design/assistants-cn.md](./design/assistants-cn.md) |
 | 聊天选择器 + ChatAppShell | [design/chat-integration-cn.md](./design/chat-integration-cn.md) |
+| **Chat 模型路由（iter-05）** | [mvp-chat/design/chat-model-config-cn.md](../mvp-chat/design/chat-model-config-cn.md) |
 
 ---
 
 ## 3. 数据库摘要
+
+### iter-05 增量
+
+| 表 / 变更 | 用途 |
+|-----------|------|
+| `user_model_configs` | provider、model_name、test_status、api_key_set |
+| `user_model_config_secrets` | 加密 API Key（仅 service_role） |
+| `user_profiles.preferred_model_config_id` | FK；NULL = 平台默认 |
+| 删除 `user_profiles.preferred_model` | 由 FK 替代 |
+
+### iter-03 基线
 
 | 表 / 变更 | 用途 |
 |-----------|------|
@@ -55,6 +79,16 @@
 ---
 
 ## 4. API 摘要
+
+### iter-05 新增（Node）
+
+| 方法 | 路径 | 说明 |
+|------|------|------|
+| POST | `/api/models` | 创建配置 + 加密 Key |
+| PATCH | `/api/models/[id]/key` | 更新 Key |
+| POST | `/api/models/[id]/test` | 连通性测试 |
+
+### iter-03 / iter-04（现状）
 
 | 方法 | 路径 | 说明 |
 |------|------|------|
@@ -88,9 +122,10 @@
 
 ## 6. PRD 验收映射
 
-| AC | 状态 |
-|----|------|
-| AC-01 – AC-12 | ✅ 全部通过 — 见 [changelog/iter-03-cn.md](./changelog/iter-03-cn.md) |
+| AC | 状态 | 设计 |
+|----|------|------|
+| AC-01 – AC-12 | ✅ iter-03 | [changelog/iter-03-cn.md](./changelog/iter-03-cn.md) |
+| AC-40 – AC-48 | 待实现 | [changelog/iter-05-cn.md](./changelog/iter-05-cn.md) · [design/models-cn.md](./design/models-cn.md) |
 
 ---
 
@@ -100,7 +135,8 @@
 |------|------|------|
 | 2026-06-16 | v0.1 | iter-03 初稿 |
 | 2026-06-16 | v0.2 | 已交付；icon/opening、ChatAppShell、session API |
+| 2026-06-17 | v0.3 | iter-05 — Models、Profile 重构、Chat 模型路由 |
 
 ---
 
-*PRD:* [01-product-requirements-cn.md](./01-product-requirements-cn.md) · *变更:* [changelog/iter-03-cn.md](./changelog/iter-03-cn.md)
+*PRD:* [01-product-requirements-cn.md](./01-product-requirements-cn.md) · *变更:* [changelog/iter-05-cn.md](./changelog/iter-05-cn.md)

@@ -14,6 +14,7 @@ interface ChatSidebarProps {
   conversations: ConversationSummary[];
   activeId: string;
   pendingId?: string | null;
+  listLoading?: boolean;
   onSelectConversation: (id: string) => void;
   onNewChat: () => void;
   onDeleteConversation: (id: string) => Promise<void>;
@@ -26,6 +27,7 @@ export function ChatSidebar({
   conversations,
   activeId,
   pendingId = null,
+  listLoading = false,
   onSelectConversation,
   onNewChat,
   onDeleteConversation,
@@ -65,7 +67,12 @@ export function ChatSidebar({
         </div>
 
         <nav className="flex-1 overflow-y-auto p-2">
-          {conversations.length === 0 ? (
+          {listLoading ? (
+            <p className="flex items-center gap-2 px-3 py-4 text-sm text-[var(--text-muted)]">
+              <Loader2 className="h-4 w-4 shrink-0 animate-spin text-[var(--neon-primary)]" />
+              Loading conversations…
+            </p>
+          ) : conversations.length === 0 ? (
             <p className="px-3 py-4 text-sm text-[var(--text-muted)]">
               No conversations yet
             </p>

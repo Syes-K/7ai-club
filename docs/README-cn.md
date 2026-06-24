@@ -44,7 +44,7 @@ docs/
 | 新的独立产品能力（如 RAG、助理 CRUD） | 新 **feature slug** + 新目录 |
 | 同一 feature 内的大块（首页 vs Chat vs LLM） | 同 slug 下 **`prd/`、`design/` 子文档** |
 | 单次迭代改动 | **`changelog/iter-NN`** + 更新相关子文档 |
-| 全局规则变更 | 更新 **`01` / `02` 总纲**（保持 ≤150 行目标） |
+| 全局规则变更 | 更新 **`01` / `02` 总纲**（保持 ≤150 行目标）或 **[loading-ux-cn.md](./loading-ux-cn.md)**（异步 loading） |
 
 ### Agent 读文档约定
 
@@ -57,6 +57,7 @@ docs/
 ```
 docs/
   README.md / README-cn.md
+  loading-ux.md / loading-ux-cn.md   # 全局：异步 loading UX
   research/
   features/<slug>/          # 见上
   iterations/<iter-id>/

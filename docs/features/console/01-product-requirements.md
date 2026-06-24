@@ -5,17 +5,17 @@
 
 > **Project:** 7ai-club  
 > **Feature slug:** `console`  
-> **Iteration:** `iter-03` (see [iter-03 README](../../iterations/iter-03/README.md))  
+> **Iteration:** `iter-03` (delivered) · **`iter-05` (in progress)** — see [iter-05 README](../../iterations/iter-05/README.md)  
 > **Roadmap phase:** 1 — MVP chat + configuration UI  
-> **Status:** Confirmed  
-> **PRD confirmed date:** 2026-06-16  
-> **Document version:** v0.1
+> **Status:** iter-03 delivered · **iter-05 PRD confirmed**  
+> **PRD confirmed date:** 2026-06-16 (iter-03) · 2026-06-17 (iter-05)  
+> **Document version:** v0.2
 
 ---
 
 ## 1. Executive Summary
 
-Signed-in users get a **Console** with left sidebar navigation and multiple pages. iter-03 delivers **Profile** (email, nickName, preferred chat model), **Assistants** (multi-assistant CRUD with system prompt), **New Chat assistant picker**, and placeholder pages for Models / Knowledge Base / MCP. Visual style matches landing **C2 · Electric Ocean**. **User-facing UI: English.**
+Signed-in users get a **Console** with left sidebar navigation. iter-03 delivered **Profile**, **Assistants**, **New Chat assistant picker**, and placeholder pages. **iter-05** ships **Models** (BYOK + test), refactors **Profile** (Account / Preferences dual cards); Knowledge Base / MCP remain placeholders. Visual style matches landing **C2 · Electric Ocean**. **User-facing UI: English.**
 
 Details live in topic PRDs — see [§3 Document map](#3-document-map).
 
@@ -29,7 +29,7 @@ Details live in topic PRDs — see [§3 Document map](#3-document-map).
 |------|------|------|
 | `/console` | Redirect → `/console/profile` | Required |
 | `/console/profile` | Profile | Required |
-| `/console/models` | Model management (placeholder) | Required |
+| `/console/models` | Model management (iter-05) | Required |
 | `/console/assistants` | Assistants | Required |
 | `/console/knowledge` | Knowledge Base (placeholder) | Required |
 | `/console/mcp` | MCP (placeholder) | Required |
@@ -49,15 +49,18 @@ Details live in topic PRDs — see [§3 Document map](#3-document-map).
 | CRUD own assistants | Owner |
 | Delete assistant with bound conversations | Blocked |
 | Platform template assistants (`user_id` null) | Not visible in UI; server seed only |
-| LLM API keys | Server only |
+| LLM API keys | Server only; user keys encrypted in DB (iter-05) |
+| CRUD own model configs | Owner (iter-05) |
 
 ### 2.4 Model Resolution (chat)
 
-Priority: **user `preferred_model`** (Profile) → env `LLM_MODEL` → active provider default. Per-assistant `model` column is **not** user-editable in iter-03.
+**iter-05:** Profile Preferences → **Passed** user model config (provider + model + key) → platform default Bailian `qwen3.6-plus` (env `BAILIAN_API_KEY`). Per-assistant model column **not** user-editable.
+
+**iter-03 (superseded):** `preferred_model` string + env `LLM_PROVIDER` static list.
 
 ### 2.5 Out of Scope (feature-wide)
 
-Knowledge Base upload/RAG, MCP connections, Model provider admin, per-assistant model picker, OAuth, org/multi-tenant, assistant KB/MCP mounting.
+Knowledge Base upload/RAG, MCP connections, Anthropic/Azure/custom OpenAI-compat providers, per-assistant model picker, OAuth, org/multi-tenant, assistant KB/MCP mounting.
 
 ### 2.6 Non-Functional (summary)
 
@@ -73,6 +76,7 @@ Knowledge Base upload/RAG, MCP connections, Model provider admin, per-assistant 
 | F-21 | Profile | [prd/profile.md](./prd/profile.md) | iter-03 |
 | F-22 | Assistants CRUD | [prd/assistants.md](./prd/assistants.md) | iter-03 |
 | F-23 | New Chat assistant picker | [prd/chat-assistant-picker.md](./prd/chat-assistant-picker.md) | iter-03 |
+| F-24 | Model management | [prd/models.md](./prd/models.md) | iter-05 |
 
 ---
 
@@ -80,11 +84,13 @@ Knowledge Base upload/RAG, MCP connections, Model provider admin, per-assistant 
 
 | Doc | Scope |
 |-----|-------|
-| [prd/profile.md](./prd/profile.md) | nickName, preferred model |
+| [prd/profile.md](./prd/profile.md) | Account, Preferences (iter-05 revision) |
+| [prd/models.md](./prd/models.md) | BYOK, test, platform default |
 | [prd/assistants.md](./prd/assistants.md) | Multi-assistant CRUD |
 | [prd/chat-assistant-picker.md](./prd/chat-assistant-picker.md) | New Chat flow |
-| [prd/placeholders.md](./prd/placeholders.md) | Models, KB, MCP stubs |
+| [prd/placeholders.md](./prd/placeholders.md) | KB, MCP stubs (Models moved to F-24) |
 | [changelog/iter-03.md](./changelog/iter-03.md) | iter-03 delta, AC-01–12 |
+| [changelog/iter-05.md](./changelog/iter-05.md) | iter-05 delta, AC-40–48 |
 
 Technical index: [02-technical-design.md](./02-technical-design.md)
 
@@ -95,7 +101,8 @@ Technical index: [02-technical-design.md](./02-technical-design.md)
 | Date | Version | Change |
 |------|---------|--------|
 | 2026-06-16 | v0.1 | Initial PRD — iter-03 |
+| 2026-06-17 | v0.2 | iter-05 — F-24 Models, Profile Preferences refactor |
 
 ---
 
-*Overview: [README.md](./README.md)* · *Iteration: [iter-03](../../iterations/iter-03/README.md)*
+*Overview: [README.md](./README.md)* · *Iteration: [iter-05](../../iterations/iter-05/README.md)*

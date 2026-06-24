@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { User } from "@supabase/supabase-js";
+import { MessageSquare, Settings } from "lucide-react";
 import { landingContainerClass } from "@/lib/constants/landing-layout";
 import { LANDING_COPY } from "@/lib/constants/landing";
 import { UserMenu } from "@/components/layout/user-menu";
@@ -52,8 +53,9 @@ export function SiteHeader({
           {showChatLink && (
             <Link
               href="/chat"
-              className="text-sm text-[var(--text-muted)] hover:text-[var(--neon-primary)] transition-colors cursor-pointer"
+              className="flex items-center gap-1.5 text-sm text-[var(--text-muted)] hover:text-[var(--neon-primary)] transition-colors cursor-pointer"
             >
+              <MessageSquare className="h-4 w-4 shrink-0" aria-hidden />
               Chat
             </Link>
           )}
@@ -61,8 +63,9 @@ export function SiteHeader({
           {user && showConsoleLink && (
             <Link
               href="/console"
-              className="text-sm text-[var(--text-muted)] hover:text-[var(--neon-primary)] transition-colors cursor-pointer"
+              className="flex items-center gap-1.5 text-sm text-[var(--text-muted)] hover:text-[var(--neon-primary)] transition-colors cursor-pointer"
             >
+              <Settings className="h-4 w-4 shrink-0" aria-hidden />
               Console
             </Link>
           )}

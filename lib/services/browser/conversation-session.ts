@@ -5,8 +5,12 @@ import {
   listConversations,
 } from "@/lib/data/browser/conversations";
 import { listMessages } from "@/lib/data/browser/messages";
+import {
+  formatModelConfigLabel,
+  PLATFORM_DEFAULT_MODEL_NAME,
+  PLATFORM_DEFAULT_PROVIDER,
+} from "@/lib/constants/model-providers";
 import type { ConversationSession, ConversationSummary } from "@/lib/data/types";
-import { getDisplayModelLabel } from "@/lib/services/browser/model-label";
 import type { UIMessage } from "ai";
 
 export async function listConversationSummaries(): Promise<ConversationSummary[]> {
@@ -17,7 +21,7 @@ export type SessionLoadContext = {
   /** From sidebar list when switching chats — avoids extra metadata queries. */
   summary?: ConversationSummary | null;
   /** From layout — avoids re-fetching user_profiles on every switch. */
-  preferredModel?: string | null;
+  preferredModelLabel?: string;
 };
 
 function buildSession(
@@ -27,14 +31,14 @@ function buildSession(
     ConversationSummary,
     "assistant_name" | "assistant_icon" | "assistant_model"
   >,
-  preferredModel?: string | null,
+  preferredModelLabel: string,
 ): ConversationSession {
   return {
     conversationId,
     messages,
     assistantName: summary.assistant_name,
     assistantIcon: summary.assistant_icon,
-    modelLabel: getDisplayModelLabel(summary.assistant_model, preferredModel),
+    modelLabel: preferredModelLabel,
   };
 }
 
@@ -42,17 +46,17 @@ export async function loadConversationSession(
   conversationId: string,
   context: SessionLoadContext = {},
 ): Promise<ConversationSession> {
-  const { preferredModel } = context;
+  const preferredModelLabel =
+    context.preferredModelLabel ??
+    formatModelConfigLabel(PLATFORM_DEFAULT_PROVIDER, PLATFORM_DEFAULT_MODEL_NAME);
   const summary =
     context.summary?.id === conversationId ? context.summary : null;
 
   if (summary) {
-    // Sidebar switch: 1 network request — messages only (Network tab: /rest/v1/messages).
     const messages = await listMessages(conversationId);
-    return buildSession(conversationId, messages, summary, preferredModel);
+    return buildSession(conversationId, messages, summary, preferredModelLabel);
   }
 
-  // Cold URL / list not ready: messages + one conversations join (no profile/assistant round-trips).
   const [messages, fetchedSummary] = await Promise.all([
     listMessages(conversationId),
     getConversationSummaryById(conversationId),
@@ -62,7 +66,12 @@ export async function loadConversationSession(
     throw new Error("Conversation not found");
   }
 
-  return buildSession(conversationId, messages, fetchedSummary, preferredModel);
+  return buildSession(
+    conversationId,
+    messages,
+    fetchedSummary,
+    preferredModelLabel,
+  );
 }
 
 export async function createConversation(assistantId: string): Promise<string> {

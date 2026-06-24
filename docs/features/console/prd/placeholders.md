@@ -24,17 +24,17 @@ F-20 — Console layout, sidebar, auth gate, placeholder pages, C2 visual, navig
 
 ### 2.2 Sidebar items (order)
 
-1. Profile  
-2. Models  
-3. Assistants  
-4. Knowledge Base  
-5. MCP  
+1. Profile
+2. Models
+3. Assistants
+4. Knowledge Base
+5. MCP
 
 Active route highlighted (neon accent).
 
 ### 2.3 Auth
 
-- Unauthenticated `/console/*` → `/login?next=<path>`
+- Unauthenticated `/console/`* → `/login?next=<path>`
 - `middleware` matcher includes `/console/:path*`
 
 ### 2.4 Entry points
@@ -46,11 +46,14 @@ Active route highlighted (neon accent).
 
 ## 3. Placeholder Pages
 
-| Route | Title | Body (English) |
-|-------|-------|----------------|
-| `/console/models` | Model management | Short description + **Coming soon** |
+> **iter-05:** `/console/models` moved to [models.md](./models.md) (F-24); **no longer** a placeholder.
+
+
+| Route                | Title          | Body (English)                      |
+| -------------------- | -------------- | ----------------------------------- |
 | `/console/knowledge` | Knowledge Base | Short description + **Coming soon** |
-| `/console/mcp` | MCP | Short description + **Coming soon** |
+| `/console/mcp`       | MCP            | Short description + **Coming soon** |
+
 
 No forms or API calls on placeholders.
 
@@ -64,16 +67,19 @@ Reuse C2 tokens from `app/globals.css` (`--bg-base`, `--neon-primary`, etc.) —
 
 ## 5. Acceptance Criteria
 
-- [ ] **AC-01** — Auth redirect for `/console/*`
-- [ ] **AC-02** — Header + UserMenu Console entry
-- [ ] **AC-03** — Sidebar 5 items, active state, mobile usable
-- [ ] **AC-11** — Placeholder pages render without error
-- [ ] **AC-12** — C2 visual; English copy
+- [x] **AC-01** — Auth redirect for `/console/`*
+- [x] **AC-02** — Header + UserMenu Console entry
+- [x] **AC-03** — Sidebar 5 items, active state, mobile usable
+- [x] **AC-11** — Placeholder pages render without error
+- [x] **AC-12** — C2 visual; English copy
 
 ---
 
 ## 6. Revision History
 
-| Date | Change |
-|------|--------|
+
+| Date       | Change  |
+| ---------- | ------- |
 | 2026-06-16 | Initial |
+
+

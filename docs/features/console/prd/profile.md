@@ -1,66 +1,123 @@
 # Profile
 
 > **English:** [profile.md](./profile.md)  
-> **中文：** [profile-cn.md](./profile-cn.md)  
+> **中文:** [profile-cn.md](./profile-cn.md)  
 > **Index:** [01-product-requirements.md](../01-product-requirements.md)  
-> **Iteration:** iter-03
+> **Iteration:** iter-03 (base) · **iter-05 (Preferences refactor)**
 
 ---
 
 ## 1. Scope
 
-F-21 — `/console/profile`: read-only email, editable nickName, preferred chat model.
+F-21 — `/console/profile`: Account info + Preferences (preferred chat model).
+
+- **iter-03:** Read-only email, nickName, static model dropdown from env `LLM_PROVIDER`
+- **iter-05:** Dual cards, Detail/Edit modes, Preferences limited to **Passed** Models configs
 
 ---
 
 ## 2. User Stories
 
-| ID | Story | Priority |
-|----|-------|----------|
-| US-20 | As a signed-in user, I want to set a nickName so that I am shown by name across the app | P0 |
-| US-21 | As a signed-in user, I want to pick my preferred chat model so that new chats use it | P0 |
+
+| ID    | Story                                                                      | Priority | Iteration |
+| ----- | -------------------------------------------------------------------------- | -------- | --------- |
+| US-20 | As a signed-in user, I want to set a nickName shown across the app         | P0       | iter-03   |
+| US-21 | As a signed-in user, I want to pick my preferred chat model                | P0       | iter-03   |
+| US-33 | As a user, I pick my default chat model from tested configs in Preferences | P0       | iter-05   |
+| US-34 | As a user, Account and Preferences save independently                      | P0       | iter-05   |
+| US-35 | As a user, Profile opens in detail view; Edit enters form mode             | P1       | iter-05   |
+
 
 ---
 
 ## 3. F-21 Profile
 
-### 3.1 Fields
+### 3.1 Page Structure (iter-05)
 
-| Field | Editable | Source |
-|-------|----------|--------|
-| Email | No | Supabase Auth |
-| Nickname | Yes | `user_profiles.nickname` |
-| Preferred model | Yes | `user_profiles.preferred_model` |
+Two vertical **Cards** (English UI):
 
-### 3.2 Nickname display
+```
+┌─ Account ──────────────────────────────┐
+│  View: email, nickname                 │
+│  [Edit] → form → [Save] / [Cancel]     │
+└────────────────────────────────────────┘
 
-When nickname is set, show it in **site header** and **chat** (fallback to email local-part / full email when empty).
+┌─ Preferences ──────────────────────────┐
+│  View: current provider + model label  │
+│  [Edit] → dropdown → [Save] / [Cancel] │
+└────────────────────────────────────────┘
+```
 
-Initials avatar: still derived from email (unchanged).
+- Default: **View (Detail)** mode
+- Each card has independent Edit / Save / Cancel
+- Success: inline **Saved.** or toast (same as iter-03)
 
-### 3.3 Model picker
+### 3.2 Account Card
 
-- Dropdown of **curated models** for the active `LLM_PROVIDER` (3–5 ids, code constant)
-- Save persists to profile; applies to **new** chat LLM calls
-- Label shows model id + provider name (English)
 
-### 3.4 UX
+| Field    | Editable        | Source                   |
+| -------- | --------------- | ------------------------ |
+| Email    | No              | Supabase Auth            |
+| Nickname | Yes (Edit mode) | `user_profiles.nickname` |
 
-- Single **Save** button or per-section save
-- Success toast or inline “Saved”
-- Validation: nickname max 32 chars; trim whitespace; empty → clear nickname
+
+**Nickname display (iter-03, unchanged):** Header + UserMenu on Chat/Console when set; Landing uses compact menu only.
+
+**Validation:** Nickname max 32 chars; trim; empty clears nickname.
+
+### 3.3 Preferences Card (iter-05)
+
+
+| Field           | Editable        | Source                                                         |
+| --------------- | --------------- | -------------------------------------------------------------- |
+| Preferred model | Yes (Edit mode) | Reference to **Passed** Models config (incl. platform default) |
+
+
+**View mode (English):** `{Provider label} — {model name}`
+
+**Edit mode dropdown:**
+
+- Options: only user configs with `test_status = Passed`
+- Format: `{Provider label} — {model name}`
+- Includes platform default Bailian qwen3.6-plus
+- No Passed configs: empty state + link to `/console/models`
+
+**Save:** Persists selected config reference; applies to Chat LLM calls (not per-assistant model column).
+
+### 3.4 iter-03 vs iter-05
+
+
+| iter-03                      | iter-05                         |
+| ---------------------------- | ------------------------------- |
+| Single form, one Save        | Dual cards, independent Save    |
+| Always form mode             | Default Detail, Edit to form    |
+| Static modelOptions from env | Passed configs from Models page |
+
 
 ---
 
 ## 4. Acceptance Criteria
 
-- [ ] **AC-04** — Email read-only; nickName saves and shows in header/chat
-- [ ] **AC-05** — Model preference saves; new conversations use updated model
+### iter-03 (delivered)
+
+- [x] **AC-04** — Email read-only; nickName in header/UserMenu
+- [x] **AC-05** — Model preference saved (iter-03 static list; iter-05 superseded by AC-43/46)
+
+### iter-05
+
+- [x] **AC-43** — Preferences dropdown lists Passed configs only (incl. platform default)
+- [x] **AC-44** — Account and Preferences save independently
+- [x] **AC-45** — Default Detail view; Edit/Cancel behavior
 
 ---
 
 ## 5. Revision History
 
-| Date | Change |
-|------|--------|
-| 2026-06-16 | Initial |
+
+| Date       | Change                                                           |
+| ---------- | ---------------------------------------------------------------- |
+| 2026-06-16 | iter-03 initial                                                  |
+| 2026-06-16 | Delivered iter-03                                                |
+| 2026-06-17 | iter-05 — dual cards, Preferences bound to Models Passed configs |
+
+

@@ -103,6 +103,8 @@ Called from `GET /api/assistants` and optionally before picker.
 - Modal or inline form for Create / Edit
 - Delete uses confirm dialog; show API error on 409
 
+Async mutations (including initial load) use **page-level busy** — [console-shell.md](./console-shell.md) §8.
+
 ---
 
 ## 5. Flow
@@ -143,3 +145,4 @@ flowchart TD
 | Date | Change |
 |------|--------|
 | 2026-06-16 | Initial |
+| 2026-06-17 | §4 — console-shell §8 page-level busy |

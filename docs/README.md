@@ -26,7 +26,7 @@ docs/iterations/<iter-id>/       # Timebox goals & todos (no full PRD copy)
 | New product capability (e.g. RAG) | New **feature slug** |
 | Large area within one feature | **`prd/` + `design/` topic files** |
 | Single iteration changes | **`changelog/iter-NN`** + update topic files |
-| Global rule change | Update **`01` / `02` index** (target ≤150 lines) |
+| Global rule change | Update **`01` / `02` index** (target ≤150 lines) or **[loading-ux.md](./loading-ux.md)** (async loading UX) |
 
 ### Agent reading order
 
