@@ -35,6 +35,10 @@ type WorkflowStepLogRow = {
   label: string;
   status: WorkflowStepStatus;
   summary: string | null;
+  detail: string | null;
+  detail_format: string | null;
+  kind: string | null;
+  sort_order: number | null;
   error_message: string | null;
   started_at: string;
   finished_at: string | null;
@@ -47,6 +51,18 @@ function stepLogToEvent(row: WorkflowStepLogRow): WorkflowStepEvent {
     label: row.label,
     status: row.status,
     summary: row.summary ?? undefined,
+    detail: row.detail ?? undefined,
+    detailFormat:
+      row.detail_format === "plain" || row.detail_format === "markdown"
+        ? row.detail_format
+        : undefined,
+    kind:
+      row.kind === "default" ||
+      row.kind === "reasoning" ||
+      row.kind === "stream"
+        ? row.kind
+        : undefined,
+    order: row.sort_order ?? undefined,
     error: row.error_message ?? undefined,
     startedAt: row.started_at,
     finishedAt: row.finished_at ?? undefined,
@@ -128,6 +144,56 @@ export async function clearActiveStreamId(
   }
 }
 
+function isMissingExtendedStepLogSchema(error: { message?: string }): boolean {
+  const message = error.message?.toLowerCase() ?? "";
+  return (
+    message.includes("schema cache") ||
+    message.includes("could not find") ||
+    message.includes("detail_format") ||
+    message.includes("sort_order")
+  );
+}
+
+function legacyStatusForUpsert(
+  status: WorkflowStepStatus,
+): WorkflowStepStatus {
+  return status === "skipped" ? "success" : status;
+}
+
+function legacySummaryForUpsert(event: WorkflowStepEvent): string | null {
+  if (event.status === "skipped") {
+    return event.summary ?? "Skipped";
+  }
+
+  if (event.detail?.trim()) {
+    const headline = event.summary?.trim() ?? event.label;
+    return `${headline}\n\n${event.detail}`;
+  }
+
+  return event.summary ?? null;
+}
+
+type LegacyWorkflowStepLogRow = {
+  run_id: string;
+  node_id: string;
+  label: string;
+  status: WorkflowStepStatus;
+  summary: string | null;
+  error_message: string | null;
+  started_at: string;
+  finished_at: string | null;
+};
+
+function legacyStepLogToEvent(row: LegacyWorkflowStepLogRow): WorkflowStepEvent {
+  return stepLogToEvent({
+    ...row,
+    detail: null,
+    detail_format: null,
+    kind: null,
+    sort_order: null,
+  });
+}
+
 export async function upsertWorkflowStepLog(
   supabase: SupabaseClient,
   event: WorkflowStepEvent,
@@ -142,13 +208,41 @@ export async function upsertWorkflowStepLog(
         )
       : null;
 
-  const { error } = await supabase.from("workflow_step_logs").upsert(
+  const extendedRow = {
+    run_id: event.runId,
+    node_id: event.nodeId,
+    label: event.label,
+    status: event.status,
+    summary: event.summary ?? null,
+    detail: event.detail ?? null,
+    detail_format: event.detailFormat ?? "markdown",
+    kind: event.kind ?? "default",
+    sort_order: event.order ?? null,
+    error_message: event.error ?? null,
+    started_at: startedAt,
+    finished_at: finishedAt,
+    duration_ms: durationMs,
+  };
+
+  const { error } = await supabase
+    .from("workflow_step_logs")
+    .upsert(extendedRow, { onConflict: "run_id,node_id" });
+
+  if (!error) {
+    return;
+  }
+
+  if (!isMissingExtendedStepLogSchema(error)) {
+    throw new Error(error.message);
+  }
+
+  const { error: legacyError } = await supabase.from("workflow_step_logs").upsert(
     {
       run_id: event.runId,
       node_id: event.nodeId,
       label: event.label,
-      status: event.status,
-      summary: event.summary ?? null,
+      status: legacyStatusForUpsert(event.status),
+      summary: legacySummaryForUpsert(event),
       error_message: event.error ?? null,
       started_at: startedAt,
       finished_at: finishedAt,
@@ -157,8 +251,8 @@ export async function upsertWorkflowStepLog(
     { onConflict: "run_id,node_id" },
   );
 
-  if (error) {
-    throw new Error(error.message);
+  if (legacyError) {
+    throw new Error(legacyError.message);
   }
 }
 
@@ -238,7 +332,23 @@ export async function getStepLogsForRun(
   supabase: SupabaseClient,
   runId: string,
 ): Promise<WorkflowStepEvent[]> {
-  const { data, error } = await supabase
+  const extended = await supabase
+    .from("workflow_step_logs")
+    .select(
+      "run_id, node_id, label, status, summary, detail, detail_format, kind, sort_order, error_message, started_at, finished_at",
+    )
+    .eq("run_id", runId)
+    .order("started_at", { ascending: true });
+
+  if (!extended.error) {
+    return (extended.data as WorkflowStepLogRow[]).map(stepLogToEvent);
+  }
+
+  if (!isMissingExtendedStepLogSchema(extended.error)) {
+    throw new Error(extended.error.message);
+  }
+
+  const legacy = await supabase
     .from("workflow_step_logs")
     .select(
       "run_id, node_id, label, status, summary, error_message, started_at, finished_at",
@@ -246,11 +356,11 @@ export async function getStepLogsForRun(
     .eq("run_id", runId)
     .order("started_at", { ascending: true });
 
-  if (error) {
-    throw new Error(error.message);
+  if (legacy.error) {
+    throw new Error(legacy.error.message);
   }
 
-  return (data as WorkflowStepLogRow[]).map(stepLogToEvent);
+  return (legacy.data as LegacyWorkflowStepLogRow[]).map(legacyStepLogToEvent);
 }
 
 export async function cancelStaleRuns(

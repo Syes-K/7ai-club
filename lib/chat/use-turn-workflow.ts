@@ -6,13 +6,14 @@ import {
   EMPTY_TURN_WORKFLOW_STORE,
   applyAllRestoredWorkflows,
   applyLiveWorkflowStep,
+  applyLiveWorkflowStepDelta,
   beginTurnWorkflow,
   findLastUserMessageId,
   settleLiveTurn,
   type TurnWorkflowStore,
   type WorkflowRestorePayload,
 } from "@/lib/chat/turn-workflow";
-import type { WorkflowStepEvent } from "@/lib/workflow/types";
+import type { WorkflowStepDeltaEvent, WorkflowStepEvent } from "@/lib/workflow/types";
 
 export function useTurnWorkflow(
   conversationId: string,
@@ -57,9 +58,17 @@ export function useTurnWorkflow(
     }
   }, [conversationId]);
 
+  const userMessageCount = options.messages.filter(
+    (message) => message.role === "user",
+  ).length;
+
   useEffect(() => {
+    if (userMessageCount === 0) {
+      return;
+    }
+
     void loadWorkflowState();
-  }, [conversationId, loadWorkflowState]);
+  }, [conversationId, userMessageCount, loadWorkflowState]);
 
   const prevChatStatusRef = useRef(options.chatStatus);
 
@@ -116,6 +125,17 @@ export function useTurnWorkflow(
 
   const handleWorkflowData = useCallback(
     (dataPart: { type: string; data: unknown }) => {
+      if (dataPart.type === "data-workflow-step-delta") {
+        setStore((prev) =>
+          applyLiveWorkflowStepDelta(
+            prev,
+            dataPart.data as WorkflowStepDeltaEvent,
+            findLastUserMessageId(messagesRef.current),
+          ),
+        );
+        return;
+      }
+
       if (dataPart.type !== "data-workflow-step") {
         return;
       }

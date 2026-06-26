@@ -1,12 +1,11 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { generateText } from "ai";
 import { decryptApiKey } from "@/lib/llm/encryption";
+import { probeProviderChatCompletion } from "@/lib/llm/connectivity-test";
 import {
   formatModelConfigLabel,
 } from "@/lib/constants/model-providers";
 import {
   buildPlatformDefaultResolved,
-  getChatModelForResolvedConfig,
   type ResolvedUserModel,
   type UserLlmProviderId,
 } from "@/lib/llm/provider";
@@ -97,18 +96,7 @@ export async function runModelConnectivityTest(
   resolved: ResolvedUserModel,
 ): Promise<{ ok: true; text: string } | { ok: false; error: string }> {
   try {
-    const result = await generateText({
-      model: getChatModelForResolvedConfig(resolved),
-      messages: [{ role: "user", content: "Hi" }],
-      maxOutputTokens: 16,
-      abortSignal: AbortSignal.timeout(30_000),
-    });
-
-    if (!result.text?.trim()) {
-      return { ok: false, error: "Empty response from provider" };
-    }
-
-    return { ok: true, text: result.text.trim() };
+    return await probeProviderChatCompletion(resolved);
   } catch (error) {
     const kind = classifyLlmError(error);
     return {

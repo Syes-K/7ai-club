@@ -1,4 +1,3 @@
-import { createOpenAI } from "@ai-sdk/openai";
 import { createOpenAICompatible } from "@ai-sdk/openai-compatible";
 import type { LanguageModel } from "ai";
 import {
@@ -134,7 +133,8 @@ function createProviderClient(provider: UserLlmProviderId, apiKey: string) {
   const timeoutMs = getLlmTimeoutMs();
   const fetchImpl = createTimeoutFetch(timeoutMs);
 
-  return createOpenAI({
+  return createOpenAICompatible({
+    name: provider,
     baseURL,
     apiKey,
     fetch: fetchImpl,
@@ -145,7 +145,7 @@ function createProviderClient(provider: UserLlmProviderId, apiKey: string) {
 export function getChatModelForResolvedConfig(
   resolved: ResolvedUserModel,
 ): LanguageModel {
-  return createProviderClient(resolved.provider, resolved.apiKey).chat(
+  return createProviderClient(resolved.provider, resolved.apiKey).chatModel(
     resolved.modelName,
   );
 }

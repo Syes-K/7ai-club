@@ -42,7 +42,7 @@ async function getLastCompletedStepCount(
 ): Promise<number> {
   const summaries = page
     .locator("main")
-    .getByRole("button", { name: /\d+ steps completed/ });
+    .getByRole("button", { name: /Workflow · \d+ steps completed/ });
   const count = await summaries.count();
   if (count === 0) {
     return 0;
@@ -83,7 +83,7 @@ test.describe("iter-06/07 workflow orchestration", () => {
 
     const stepsSummary = page
       .locator("main")
-      .getByRole("button", { name: /\d+ steps completed/ })
+      .getByRole("button", { name: /Workflow · \d+ steps completed/ })
       .last();
 
     await stepsSummary.click();

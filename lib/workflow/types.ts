@@ -4,7 +4,10 @@ import type { ResolvedUserModel } from "@/lib/llm/provider";
 import type { DbMessageWithArchive } from "@/lib/data/types";
 import type { MemorySummaryRow, SummarizationPlan } from "@/lib/memory/types";
 
-export type WorkflowStepStatus = "running" | "success" | "error";
+export type WorkflowStepStatus = "running" | "success" | "error" | "skipped";
+
+export type WorkflowStepDetailFormat = "plain" | "markdown";
+export type WorkflowStepKind = "default" | "reasoning" | "stream";
 
 export type WorkflowRunStatus =
   | "running"
@@ -18,9 +21,19 @@ export type WorkflowStepEvent = {
   label: string;
   status: WorkflowStepStatus;
   summary?: string;
+  detail?: string;
+  detailFormat?: WorkflowStepDetailFormat;
+  kind?: WorkflowStepKind;
+  order?: number;
   error?: string;
   startedAt?: string;
   finishedAt?: string;
+};
+
+export type WorkflowStepDeltaEvent = {
+  runId: string;
+  nodeId: string;
+  delta: string;
 };
 
 export type ConversationRow = {
@@ -107,6 +120,7 @@ export const WORKFLOW_NODE_ORDER = [
   "load_context",
   "load_history_summary",
   "resolve_model",
+  "reasoning",
   WORKFLOW_FINAL_NODE_ID,
   ...POST_LLM_NODE_IDS,
 ] as const;

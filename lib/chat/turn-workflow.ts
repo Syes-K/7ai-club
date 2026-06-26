@@ -1,9 +1,9 @@
 import type { UIMessage } from "ai";
-import type { WorkflowRunStatus, WorkflowStepEvent } from "@/lib/workflow/types";
+import { sortSteps } from "@/lib/workflow/sort-steps";
+import type { WorkflowRunStatus, WorkflowStepDeltaEvent, WorkflowStepEvent } from "@/lib/workflow/types";
 import {
   POST_LLM_NODE_IDS,
   WORKFLOW_FINAL_NODE_ID,
-  WORKFLOW_NODE_ORDER,
   mergeWorkflowStep,
 } from "@/lib/workflow/types";
 
@@ -79,7 +79,11 @@ export function isTurnWorkflowSettled(steps: WorkflowStepEvent[]): boolean {
       return false;
     }
 
-    if (step.status !== "success" && step.status !== "error") {
+    if (
+      step.status !== "success" &&
+      step.status !== "error" &&
+      step.status !== "skipped"
+    ) {
       return false;
     }
   }
@@ -88,7 +92,11 @@ export function isTurnWorkflowSettled(steps: WorkflowStepEvent[]): boolean {
 }
 
 function stepTerminalScore(step: WorkflowStepEvent): number {
-  if (step.status === "success" || step.status === "error") {
+  if (
+    step.status === "success" ||
+    step.status === "error" ||
+    step.status === "skipped"
+  ) {
     return 2;
   }
 
@@ -121,7 +129,7 @@ export function mergeWorkflowSteps(
     }
   }
 
-  return [...merged.values()];
+  return sortSteps([...merged.values()]);
 }
 
 export function isMissingSummarizeStep(steps: WorkflowStepEvent[]): boolean {
@@ -149,19 +157,17 @@ export function normalizeTurnSteps(
     ? steps.filter((step) => step.runId === runId)
     : steps;
 
-  const byNodeId = new Map(scoped.map((step) => [step.nodeId, step]));
-  const ordered = WORKFLOW_NODE_ORDER.flatMap((nodeId) => {
-    const step = byNodeId.get(nodeId);
-    return step ? [step] : [];
-  });
+  const sorted = sortSteps(scoped);
 
-  return ordered.map((step, index) => {
+  return sorted.map((step, index) => {
     if (step.status !== "running") {
       return step;
     }
 
-    const hasLaterStep = ordered.slice(index + 1).length > 0;
-    if (!hasLaterStep) {
+    const hasLaterTerminal = sorted
+      .slice(index + 1)
+      .some((laterStep) => stepTerminalScore(laterStep) >= 2);
+    if (!hasLaterTerminal) {
       return step;
     }
 
@@ -249,6 +255,56 @@ export function applyLiveStepEvent(
     steps,
     phase: deriveTurnWorkflowPhase(steps),
   };
+}
+
+export function applyLiveStepDelta(
+  live: TurnWorkflowLiveState,
+  delta: WorkflowStepDeltaEvent,
+): TurnWorkflowLiveState {
+  if (live.runId && live.runId !== delta.runId) {
+    return live;
+  }
+
+  const existing = live.steps.find((step) => step.nodeId === delta.nodeId);
+  const nextDetail = `${existing?.detail ?? ""}${delta.delta}`;
+
+  const event: WorkflowStepEvent = {
+    runId: delta.runId,
+    nodeId: delta.nodeId,
+    label: existing?.label ?? "Reasoning",
+    status: existing?.status ?? "running",
+    detail: nextDetail,
+    detailFormat: existing?.detailFormat ?? "plain",
+    kind: existing?.kind ?? "reasoning",
+    order: existing?.order,
+    startedAt: existing?.startedAt,
+  };
+
+  return applyLiveStepEvent(live, event);
+}
+
+export function applyLiveWorkflowStepDelta(
+  store: TurnWorkflowStore,
+  delta: WorkflowStepDeltaEvent,
+  fallbackUserMessageId?: string | null,
+): TurnWorkflowStore {
+  let live = store.live;
+
+  if (!live && fallbackUserMessageId) {
+    live = {
+      runId: null,
+      userMessageId: fallbackUserMessageId,
+      steps: [],
+      phase: "running",
+    };
+  }
+
+  if (!live) {
+    return store;
+  }
+
+  const updatedLive = applyLiveStepDelta(live, delta);
+  return { ...store, live: updatedLive };
 }
 
 export function applyLiveWorkflowStep(

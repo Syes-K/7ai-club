@@ -4,18 +4,16 @@
 > **中文：** [README-cn.md](./README-cn.md)
 
 > **Feature slug：** `agent-orchestration`  
-> **迭代：** [`iter-06`](../../iterations/iter-06/README-cn.md)（**已发布**）· [`iter-07`](../../iterations/iter-07/README-cn.md)（**已发布**）  
+> **迭代：** [`iter-06`](../../iterations/iter-06/README-cn.md)（**已发布**）· [`iter-07`](../../iterations/iter-07/README-cn.md)（**已发布**）· [`iter-08`](../../iterations/iter-08/README-cn.md)（**已发布**）  
 > **路线图阶段：** 2 — Agent 编排基础（为 RAG / MCP / Skills 铺路）
 
 ---
 
 ## 文档地图（Agent 入口）
 
-**iter-07 已发布 — 先读 changelog §5–§10：**
+**iter-08 已发布 — 验收：** [changelog/iter-08-cn.md](./changelog/iter-08-cn.md) · AC-80–89
 
-1. [01-product-requirements-cn.md](./01-product-requirements-cn.md) — 总纲 §2 全局约定  
-2. [changelog/iter-07-cn.md](./changelog/iter-07-cn.md) — **AC-70–77** · **§7 人工 QA 修复** · **§9 步骤指标说明**  
-3. 子 PRD：[history-summarization-cn.md](./prd/history-summarization-cn.md) · [workflow-orchestration-cn.md](./prd/workflow-orchestration-cn.md)
+**iter-07 已发布 —** [changelog/iter-07-cn.md](./changelog/iter-07-cn.md) · AC-70–77
 
 **iter-06（已发布）：** [changelog/iter-06-cn.md](./changelog/iter-06-cn.md) · AC-50–64
 
@@ -25,6 +23,17 @@
 | 技术 | [02-technical-design-cn.md](./02-technical-design-cn.md) | [design/workflow-orchestration-cn.md](./design/workflow-orchestration-cn.md) · [design/stream-resume-cn.md](./design/stream-resume-cn.md) |
 
 **关联 feature：** [mvp-chat](../mvp-chat/README-cn.md)（Clear chat 扩展）、[console](../console/README-cn.md)（Preferences 摘要配置）
+
+---
+
+## iter-08 范围摘要（已发布）
+
+- **默认折叠步骤面板** — 折叠头当前步骤 / `N steps completed`；chevron affordance  
+- **Registry 架构** — `components/chat/workflow/`；Reasoning 流式；Markdown 摘要 detail  
+- **DB / API** — `workflow_step_logs` 扩展（detail、skipped、kind）；workflow restore  
+- **Reasoning / 模型 Test** — capability 检测；connectivity-test；openai-compatible 客户端  
+- **步骤行 UX** — Reasoning / Summarizing 标题与 chevron 同行；token 统计折叠内展示  
+- **验收** — [changelog/iter-08-cn.md](./changelog/iter-08-cn.md) · AC-80–89 · `iter08-manual-qa.spec.ts`  
 
 ---
 

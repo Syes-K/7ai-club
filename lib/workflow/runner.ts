@@ -1,3 +1,4 @@
+import { buildStepSuccessPayload } from "@/lib/workflow/step-payload";
 import type { WorkflowContext, WorkflowNode, StepEmitter } from "@/lib/workflow/types";
 
 export async function runWorkflow(
@@ -19,15 +20,16 @@ export async function runWorkflow(
     try {
       const summary = await node.run(ctx);
 
-      await emit({
-        runId: ctx.runId,
-        nodeId: node.id,
-        label: node.label,
-        status: "success",
-        summary: summary || undefined,
-        startedAt,
-        finishedAt: new Date().toISOString(),
-      });
+      await emit(
+        buildStepSuccessPayload(node.id, summary, {
+          runId: ctx.runId,
+          nodeId: node.id,
+          label: node.label,
+          status: "success",
+          startedAt,
+          finishedAt: new Date().toISOString(),
+        }),
+      );
     } catch (error) {
       const message =
         error instanceof Error ? error.message : "Workflow step failed";

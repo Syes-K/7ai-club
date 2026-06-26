@@ -5,12 +5,19 @@ import {
 } from "ai";
 import { saveAssistantMessage } from "@/lib/chat/conversations";
 import { classifyLlmError } from "@/lib/llm/errors";
+import {
+  getStreamTextProviderOptions,
+  supportsReasoning,
+} from "@/lib/llm/model-capabilities";
 import { getChatModelForResolvedConfig } from "@/lib/llm/provider";
-import { getStreamTextProviderOptions } from "@/lib/llm/stream-options";
 import {
   getChatChunkTimeoutMs,
   getLlmTimeoutMs,
 } from "@/lib/llm/timeout";
+import {
+  writeWorkflowStepDelta,
+} from "@/lib/workflow/emit-step";
+import { REASONING_NODE_ID } from "@/lib/workflow/node-catalog";
 import type { WorkflowContext, StepEmitter } from "@/lib/workflow/types";
 
 function buildSystemPrompt(ctx: WorkflowContext): string {
@@ -24,6 +31,68 @@ function buildSystemPrompt(ctx: WorkflowContext): string {
   return `${base}\n\n## Conversation memory\n${memory}`;
 }
 
+function getReasoningDelta(part: { type: string; delta?: string; text?: string }): string {
+  if (part.type !== "reasoning-delta" && part.type !== "reasoning") {
+    return "";
+  }
+
+  return part.delta ?? part.text ?? "";
+}
+
+async function streamReasoningDeltas(options: {
+  ctx: WorkflowContext;
+  writer: UIMessageStreamWriter;
+  emit: StepEmitter;
+  stream: AsyncIterable<{ type: string; delta?: string; text?: string }>;
+}): Promise<string> {
+  const { ctx, writer, emit, stream } = options;
+  const startedAt = new Date().toISOString();
+  let reasoningText = "";
+  let reasoningStarted = false;
+
+  for await (const part of stream) {
+    const delta = getReasoningDelta(part);
+    if (!delta) {
+      continue;
+    }
+
+    if (!reasoningStarted) {
+      reasoningStarted = true;
+      await emit({
+        runId: ctx.runId,
+        nodeId: REASONING_NODE_ID,
+        label: "Reasoning",
+        status: "running",
+        startedAt,
+      });
+    }
+
+    reasoningText += delta;
+    writeWorkflowStepDelta(writer, {
+      runId: ctx.runId,
+      nodeId: REASONING_NODE_ID,
+      delta,
+    });
+  }
+
+  if (!reasoningStarted) {
+    return "";
+  }
+
+  await emit({
+    runId: ctx.runId,
+    nodeId: REASONING_NODE_ID,
+    label: "Reasoning",
+    status: "success",
+    detail: reasoningText,
+    detailFormat: "plain",
+    startedAt,
+    finishedAt: new Date().toISOString(),
+  });
+
+  return reasoningText;
+}
+
 export async function runLlmStreamNode(
   ctx: WorkflowContext,
   writer: UIMessageStreamWriter,
@@ -35,6 +104,7 @@ export async function runLlmStreamNode(
 
   const llmMessages = ctx.llmUiMessages ?? ctx.uiMessages;
   const startedAt = new Date().toISOString();
+  const shouldStreamReasoning = supportsReasoning(ctx.resolved);
 
   await emit({
     runId: ctx.runId,
@@ -50,7 +120,7 @@ export async function runLlmStreamNode(
     model: getChatModelForResolvedConfig(ctx.resolved),
     system: buildSystemPrompt(ctx),
     messages: await convertToModelMessages(llmMessages),
-    providerOptions: getStreamTextProviderOptions(),
+    providerOptions: getStreamTextProviderOptions(ctx.resolved),
     abortSignal: AbortSignal.timeout(llmTimeoutMs),
     timeout: { totalMs: llmTimeoutMs, chunkMs: getChatChunkTimeoutMs() },
     onError: ({ error }) => {
@@ -60,6 +130,16 @@ export async function runLlmStreamNode(
       });
     },
   });
+
+  const reasoningPromise =
+    shouldStreamReasoning
+      ? streamReasoningDeltas({
+          ctx,
+          writer,
+          emit,
+          stream: result.fullStream,
+        })
+      : Promise.resolve("");
 
   let resolveLlmComplete!: () => void;
   let rejectLlmComplete!: (error: unknown) => void;
@@ -72,8 +152,11 @@ export async function runLlmStreamNode(
     result.toUIMessageStream({
       originalMessages: ctx.uiMessages,
       sendStart: false,
+      sendReasoning: false,
       onFinish: async ({ responseMessage }) => {
         try {
+          await reasoningPromise;
+
           await saveAssistantMessage(
             ctx.conversationId,
             responseMessage,

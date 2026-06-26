@@ -4,18 +4,16 @@
 > **中文:** [README-cn.md](./README-cn.md)
 
 > **Feature slug:** `agent-orchestration`  
-> **Iteration:** [`iter-06`](../../iterations/iter-06/README.md) (**Released**) · [`iter-07`](../../iterations/iter-07/README.md) (**Released**)  
+> **Iteration:** [`iter-06`](../../iterations/iter-06/README.md) (**Released**) · [`iter-07`](../../iterations/iter-07/README.md) (**Released**) · [`iter-08`](../../iterations/iter-08/README.md) (**Released**)  
 > **Roadmap phase:** 2 — Agent orchestration foundation (enables RAG / MCP / Skills)
 
 ---
 
 ## Document map (agent entry)
 
-**iter-07 released — read changelog §5–§10:**
+**iter-08 released:** [changelog/iter-08.md](./changelog/iter-08.md) · AC-80–89
 
-1. [01-product-requirements.md](./01-product-requirements.md)  
-2. [changelog/iter-07.md](./changelog/iter-07.md) — AC-70–77 · manual QA fixes · step metrics  
-3. Sub-PRD: [history-summarization.md](./prd/history-summarization.md)
+**iter-07 released:** [changelog/iter-07.md](./changelog/iter-07.md) · AC-70–77
 
 **iter-06 (released):** [changelog/iter-06.md](./changelog/iter-06.md) · AC-50–64
 
@@ -25,6 +23,12 @@
 | Technical | [02-technical-design.md](./02-technical-design.md) | [design/workflow-orchestration.md](./design/workflow-orchestration.md) · [design/stream-resume.md](./design/stream-resume.md) |
 
 **Related features:** [mvp-chat](../mvp-chat/README.md) (Clear chat extension), [console](../console/README.md) (Preferences summarization)
+
+---
+
+## iter-08 scope summary (released)
+
+Default-collapsed panel; registry + Reasoning stream; Markdown summary detail; DB/API extensions; inline step chevrons (B-04). **Released** 2026-06-26. See [changelog/iter-08.md](./changelog/iter-08.md).
 
 ---
 

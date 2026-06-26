@@ -5,11 +5,11 @@
 
 > **项目：** 7ai-club  
 > **Feature slug：** `agent-orchestration`  
-> **迭代：** `iter-06`（已发布）· **`iter-07`（已发布）** — 见 [iter-07 README](../../iterations/iter-07/README-cn.md)  
+> **迭代：** `iter-06`（已发布）· `iter-07`（已发布）· **`iter-08`（进行中）** — 见 [iter-08 README](../../iterations/iter-08/README-cn.md)  
 > **路线图阶段：** 2 — Agent 编排基础  
-> **状态：** **PRD 已确认**（iter-06 + iter-07）· iter-07 **已发布**（2026-06-26）  
-> **PRD 确认日期：** iter-06 · 2026-06-24 · iter-07 · 2026-06-25  
-> **文档版本：** v0.2
+> **状态：** **PRD 已确认**（iter-06 + iter-07 + iter-08）· iter-07 **已发布**（2026-06-26）  
+> **PRD 确认日期：** iter-06 · 2026-06-24 · iter-07 · 2026-06-25 · iter-08 · 2026-06-26  
+> **文档版本：** v0.3
 
 ---
 
@@ -79,6 +79,13 @@
 | F-60 | 历史对话滚动摘要 | [prd/history-summarization-cn.md](./prd/history-summarization-cn.md) | iter-07 |
 | F-61 | 摘要 Workflow Nodes | [prd/history-summarization-cn.md](./prd/history-summarization-cn.md) | iter-07 |
 | F-62 | 摘要步骤 inline 展开 | [prd/history-summarization-cn.md](./prd/history-summarization-cn.md) | iter-07 |
+| F-63 | 默认折叠步骤面板 | [prd/workflow-step-ui-cn.md](./prd/workflow-step-ui-cn.md) | iter-08 |
+| F-64 | 摘要 Markdown 弱化展示 | [prd/workflow-step-ui-cn.md](./prd/workflow-step-ui-cn.md) | iter-08 |
+| F-65 | Reasoning 流式节点 | [prd/workflow-step-ui-cn.md](./prd/workflow-step-ui-cn.md) | iter-08 |
+| F-66 | 前端组件 Registry 分层 | [prd/workflow-step-ui-cn.md](./prd/workflow-step-ui-cn.md) | iter-08 |
+| F-67 | 动态节点协议 | [prd/workflow-step-ui-cn.md](./prd/workflow-step-ui-cn.md) | iter-08 |
+| F-68 | 三态展示统一 | [prd/workflow-step-ui-cn.md](./prd/workflow-step-ui-cn.md) | iter-08 |
+| F-69 | API & DB 步骤 schema 整理 | [prd/workflow-step-ui-cn.md](./prd/workflow-step-ui-cn.md) | iter-08 |
 
 ---
 
@@ -91,6 +98,7 @@
 | [prd/workflow-orchestration-cn.md](./prd/workflow-orchestration-cn.md) | Runner、Node、步骤事件、DB 日志、Chat UI |
 | [prd/stream-resume-cn.md](./prd/stream-resume-cn.md) | Upstash、resumable stream、刷新恢复、Redis 清理 |
 | [prd/history-summarization-cn.md](./prd/history-summarization-cn.md) | 滚动摘要、Preferences 策略、摘要 Nodes、Clear chat |
+| [prd/workflow-step-ui-cn.md](./prd/workflow-step-ui-cn.md) | 步骤 UI 重构、Registry、Reasoning、动态协议 |
 
 ### 3.2 迭代变更（`changelog/`）
 
@@ -98,6 +106,7 @@
 |------|------|
 | [changelog/iter-06-cn.md](./changelog/iter-06-cn.md) | iter-06 必读 + AC 索引 |
 | [changelog/iter-07-cn.md](./changelog/iter-07-cn.md) | iter-07 必读 + AC-70–77 |
+| [changelog/iter-08-cn.md](./changelog/iter-08-cn.md) | iter-08 必读 + AC-80–89 |
 
 ---
 
@@ -108,6 +117,7 @@
 | 2026-06-24 | v0.1 | iter-06 初稿 — 用户确认 PRD |
 | 2026-06-25 | v0.2 | iter-07 — 历史对话摘要 PRD 已确认 |
 | 2026-06-25 | v0.3 | iter-07 编码完成；变更见 [changelog/iter-07-cn.md](./changelog/iter-07-cn.md) §6–§10 |
+| 2026-06-26 | v0.4 | iter-08 — Workflow 步骤 UI 重构 PRD 已确认 |
 
 ---
 

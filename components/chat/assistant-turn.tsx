@@ -4,10 +4,8 @@ import { useEffect, useState } from "react";
 import type { UIMessage } from "ai";
 import { AssistantAvatar } from "@/components/chat/assistant-avatar";
 import { MarkdownContent } from "@/components/chat/markdown-content";
-import {
-  WorkflowStepList,
-  WorkflowStepSummary,
-} from "@/components/chat/workflow-step-timeline";
+import { WorkflowStepPanel } from "@/components/chat/workflow/workflow-step-panel";
+import { REASONING_NODE_ID } from "@/lib/workflow/node-catalog";
 import type { WorkflowStepEvent } from "@/lib/workflow/types";
 import { cn } from "@/lib/utils";
 
@@ -44,6 +42,22 @@ function CompactThinking() {
   );
 }
 
+function resolveStreamingNodeId(
+  steps: WorkflowStepEvent[],
+  isStreaming: boolean,
+): string | null {
+  if (!isStreaming) {
+    return null;
+  }
+
+  const reasoningStep = steps.find((step) => step.nodeId === REASONING_NODE_ID);
+  if (reasoningStep?.status === "running") {
+    return REASONING_NODE_ID;
+  }
+
+  return null;
+}
+
 interface AssistantTurnProps {
   message?: UIMessage;
   steps: WorkflowStepEvent[];
@@ -64,16 +78,13 @@ export function AssistantTurn({
   const text = message ? getMessageText(message) : "";
   const hasText = text.trim().length > 0;
   const hasSteps = steps.length > 0;
-  const showStepsExpanded = hasSteps && phase === "active";
-  const showStepsCollapsed = hasSteps && phase === "completed";
   const useMarkdown = !isStreaming;
 
   const showThinkingRow = showThinking && !hasSteps && !hasText;
   const showBody = hasText;
-  const showDivider =
-    (showStepsExpanded || showStepsCollapsed) && showBody;
+  const showDivider = hasSteps && showBody;
 
-  if (!showStepsExpanded && !showStepsCollapsed && !showBody && !showThinkingRow) {
+  if (!hasSteps && !showBody && !showThinkingRow) {
     return null;
   }
 
@@ -86,14 +97,13 @@ export function AssistantTurn({
           "border border-[var(--neon-primary)]/20 bg-[var(--bg-elevated)]/80 text-[var(--text-primary)]",
         )}
       >
-        {showStepsExpanded ? (
-          <div role="status" aria-live="polite">
-            <WorkflowStepList steps={steps} />
-          </div>
-        ) : null}
-
-        {showStepsCollapsed ? (
-          <WorkflowStepSummary steps={steps} />
+        {hasSteps ? (
+          <WorkflowStepPanel
+            steps={steps}
+            isSettled={phase === "completed"}
+            defaultExpanded={false}
+            streamingNodeId={resolveStreamingNodeId(steps, isStreaming)}
+          />
         ) : null}
 
         {showThinkingRow ? <CompactThinking /> : null}

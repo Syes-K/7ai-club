@@ -5,11 +5,11 @@
 
 > **Project:** 7ai-club  
 > **Feature slug:** `agent-orchestration`  
-> **Iteration:** `iter-06` (released) · **`iter-07` (released)** — see [iter-07 README](../../iterations/iter-07/README.md)  
+> **Iteration:** `iter-06` (released) · `iter-07` (released) · **`iter-08` (in progress)** — see [iter-08 README](../../iterations/iter-08/README.md)  
 > **Roadmap phase:** 2 — Agent orchestration foundation  
-> **Status:** **PRD confirmed** (iter-06 + iter-07) · iter-07 **released** (2026-06-26)  
-> **PRD confirmed:** iter-06 · 2026-06-24 · iter-07 · 2026-06-25  
-> **Doc version:** v0.2
+> **Status:** **PRD confirmed** (iter-06 + iter-07 + iter-08) · iter-07 **released** (2026-06-26)  
+> **PRD confirmed:** iter-06 · 2026-06-24 · iter-07 · 2026-06-25 · iter-08 · 2026-06-26  
+> **Doc version:** v0.3
 
 ---
 
@@ -79,6 +79,13 @@ On top of MVP chat (iter-05), introduce an **extensible Workflow orchestration l
 | F-60 | Conversation rolling summary | [prd/history-summarization.md](./prd/history-summarization.md) | iter-07 |
 | F-61 | Summary workflow nodes | [prd/history-summarization.md](./prd/history-summarization.md) | iter-07 |
 | F-62 | Inline step expand for summary | [prd/history-summarization.md](./prd/history-summarization.md) | iter-07 |
+| F-63 | Default-collapsed step panel | [prd/workflow-step-ui.md](./prd/workflow-step-ui.md) | iter-08 |
+| F-64 | Muted Markdown summary detail | [prd/workflow-step-ui.md](./prd/workflow-step-ui.md) | iter-08 |
+| F-65 | Reasoning streaming node | [prd/workflow-step-ui.md](./prd/workflow-step-ui.md) | iter-08 |
+| F-66 | Frontend component registry | [prd/workflow-step-ui.md](./prd/workflow-step-ui.md) | iter-08 |
+| F-67 | Dynamic node protocol | [prd/workflow-step-ui.md](./prd/workflow-step-ui.md) | iter-08 |
+| F-68 | Unified live / refresh / history display | [prd/workflow-step-ui.md](./prd/workflow-step-ui.md) | iter-08 |
+| F-69 | API & DB step schema cleanup | [prd/workflow-step-ui.md](./prd/workflow-step-ui.md) | iter-08 |
 
 ---
 
@@ -95,6 +102,7 @@ See [01-product-requirements-cn.md](./01-product-requirements-cn.md) §3 for the
 | 2026-06-24 | v0.1 | iter-06 initial — PRD confirmed |
 | 2026-06-25 | v0.2 | iter-07 — history summarization PRD confirmed |
 | 2026-06-25 | v0.3 | iter-07 implemented; see [changelog/iter-07-cn.md](./changelog/iter-07-cn.md) §6–§10 |
+| 2026-06-26 | v0.4 | iter-08 — workflow step UI refactor PRD confirmed |
 
 ---
 

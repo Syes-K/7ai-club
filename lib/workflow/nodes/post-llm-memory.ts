@@ -2,6 +2,7 @@ import { loadDbMessagesWithArchive } from "@/lib/memory/persistence";
 import { runWorkflow } from "@/lib/workflow/runner";
 import { evaluateSummarizationNode } from "@/lib/workflow/nodes/evaluate-summarization";
 import { executeSummarizeHistory } from "@/lib/workflow/nodes/summarize-history";
+import { buildStepSuccessPayload } from "@/lib/workflow/step-payload";
 import type { StepEmitter, WorkflowContext } from "@/lib/workflow/types";
 
 async function runSummarizeHistoryStep(
@@ -9,39 +10,55 @@ async function runSummarizeHistoryStep(
   emit: StepEmitter,
 ): Promise<void> {
   const startedAt = new Date().toISOString();
+  const nodeId = "summarize_history";
+  const label = "Summarizing history";
 
   await emit({
     runId: ctx.runId,
-    nodeId: "summarize_history",
-    label: "Summarizing history",
+    nodeId,
+    label,
     status: "running",
     startedAt,
   });
 
   try {
     const plan = ctx.summarizationPlan;
-    const summary =
-      plan?.shouldSummarize && plan.archiveIds.length > 0
-        ? await executeSummarizeHistory(ctx)
-        : "Skipped";
+    const shouldRun =
+      plan?.shouldSummarize === true && plan.archiveIds.length > 0;
 
-    await emit({
-      runId: ctx.runId,
-      nodeId: "summarize_history",
-      label: "Summarizing history",
-      status: "success",
-      summary,
-      startedAt,
-      finishedAt: new Date().toISOString(),
-    });
+    if (!shouldRun) {
+      await emit({
+        runId: ctx.runId,
+        nodeId,
+        label,
+        status: "skipped",
+        summary: "Skipped",
+        startedAt,
+        finishedAt: new Date().toISOString(),
+      });
+      return;
+    }
+
+    const rawSummary = await executeSummarizeHistory(ctx);
+
+    await emit(
+      buildStepSuccessPayload(nodeId, rawSummary, {
+        runId: ctx.runId,
+        nodeId,
+        label,
+        status: "success",
+        startedAt,
+        finishedAt: new Date().toISOString(),
+      }),
+    );
   } catch (error) {
     const message =
       error instanceof Error ? error.message : "Summarization failed";
 
     await emit({
       runId: ctx.runId,
-      nodeId: "summarize_history",
-      label: "Summarizing history",
+      nodeId,
+      label,
       status: "error",
       error: message,
       startedAt,
