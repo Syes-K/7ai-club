@@ -1,6 +1,8 @@
 import type { UIMessage } from "ai";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { ResolvedUserModel } from "@/lib/llm/provider";
+import type { DbMessageWithArchive } from "@/lib/data/types";
+import type { MemorySummaryRow, SummarizationPlan } from "@/lib/memory/types";
 
 export type WorkflowStepStatus = "running" | "success" | "error";
 
@@ -38,6 +40,12 @@ export type AssistantRow = {
 
 export type ProfileRow = {
   preferred_model_config_id: string | null;
+  summarization_enabled: boolean;
+  summary_trigger_turns: number;
+  summary_retain_turns: number;
+  summary_trigger_tokens: number;
+  summary_retain_tokens: number;
+  summary_model_config_id: string | null;
 };
 
 export type WorkflowContext = {
@@ -48,9 +56,13 @@ export type WorkflowContext = {
   userText: string;
   supabase: SupabaseClient;
   conversation?: ConversationRow;
+  dbMessages?: DbMessageWithArchive[];
   uiMessages?: UIMessage[];
+  llmUiMessages?: UIMessage[];
   assistant?: AssistantRow;
   profile?: ProfileRow | null;
+  memorySummary?: MemorySummaryRow | null;
+  summarizationPlan?: SummarizationPlan;
   resolved?: ResolvedUserModel;
 };
 
@@ -85,9 +97,16 @@ export function mergeWorkflowStep(
 
 export const WORKFLOW_FINAL_NODE_ID = "llm_stream";
 
+export const POST_LLM_NODE_IDS = [
+  "evaluate_summarization",
+  "summarize_history",
+] as const;
+
 export const WORKFLOW_NODE_ORDER = [
   "validate_request",
   "load_context",
+  "load_history_summary",
   "resolve_model",
   WORKFLOW_FINAL_NODE_ID,
+  ...POST_LLM_NODE_IDS,
 ] as const;

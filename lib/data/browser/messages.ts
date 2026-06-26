@@ -41,6 +41,13 @@ export async function clearConversationMessages(
     return false;
   }
 
+  const { error: memoryError } = await supabase
+    .from("conversation_memory_summaries")
+    .delete()
+    .eq("conversation_id", conversationId);
+
+  throwIfError(memoryError);
+
   const { error: deleteError } = await supabase
     .from("messages")
     .delete()

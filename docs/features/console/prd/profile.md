@@ -26,6 +26,7 @@ F-21 — `/console/profile`: Account info + Preferences (preferred chat model).
 | US-33 | As a user, I pick my default chat model from tested configs in Preferences | P0       | iter-05   |
 | US-34 | As a user, Account and Preferences save independently                      | P0       | iter-05   |
 | US-35 | As a user, Profile opens in detail view; Edit enters form mode             | P1       | iter-05   |
+| US-36 | As a user, I configure conversation summarization and summary model in Preferences | P0 | iter-07 |
 
 
 ---
@@ -84,7 +85,24 @@ Two vertical **Cards** (English UI):
 
 **Save:** Persists selected config reference; applies to Chat LLM calls (not per-assistant model column).
 
-### 3.4 iter-03 vs iter-05
+### 3.4 Conversation memory (iter-07)
+
+Add a **Conversation memory** section inside the Preferences card (English UI). Same card as chat model; **independent Save** (iter-05 pattern).
+
+| Field | Edit control | Default |
+|-------|--------------|---------|
+| Enable summarization | Toggle | On |
+| Trigger turn count | Number | 20 |
+| Retain turn count | Number | 6 |
+| Trigger token count | Number | 8000 |
+| Retain token count | Number | 4000 |
+| Summary model | Dropdown | Same as chat model (+ Passed configs) |
+
+**Validation:** `retain_turns ≤ trigger_turns`; `retain_tokens ≤ trigger_tokens`; numeric fields disabled when toggle Off.
+
+See [agent-orchestration/prd/history-summarization.md](../../agent-orchestration/prd/history-summarization.md).
+
+### 3.5 iter-03 vs iter-05
 
 
 | iter-03                      | iter-05                         |
@@ -109,6 +127,10 @@ Two vertical **Cards** (English UI):
 - [x] **AC-44** — Account and Preferences save independently
 - [x] **AC-45** — Default Detail view; Edit/Cancel behavior
 
+### iter-07
+
+- [ ] **AC-70** — Conversation memory fields editable, validated, persisted (see agent-orchestration changelog)
+
 ---
 
 ## 5. Revision History
@@ -119,5 +141,6 @@ Two vertical **Cards** (English UI):
 | 2026-06-16 | iter-03 initial                                                  |
 | 2026-06-16 | Delivered iter-03                                                |
 | 2026-06-17 | iter-05 — dual cards, Preferences bound to Models Passed configs |
+| 2026-06-25 | iter-07 — Conversation memory summarization settings in Preferences |
 
 

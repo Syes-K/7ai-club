@@ -1,6 +1,7 @@
 import type { UIMessage } from "ai";
 import type { WorkflowRunStatus, WorkflowStepEvent } from "@/lib/workflow/types";
 import {
+  POST_LLM_NODE_IDS,
   WORKFLOW_FINAL_NODE_ID,
   WORKFLOW_NODE_ORDER,
   mergeWorkflowStep,
@@ -32,9 +33,13 @@ export type TurnStepsView = {
   isLive: boolean;
 };
 
-export type WorkflowRestorePayload = {
-  run: { id: string; status: WorkflowRunStatus } | null;
+export type WorkflowRunPayload = {
+  run: { id: string; status: WorkflowRunStatus; startedAt?: string };
   steps: WorkflowStepEvent[];
+};
+
+export type WorkflowRestorePayload = {
+  runs: Array<WorkflowRunPayload & { userMessageId: string | null }>;
 };
 
 export const EMPTY_TURN_WORKFLOW_STORE: TurnWorkflowStore = {
@@ -56,11 +61,80 @@ export function isTurnWorkflowSettled(steps: WorkflowStepEvent[]): boolean {
   }
 
   const llmStep = steps.find((step) => step.nodeId === WORKFLOW_FINAL_NODE_ID);
-  if (llmStep) {
-    return llmStep.status === "success" || llmStep.status === "error";
+  if (!llmStep) {
+    return steps.some((step) => step.status === "error");
   }
 
-  return steps.some((step) => step.status === "error");
+  if (llmStep.status === "error") {
+    return true;
+  }
+
+  if (llmStep.status !== "success") {
+    return false;
+  }
+
+  for (const nodeId of POST_LLM_NODE_IDS) {
+    const step = steps.find((item) => item.nodeId === nodeId);
+    if (!step) {
+      return false;
+    }
+
+    if (step.status !== "success" && step.status !== "error") {
+      return false;
+    }
+  }
+
+  return true;
+}
+
+function stepTerminalScore(step: WorkflowStepEvent): number {
+  if (step.status === "success" || step.status === "error") {
+    return 2;
+  }
+
+  if (step.status === "running") {
+    return 1;
+  }
+
+  return 0;
+}
+
+export function mergeWorkflowSteps(
+  localSteps: WorkflowStepEvent[],
+  remoteSteps: WorkflowStepEvent[],
+): WorkflowStepEvent[] {
+  const merged = new Map<string, WorkflowStepEvent>();
+
+  for (const step of localSteps) {
+    merged.set(step.nodeId, step);
+  }
+
+  for (const step of remoteSteps) {
+    const existing = merged.get(step.nodeId);
+    if (!existing) {
+      merged.set(step.nodeId, step);
+      continue;
+    }
+
+    if (stepTerminalScore(step) >= stepTerminalScore(existing)) {
+      merged.set(step.nodeId, { ...existing, ...step });
+    }
+  }
+
+  return [...merged.values()];
+}
+
+export function isMissingSummarizeStep(steps: WorkflowStepEvent[]): boolean {
+  const evaluate = steps.find(
+    (step) => step.nodeId === "evaluate_summarization",
+  );
+  const summarize = steps.find((step) => step.nodeId === "summarize_history");
+
+  if (!evaluate || evaluate.status !== "success") {
+    return false;
+  }
+
+  return summarize == null;
 }
 
 export function normalizeTurnSteps(
@@ -227,19 +301,55 @@ export function settleLiveTurn(store: TurnWorkflowStore): TurnWorkflowStore {
   };
 }
 
-function isLastTurnComplete(messages: UIMessage[]): boolean {
-  const lastUserId = findLastUserMessageId(messages);
-  if (!lastUserId) {
-    return false;
+function hasAssistantReplyForUserMessage(
+  messages: UIMessage[],
+  userMessageId: string,
+): boolean {
+  let awaitingAssistant = false;
+
+  for (const message of messages) {
+    if (message.role === "user" && message.id === userMessageId) {
+      awaitingAssistant = true;
+      continue;
+    }
+
+    if (awaitingAssistant && message.role === "assistant") {
+      return true;
+    }
   }
 
-  const lastMessage = messages.at(-1);
-  return lastMessage?.role === "assistant";
+  return false;
+}
+
+export function applyAllRestoredWorkflows(
+  store: TurnWorkflowStore,
+  payload: WorkflowRestorePayload,
+  messages: UIMessage[],
+): TurnWorkflowStore {
+  if (payload.runs.length === 0) {
+    return store;
+  }
+
+  return payload.runs.reduce(
+    (next, entry) => {
+      if (!entry.userMessageId || entry.steps.length === 0) {
+        return next;
+      }
+
+      return applyRestoredWorkflow(
+        next,
+        { run: entry.run, steps: entry.steps },
+        entry.userMessageId,
+        messages,
+      );
+    },
+    store,
+  );
 }
 
 export function applyRestoredWorkflow(
   store: TurnWorkflowStore,
-  payload: WorkflowRestorePayload,
+  payload: WorkflowRunPayload,
   userMessageId: string,
   messages: UIMessage[],
 ): TurnWorkflowStore {
@@ -247,7 +357,6 @@ export function applyRestoredWorkflow(
     return store;
   }
 
-  const steps = normalizeTurnSteps(payload.steps);
   const { status, id: runId } = payload.run;
 
   if (status === "running") {
@@ -255,24 +364,60 @@ export function applyRestoredWorkflow(
       return store;
     }
 
+    const restoredSteps = normalizeTurnSteps(payload.steps);
+    const mergedSteps =
+      store.live?.runId === runId && store.live.steps.length > 0
+        ? normalizeTurnSteps(
+            mergeWorkflowSteps(store.live.steps, restoredSteps),
+          )
+        : restoredSteps;
+
     return {
       ...store,
       live: {
         runId,
         userMessageId,
-        steps,
-        phase: deriveTurnWorkflowPhase(steps),
+        steps: mergedSteps,
+        phase: deriveTurnWorkflowPhase(mergedSteps),
       },
     };
   }
 
   if (
     (status === "completed" || status === "error") &&
-    isLastTurnComplete(messages)
+    hasAssistantReplyForUserMessage(messages, userMessageId)
   ) {
-    if (store.completed[userMessageId]) {
-      return store;
+    const restoredSteps = normalizeTurnSteps(payload.steps);
+    const existingCompleted = store.completed[userMessageId];
+
+    if (existingCompleted?.runId === runId) {
+      const mergedSteps = normalizeTurnSteps(
+        mergeWorkflowSteps(existingCompleted.steps, restoredSteps),
+      );
+
+      return {
+        ...store,
+        completed: {
+          ...store.completed,
+          [userMessageId]: {
+            ...existingCompleted,
+            steps: mergedSteps,
+          },
+        },
+        live:
+          store.live?.userMessageId === userMessageId &&
+          deriveTurnWorkflowPhase(mergedSteps) === "settled"
+            ? null
+            : store.live,
+      };
     }
+
+    const mergedSteps =
+      store.live?.runId === runId && store.live.userMessageId === userMessageId
+        ? normalizeTurnSteps(
+            mergeWorkflowSteps(store.live.steps, restoredSteps),
+          )
+        : restoredSteps;
 
     return {
       ...store,
@@ -281,9 +426,14 @@ export function applyRestoredWorkflow(
         [userMessageId]: {
           userMessageId,
           runId,
-          steps,
+          steps: mergedSteps,
         },
       },
+      live:
+        store.live?.userMessageId === userMessageId &&
+        deriveTurnWorkflowPhase(mergedSteps) === "settled"
+          ? null
+          : store.live,
     };
   }
 
@@ -294,15 +444,23 @@ export function getTurnStepsView(
   store: TurnWorkflowStore,
   userMessageId: string,
 ): TurnStepsView | null {
+  const completed = store.completed[userMessageId];
+
   if (store.live?.userMessageId === userMessageId) {
+    const steps =
+      completed && completed.runId === store.live.runId
+        ? normalizeTurnSteps(
+            mergeWorkflowSteps(completed.steps, store.live.steps),
+          )
+        : store.live.steps;
+
     return {
-      steps: store.live.steps,
-      phase: store.live.phase,
+      steps,
+      phase: deriveTurnWorkflowPhase(steps),
       isLive: true,
     };
   }
 
-  const completed = store.completed[userMessageId];
   if (completed) {
     return {
       steps: completed.steps,

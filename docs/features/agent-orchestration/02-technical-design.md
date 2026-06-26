@@ -6,33 +6,45 @@
 > **Project:** 7ai-club  
 > **Feature slug:** `agent-orchestration`  
 > **Roadmap phase:** 2 — Agent orchestration foundation  
-> **PRD:** [01-product-requirements.md](./01-product-requirements.md)  
-> **Status:** iter-06 **draft — pending confirmation**  
-> **Date:** 2026-06-24  
-> **Version:** v0.1
+> **Related PRD:** [01-product-requirements.md](./01-product-requirements.md)  
+> **Status:** iter-06 **released** · iter-07 **released** (2026-06-26)  
+> **Design date:** iter-06 · 2026-06-24 · iter-07 · 2026-06-25  
+> **Doc version:** v0.4
 
 ---
 
-## 1. Summary
+## 1. Overview
 
-iter-06 introduces **WorkflowRunner** on `POST /api/chat` (Vercel AI SDK `createUIMessageStream`), four linear nodes, `data-workflow-step` events, Supabase run/step logs, and **Upstash Redis** resumable streams with post-run purge. No LangChain / LangGraph.
+**iter-06 (released):** WorkflowRunner, 4-node pipeline, Upstash resume, workflow logs.
 
-**Required reading:**
+**iter-07 (released):** History summarization — 3 new nodes, Preferences extensions, rolling summary + soft archive, LLM/UI message split.
 
-1. [changelog/iter-06.md](./changelog/iter-06.md)  
-2. [design/workflow-orchestration.md](./design/workflow-orchestration.md)  
-3. [design/stream-resume.md](./design/stream-resume.md)
+**Required reading for iter-07:**
 
-See [02-technical-design-cn.md](./02-technical-design-cn.md) for architecture table, API list, env vars, file index, and implementation order.
+1. [changelog/iter-07.md](./changelog/iter-07.md)  
+2. [prd/history-summarization.md](./prd/history-summarization.md)  
+3. [design/history-summarization.md](./design/history-summarization.md)
+
+Full CN index structure: [02-technical-design-cn.md](./02-technical-design-cn.md).
 
 ---
 
-## 2. Revision history
+## 2. Design document map
+
+| Doc | Scope | Status |
+|-----|-------|--------|
+| [design/workflow-orchestration.md](./design/workflow-orchestration.md) | iter-06 workflow | Released |
+| [design/stream-resume.md](./design/stream-resume.md) | iter-06 resume | Released |
+| [design/history-summarization.md](./design/history-summarization.md) | iter-07 memory | **Released** |
+
+---
+
+## 3. Revision history
 
 | Date | Version | Change |
 |------|---------|--------|
-| 2026-06-24 | v0.1 | iter-06 technical design draft |
-
----
-
-*After review, reply: `技术设计已确认，可开始编码`*
+| 2026-06-24 | v0.1 | iter-06 |
+| 2026-06-25 | v0.2 | iter-07 summarization design draft |
+| 2026-06-25 | v0.3 | **Option B** — post-LLM evaluate/summarize |
+| 2026-06-25 | v0.4 | Design confirmed; implementation complete; see [changelog/iter-07-cn.md](./changelog/iter-07-cn.md) §6–§10 |
+| 2026-06-26 | v0.5 | QA passed; iter-07 **released** |

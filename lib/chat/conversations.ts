@@ -1,9 +1,12 @@
 import type { UIMessage } from "ai";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { DEFAULT_CONVERSATION_TITLE, TITLE_MAX_LENGTH } from "@/lib/constants";
-import { createClient } from "@/lib/supabase/server";
-
+import { clearConversationMemory } from "@/lib/memory/persistence";
+import {
+  DEFAULT_CONVERSATION_TITLE,
+  TITLE_MAX_LENGTH,
+} from "@/lib/constants";
 import type { ConversationSummary, DbMessage } from "@/lib/data/types";
+import { createClient } from "@/lib/supabase/server";
 
 export type { ConversationSummary, DbMessage };
 
@@ -46,7 +49,7 @@ export async function loadMessages(
 export async function saveUserMessage(
   conversationId: string,
   message: UIMessage,
-): Promise<void> {
+): Promise<string> {
   const supabase = await createClient();
   const content = getTextFromUIMessage(message);
 
@@ -54,15 +57,32 @@ export async function saveUserMessage(
     throw new Error("Empty message");
   }
 
-  const { error } = await supabase.from("messages").insert({
+  const row: {
+    conversation_id: string;
+    role: "user";
+    content: string;
+    id?: string;
+  } = {
     conversation_id: conversationId,
     role: "user",
     content,
-  });
+  };
 
-  if (error) {
-    throw new Error(error.message);
+  if (UUID_RE.test(message.id)) {
+    row.id = message.id;
   }
+
+  const { data, error } = await supabase
+    .from("messages")
+    .insert(row)
+    .select("id")
+    .single();
+
+  if (error || !data) {
+    throw new Error(error?.message ?? "Failed to save message");
+  }
+
+  return data.id as string;
 }
 
 export async function saveAssistantMessage(
@@ -284,6 +304,8 @@ export async function clearConversationMessages(
   }
 
   const supabase = await createClient();
+  await clearConversationMemory(conversationId, supabase);
+
   const { error: deleteError } = await supabase
     .from("messages")
     .delete()

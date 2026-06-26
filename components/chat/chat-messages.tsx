@@ -1,12 +1,14 @@
 "use client";
 
 import type { ChatStatus, UIMessage } from "ai";
+import { useEffect } from "react";
 import { User } from "lucide-react";
 import { AssistantTurn } from "@/components/chat/assistant-turn";
 import type { AssistantTurnPhase } from "@/components/chat/assistant-turn";
 import { AssistantAvatar } from "@/components/chat/assistant-avatar";
 import { MarkdownContent } from "@/components/chat/markdown-content";
 import { formatChatErrorMessage } from "@/lib/chat/fetch-with-error";
+import { useStickToBottom } from "@/lib/chat/use-stick-to-bottom";
 import {
   findUserMessageIdBeforeAssistant,
   getTurnStepsView,
@@ -106,8 +108,36 @@ export function ChatMessages({
   const streamingAssistantId =
     status === "streaming" && turnAssistant ? turnAssistant.id : null;
 
+  const {
+    containerRef,
+    contentRef,
+    bottomRef,
+    handleScroll,
+    stickToBottom,
+    followContent,
+  } = useStickToBottom();
+
+  useEffect(() => {
+    stickToBottom("auto");
+  }, [stickToBottom]);
+
+  useEffect(() => {
+    if (status === "submitted") {
+      stickToBottom("smooth");
+    }
+  }, [status, stickToBottom]);
+
+  useEffect(() => {
+    const behavior = status === "streaming" ? "auto" : "smooth";
+    followContent(behavior);
+  }, [messages, status, workflowStore, error, followContent]);
+
   return (
-    <div className={cn("flex-1 overflow-y-auto py-6", CHAT_PANEL_X)}>
+    <div
+      ref={containerRef}
+      onScroll={handleScroll}
+      className={cn("flex-1 overflow-y-auto py-6", CHAT_PANEL_X)}
+    >
       {messages.length === 0 ? (
         <div className="flex h-full flex-col items-center justify-center text-center">
           <AssistantAvatar icon={assistantIcon} variant="hero" className="mb-4" />
@@ -119,8 +149,9 @@ export function ChatMessages({
           </p>
         </div>
       ) : (
-        <div className="w-full space-y-6">
-          {messages.map((message) => {
+        <div ref={contentRef} className="w-full">
+          <div className="space-y-6">
+            {messages.map((message) => {
             if (message.role === "user") {
               return <UserMessage key={message.id} message={message} />;
             }
@@ -170,10 +201,20 @@ export function ChatMessages({
 
             return null;
           })}
+          </div>
+
+          {error ? (
+            <div
+              className="mt-4 rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-300"
+              role="alert"
+            >
+              {formatChatErrorMessage(error)}
+            </div>
+          ) : null}
         </div>
       )}
 
-      {error ? (
+      {messages.length === 0 && error ? (
         <div
           className="mt-4 rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-300"
           role="alert"
@@ -181,6 +222,8 @@ export function ChatMessages({
           {formatChatErrorMessage(error)}
         </div>
       ) : null}
+
+      <div ref={bottomRef} className="h-px w-full shrink-0" aria-hidden />
     </div>
   );
 }

@@ -1,10 +1,7 @@
 export const runtime = "nodejs";
 
 import { getConversationForUser } from "@/lib/chat/conversations";
-import {
-  getLatestRunForConversation,
-  getStepLogsForRun,
-} from "@/lib/workflow/persistence";
+import { getWorkflowRunsForConversation } from "@/lib/workflow/persistence";
 import { createClient } from "@/lib/supabase/server";
 
 export async function GET(
@@ -27,24 +24,11 @@ export async function GET(
     return new Response("Conversation not found", { status: 404 });
   }
 
-  const run = await getLatestRunForConversation(
+  const runs = await getWorkflowRunsForConversation(
     supabase,
     conversationId,
     user.id,
   );
 
-  if (!run) {
-    return Response.json({ run: null, steps: [] });
-  }
-
-  const steps = await getStepLogsForRun(supabase, run.id);
-
-  return Response.json({
-    run: {
-      id: run.id,
-      status: run.status,
-      startedAt: run.startedAt,
-    },
-    steps,
-  });
+  return Response.json({ runs });
 }

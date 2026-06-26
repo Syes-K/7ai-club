@@ -3,6 +3,9 @@ import type { UserLlmProviderId } from "@/lib/llm/provider";
 export const PLATFORM_DEFAULT_CONFIG_ID =
   "00000000-0000-0000-0000-000000000001" as const;
 
+/** UI sentinel for Preferences summary model dropdown (persisted as null). */
+export const SUMMARY_SAME_AS_CHAT_ID = "__same_as_chat__" as const;
+
 export const PLATFORM_DEFAULT_PROVIDER = "bailian" as const;
 export const PLATFORM_DEFAULT_MODEL_NAME = "qwen3.6-plus";
 

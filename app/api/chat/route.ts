@@ -24,9 +24,11 @@ import { createServiceClient } from "@/lib/supabase/service";
 import { makeStepEmitter } from "@/lib/workflow/emit-step";
 import {
   loadContextNode,
+  loadHistorySummaryNode,
   ModelNotReadyError,
   resolveModelNode,
   runLlmStreamNode,
+  runPostLlmMemorySteps,
   validateRequestNode,
 } from "@/lib/workflow/nodes";
 import {
@@ -91,8 +93,9 @@ export async function POST(req: Request) {
     return new Response("Empty message", { status: 422 });
   }
 
+  let savedUserMessageId: string;
   try {
-    await saveUserMessage(conversationId, message);
+    savedUserMessageId = await saveUserMessage(conversationId, message);
     await maybeUpdateConversationTitle(conversationId, userText);
   } catch (error) {
     return new Response(
@@ -113,6 +116,7 @@ export async function POST(req: Request) {
     runId = await createWorkflowRun(supabase, {
       conversationId,
       userId: user.id,
+      userMessageId: savedUserMessageId,
     });
   } catch (error) {
     return new Response(
@@ -148,11 +152,17 @@ export async function POST(req: Request) {
 
       try {
         await runWorkflow(
-          [validateRequestNode, loadContextNode, resolveModelNode],
+          [
+            validateRequestNode,
+            loadContextNode,
+            loadHistorySummaryNode,
+            resolveModelNode,
+          ],
           ctx,
           emit,
         );
         await runLlmStreamNode(ctx, writer, emit);
+        await runPostLlmMemorySteps(ctx, emit);
       } catch (error) {
         const errorMessage =
           error instanceof Error ? error.message : "Workflow failed";

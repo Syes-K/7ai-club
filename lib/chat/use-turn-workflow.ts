@@ -4,8 +4,8 @@ import type { ChatStatus, UIMessage } from "ai";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
   EMPTY_TURN_WORKFLOW_STORE,
+  applyAllRestoredWorkflows,
   applyLiveWorkflowStep,
-  applyRestoredWorkflow,
   beginTurnWorkflow,
   findLastUserMessageId,
   settleLiveTurn,
@@ -24,51 +24,42 @@ export function useTurnWorkflow(
   const [store, setStore] = useState<TurnWorkflowStore>(EMPTY_TURN_WORKFLOW_STORE);
   const restoreGenerationRef = useRef(0);
   const begunUserMessageIdRef = useRef<string | null>(null);
-
-  const loadWorkflowState = useCallback(
-    async (messages: UIMessage[]) => {
-      const generation = restoreGenerationRef.current;
-
-      try {
-        const response = await fetch(`/api/chat/${conversationId}/workflow`);
-        if (!response.ok || generation !== restoreGenerationRef.current) {
-          return;
-        }
-
-        const payload = (await response.json()) as WorkflowRestorePayload;
-        if (generation !== restoreGenerationRef.current) {
-          return;
-        }
-
-        const userMessageId = findLastUserMessageId(messages);
-        if (!userMessageId || !payload.run) {
-          return;
-        }
-
-        setStore((prev) =>
-          applyRestoredWorkflow(prev, payload, userMessageId, messages),
-        );
-      } catch {
-        // Ignore workflow restore errors; chat history still loads from DB.
-      }
-    },
-    [conversationId],
-  );
+  const messagesRef = useRef(options.messages);
 
   useEffect(() => {
-    let cancelled = false;
+    messagesRef.current = options.messages;
+  }, [options.messages]);
 
-    void (async () => {
-      await loadWorkflowState(options.messages);
-      if (cancelled) {
-        return;
+  const loadWorkflowState = useCallback(async () => {
+    const generation = restoreGenerationRef.current;
+    const messages = messagesRef.current;
+
+    try {
+      const response = await fetch(`/api/chat/${conversationId}/workflow`);
+      if (!response.ok || generation !== restoreGenerationRef.current) {
+        return false;
       }
-    })();
 
-    return () => {
-      cancelled = true;
-    };
-  }, [conversationId, loadWorkflowState, options.messages]);
+      const payload = (await response.json()) as WorkflowRestorePayload;
+      if (generation !== restoreGenerationRef.current) {
+        return false;
+      }
+
+      if (payload.runs.length === 0 || messages.length === 0) {
+        return false;
+      }
+
+      setStore((prev) => applyAllRestoredWorkflows(prev, payload, messages));
+
+      return true;
+    } catch {
+      return false;
+    }
+  }, [conversationId]);
+
+  useEffect(() => {
+    void loadWorkflowState();
+  }, [conversationId, loadWorkflowState]);
 
   const prevChatStatusRef = useRef(options.chatStatus);
 
@@ -95,7 +86,7 @@ export function useTurnWorkflow(
       return;
     }
 
-    void loadWorkflowState(options.messages);
+    void loadWorkflowState();
 
     setStore((prev) => {
       if (prev.live?.phase === "settled") {
@@ -104,7 +95,24 @@ export function useTurnWorkflow(
 
       return prev;
     });
-  }, [options.chatStatus, options.messages, loadWorkflowState]);
+
+    let cancelled = false;
+    let ticks = 0;
+    const intervalId = window.setInterval(() => {
+      if (cancelled || ticks >= 20) {
+        window.clearInterval(intervalId);
+        return;
+      }
+
+      ticks += 1;
+      void loadWorkflowState();
+    }, 1500);
+
+    return () => {
+      cancelled = true;
+      window.clearInterval(intervalId);
+    };
+  }, [options.chatStatus, loadWorkflowState]);
 
   const handleWorkflowData = useCallback(
     (dataPart: { type: string; data: unknown }) => {
@@ -116,11 +124,11 @@ export function useTurnWorkflow(
         applyLiveWorkflowStep(
           prev,
           dataPart.data as WorkflowStepEvent,
-          findLastUserMessageId(options.messages),
+          findLastUserMessageId(messagesRef.current),
         ),
       );
     },
-    [options.messages],
+    [],
   );
 
   const clearAll = useCallback(() => {

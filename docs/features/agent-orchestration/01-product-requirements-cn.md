@@ -5,11 +5,11 @@
 
 > **项目：** 7ai-club  
 > **Feature slug：** `agent-orchestration`  
-> **迭代：** `iter-06`（见 [iter-06 README](../../iterations/iter-06/README-cn.md)）  
+> **迭代：** `iter-06`（已发布）· **`iter-07`（已发布）** — 见 [iter-07 README](../../iterations/iter-07/README-cn.md)  
 > **路线图阶段：** 2 — Agent 编排基础  
-> **状态：** **PRD 已确认**  
-> **PRD 确认日期：** 2026-06-24  
-> **文档版本：** v0.1
+> **状态：** **PRD 已确认**（iter-06 + iter-07）· iter-07 **已发布**（2026-06-26）  
+> **PRD 确认日期：** iter-06 · 2026-06-24 · iter-07 · 2026-06-25  
+> **文档版本：** v0.2
 
 ---
 
@@ -76,6 +76,9 @@
 | F-51 | 步骤时间线 UI | [prd/workflow-orchestration-cn.md](./prd/workflow-orchestration-cn.md) | iter-06 |
 | F-52 | 运行日志（runs + step logs） | [prd/workflow-orchestration-cn.md](./prd/workflow-orchestration-cn.md) | iter-06 |
 | F-53 | 流式恢复（Upstash + resume） | [prd/stream-resume-cn.md](./prd/stream-resume-cn.md) | iter-06 |
+| F-60 | 历史对话滚动摘要 | [prd/history-summarization-cn.md](./prd/history-summarization-cn.md) | iter-07 |
+| F-61 | 摘要 Workflow Nodes | [prd/history-summarization-cn.md](./prd/history-summarization-cn.md) | iter-07 |
+| F-62 | 摘要步骤 inline 展开 | [prd/history-summarization-cn.md](./prd/history-summarization-cn.md) | iter-07 |
 
 ---
 
@@ -87,12 +90,14 @@
 |------|------|
 | [prd/workflow-orchestration-cn.md](./prd/workflow-orchestration-cn.md) | Runner、Node、步骤事件、DB 日志、Chat UI |
 | [prd/stream-resume-cn.md](./prd/stream-resume-cn.md) | Upstash、resumable stream、刷新恢复、Redis 清理 |
+| [prd/history-summarization-cn.md](./prd/history-summarization-cn.md) | 滚动摘要、Preferences 策略、摘要 Nodes、Clear chat |
 
 ### 3.2 迭代变更（`changelog/`）
 
 | 文档 | 范围 |
 |------|------|
 | [changelog/iter-06-cn.md](./changelog/iter-06-cn.md) | iter-06 必读 + AC 索引 |
+| [changelog/iter-07-cn.md](./changelog/iter-07-cn.md) | iter-07 必读 + AC-70–77 |
 
 ---
 
@@ -101,6 +106,8 @@
 | 日期 | 版本 | 变更 |
 |------|------|------|
 | 2026-06-24 | v0.1 | iter-06 初稿 — 用户确认 PRD |
+| 2026-06-25 | v0.2 | iter-07 — 历史对话摘要 PRD 已确认 |
+| 2026-06-25 | v0.3 | iter-07 编码完成；变更见 [changelog/iter-07-cn.md](./changelog/iter-07-cn.md) §6–§10 |
 
 ---
 

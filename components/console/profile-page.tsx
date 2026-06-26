@@ -21,6 +21,13 @@ export function ProfilePage({ profile }: ProfilePageProps) {
         <PreferencesCard
           initialPreferredConfigId={profile.preferredModelConfigId}
           initialPreferredLabel={profile.preferredLabel}
+          initialSummarizationEnabled={profile.summarizationEnabled}
+          initialSummaryTriggerTurns={profile.summaryTriggerTurns}
+          initialSummaryRetainTurns={profile.summaryRetainTurns}
+          initialSummaryTriggerTokens={profile.summaryTriggerTokens}
+          initialSummaryRetainTokens={profile.summaryRetainTokens}
+          initialSummaryModelConfigId={profile.summaryModelConfigId}
+          initialSummaryModelLabel={profile.summaryModelLabel}
           modelOptions={profile.modelOptions}
         />
       </div>

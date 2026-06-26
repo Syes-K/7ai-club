@@ -4,29 +4,37 @@
 > **中文:** [README-cn.md](./README-cn.md)
 
 > **Feature slug:** `agent-orchestration`  
-> **Iteration:** [`iter-06`](../../iterations/iter-06/README.md) (**Released** — 2026-06-24)  
+> **Iteration:** [`iter-06`](../../iterations/iter-06/README.md) (**Released**) · [`iter-07`](../../iterations/iter-07/README.md) (**Released**)  
 > **Roadmap phase:** 2 — Agent orchestration foundation (enables RAG / MCP / Skills)
 
 ---
 
 ## Document map (agent entry)
 
-**iter-06 released — read changelog first, then sub-PRDs:**
+**iter-07 released — read changelog §5–§10:**
 
-1. [01-product-requirements.md](./01-product-requirements.md) — index §2 global conventions  
-2. [changelog/iter-06.md](./changelog/iter-06.md) — **iter-06 AC-50–64**  
-3. Sub-PRDs: [workflow-orchestration.md](./prd/workflow-orchestration.md) · [stream-resume.md](./prd/stream-resume.md)
+1. [01-product-requirements.md](./01-product-requirements.md)  
+2. [changelog/iter-07.md](./changelog/iter-07.md) — AC-70–77 · manual QA fixes · step metrics  
+3. Sub-PRD: [history-summarization.md](./prd/history-summarization.md)
+
+**iter-06 (released):** [changelog/iter-06.md](./changelog/iter-06.md) · AC-50–64
 
 | Layer | Index | Sub-docs |
 |-------|-------|----------|
 | Product | [01-product-requirements.md](./01-product-requirements.md) | [prd/](./prd/) |
 | Technical | [02-technical-design.md](./02-technical-design.md) | [design/workflow-orchestration.md](./design/workflow-orchestration.md) · [design/stream-resume.md](./design/stream-resume.md) |
 
-**Related features:** [mvp-chat](../mvp-chat/README.md) (`/api/chat` refactor), [console](../console/README.md) (no UI changes)
+**Related features:** [mvp-chat](../mvp-chat/README.md) (Clear chat extension), [console](../console/README.md) (Preferences summarization)
 
 ---
 
-## iter-06 scope summary
+## iter-07 scope summary (released)
+
+See [README-cn.md](./README-cn.md) § iter-07 — rolling summary, 7-step workflow restore, `active · total` load context, changelog §7–§10. **Released** 2026-06-26.  
+
+---
+
+## iter-06 scope summary (released)
 
 - **Workflow orchestration** — Vercel AI SDK + custom `WorkflowRunner` / nodes (no LangChain / LangGraph / n8n)  
 - **Step visibility** — Real-time step timeline in Chat (running / success / error)  

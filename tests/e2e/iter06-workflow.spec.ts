@@ -2,7 +2,17 @@ import { expect, test } from "@playwright/test";
 import { hasAuthCredentials, login } from "./helpers/auth";
 import { waitForChatSidebarReady } from "./helpers/chat";
 
-const WORKFLOW_STEP_LABELS = [
+const ITER07_WORKFLOW_STEP_LABELS = [
+  "Validate request",
+  "Load context",
+  "Loading memory summary",
+  "Resolve model",
+  "Generate response",
+  "Evaluating context size",
+  "Summarizing history",
+] as const;
+
+const ITER06_WORKFLOW_STEP_LABELS = [
   "Validate request",
   "Load context",
   "Resolve model",
@@ -27,7 +37,22 @@ async function openAssistantConversation(page: import("@playwright/test").Page) 
   return true;
 }
 
-test.describe("iter-06 workflow orchestration", () => {
+async function getLastCompletedStepCount(
+  page: import("@playwright/test").Page,
+): Promise<number> {
+  const summaries = page
+    .locator("main")
+    .getByRole("button", { name: /\d+ steps completed/ });
+  const count = await summaries.count();
+  if (count === 0) {
+    return 0;
+  }
+
+  const text = await summaries.last().textContent();
+  return Number(text?.match(/(\d+) steps completed/)?.[1] ?? 0);
+}
+
+test.describe("iter-06/07 workflow orchestration", () => {
   test.skip(!hasAuthCredentials, "Set E2E_TEST_EMAIL and E2E_TEST_PASSWORD");
   test.describe.configure({ mode: "serial", retries: 1 });
   test.setTimeout(180_000);
@@ -36,46 +61,37 @@ test.describe("iter-06 workflow orchestration", () => {
     await login(page);
   });
 
-  test("AC-50: chat shows four English workflow steps after send", async ({
-    page,
-  }) => {
+  test("AC-50 / AC-77: chat shows workflow steps after send", async ({ page }) => {
     const opened = await openAssistantConversation(page);
     test.skip(!opened, "Need an existing 7ai Assistant conversation for E2E");
 
     const input = page.getByPlaceholder("Type a message");
     await expect(input).toBeEnabled({ timeout: 15_000 });
-    const message = `iter-06 workflow ${Date.now()}`;
+    const message = `workflow steps ${Date.now()}`;
     await input.fill(message);
     await input.press("Enter");
 
     await expect
-      .poll(
-        async () => {
-          const summaryVisible = await page
-            .locator("main")
-            .getByText("4 steps completed")
-            .isVisible()
-            .catch(() => false);
-          if (summaryVisible) {
-            return 4;
-          }
-
-          let count = 0;
-          for (const label of WORKFLOW_STEP_LABELS) {
-            if (
-              await page
-                .locator("main")
-                .getByText(label, { exact: true })
-                .isVisible()
-                .catch(() => false)
-            ) {
-              count += 1;
-            }
-          }
-          return count;
-        },
-        { timeout: 120_000 },
-      )
+      .poll(async () => getLastCompletedStepCount(page), { timeout: 120_000 })
       .toBeGreaterThanOrEqual(4);
+
+    const completedCount = await getLastCompletedStepCount(page);
+    const labels =
+      completedCount >= ITER07_WORKFLOW_STEP_LABELS.length
+        ? ITER07_WORKFLOW_STEP_LABELS
+        : ITER06_WORKFLOW_STEP_LABELS;
+
+    const stepsSummary = page
+      .locator("main")
+      .getByRole("button", { name: /\d+ steps completed/ })
+      .last();
+
+    await stepsSummary.click();
+
+    for (const label of labels) {
+      await expect(
+        page.locator("main").getByText(label, { exact: true }),
+      ).toBeVisible({ timeout: 10_000 });
+    }
   });
 });

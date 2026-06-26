@@ -19,6 +19,75 @@ function StepIcon({ status }: { status: WorkflowStepEvent["status"] }) {
   return <Check className="h-3.5 w-3.5 text-[var(--accent-success)]" />;
 }
 
+function splitStepSummary(summary: string): {
+  headline: string;
+  detail: string | null;
+} {
+  const splitIndex = summary.indexOf("\n\n");
+  if (splitIndex === -1) {
+    return { headline: summary, detail: null };
+  }
+
+  return {
+    headline: summary.slice(0, splitIndex),
+    detail: summary.slice(splitIndex + 2),
+  };
+}
+
+function WorkflowStepRow({ step }: { step: WorkflowStepEvent }) {
+  const [expanded, setExpanded] = useState(false);
+  const summaryParts = step.summary ? splitStepSummary(step.summary) : null;
+  const hasExpandableDetail = Boolean(summaryParts?.detail);
+
+  return (
+    <li
+      className={cn(
+        "flex items-start gap-2 font-mono text-xs",
+        step.status === "error"
+          ? "text-red-300"
+          : "text-[var(--text-muted)]",
+      )}
+    >
+      <span className="mt-0.5 shrink-0">
+        <StepIcon status={step.status} />
+      </span>
+      <span className="min-w-0 flex-1">
+        <span className="text-[var(--text-primary)]">{step.label}</span>
+        {summaryParts ? (
+          <span className="ml-2 text-[var(--text-muted)]">
+            {summaryParts.headline}
+          </span>
+        ) : null}
+        {hasExpandableDetail ? (
+          <div className="mt-1">
+            <button
+              type="button"
+              onClick={() => setExpanded((value) => !value)}
+              className="flex items-center gap-1 text-[var(--text-muted)] transition-colors hover:text-[var(--text-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--neon-primary)]/40"
+              aria-expanded={expanded}
+            >
+              {expanded ? (
+                <ChevronDown className="h-3.5 w-3.5 shrink-0" aria-hidden />
+              ) : (
+                <ChevronRight className="h-3.5 w-3.5 shrink-0" aria-hidden />
+              )}
+              <span>{expanded ? "Hide summary" : "Show summary"}</span>
+            </button>
+            {expanded ? (
+              <pre className="mt-2 max-h-48 overflow-auto whitespace-pre-wrap rounded-md border border-[var(--neon-primary)]/15 bg-[var(--bg-base)]/60 p-2 text-[11px] leading-relaxed text-[var(--text-primary)]">
+                {summaryParts?.detail}
+              </pre>
+            ) : null}
+          </div>
+        ) : null}
+        {step.error ? (
+          <span className="mt-1 block text-red-300">{step.error}</span>
+        ) : null}
+      </span>
+    </li>
+  );
+}
+
 interface WorkflowStepListProps {
   steps: WorkflowStepEvent[];
 }
@@ -35,28 +104,7 @@ export function WorkflowStepList({ steps }: WorkflowStepListProps) {
       aria-label="Workflow steps"
     >
       {steps.map((step) => (
-        <li
-          key={step.nodeId}
-          className={cn(
-            "flex items-start gap-2 font-mono text-xs",
-            step.status === "error"
-              ? "text-red-300"
-              : "text-[var(--text-muted)]",
-          )}
-        >
-          <span className="mt-0.5 shrink-0">
-            <StepIcon status={step.status} />
-          </span>
-          <span className="min-w-0">
-            <span className="text-[var(--text-primary)]">{step.label}</span>
-            {step.summary ? (
-              <span className="ml-2 text-[var(--text-muted)]">{step.summary}</span>
-            ) : null}
-            {step.error ? (
-              <span className="mt-1 block text-red-300">{step.error}</span>
-            ) : null}
-          </span>
-        </li>
+        <WorkflowStepRow key={step.nodeId} step={step} />
       ))}
     </ul>
   );

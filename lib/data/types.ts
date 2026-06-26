@@ -7,6 +7,11 @@ export type DbMessage = {
   role: "user" | "assistant" | "system";
   content: string;
   created_at: string;
+  summarized_at?: string | null;
+};
+
+export type DbMessageWithArchive = DbMessage & {
+  summarized_at: string | null;
 };
 
 export type ConversationSummary = {
@@ -56,6 +61,12 @@ export type UserProfile = {
   user_id: string;
   nickname: string | null;
   preferred_model_config_id: string | null;
+  summarization_enabled: boolean;
+  summary_trigger_turns: number;
+  summary_retain_turns: number;
+  summary_trigger_tokens: number;
+  summary_retain_tokens: number;
+  summary_model_config_id: string | null;
 };
 
 export type ModelConfigRow = {
@@ -94,4 +105,11 @@ export type ProfileDto = {
   preferredModelConfigId: string | null;
   preferredLabel: string;
   modelOptions: ModelConfigOption[];
+  summarizationEnabled: boolean;
+  summaryTriggerTurns: number;
+  summaryRetainTurns: number;
+  summaryTriggerTokens: number;
+  summaryRetainTokens: number;
+  summaryModelConfigId: string | null;
+  summaryModelLabel: string;
 };

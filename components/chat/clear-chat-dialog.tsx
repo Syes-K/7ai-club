@@ -40,7 +40,8 @@ export function ClearChatDialog({
     >
       <h2 className="font-mono text-lg font-semibold">Clear chat history?</h2>
       <p className="mt-2 text-sm text-[var(--text-muted)]">
-        All messages in this conversation will be removed. This cannot be undone.
+        All messages and conversation memory in this conversation will be removed.
+        This cannot be undone.
       </p>
       <div className="mt-6 flex justify-end gap-3">
         <Button variant="ghost" onClick={onCancel} disabled={clearing}>

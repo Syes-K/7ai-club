@@ -64,3 +64,15 @@ export function resolvePreferenceLabel(
   const platform = buildPlatformDefaultDto();
   return formatModelConfigLabel(platform.provider, platform.modelName);
 }
+
+export function resolveSummaryModelLabel(
+  summaryModelConfigId: string | null,
+  options: { id: string; label: string }[],
+): string {
+  if (summaryModelConfigId == null) {
+    return "Same as chat model";
+  }
+
+  const match = options.find((option) => option.id === summaryModelConfigId);
+  return match?.label ?? "Same as chat model";
+}

@@ -5,11 +5,11 @@
 
 > **Project:** 7ai-club  
 > **Feature slug:** `agent-orchestration`  
-> **Iteration:** `iter-06` (see [iter-06 README](../../iterations/iter-06/README.md))  
+> **Iteration:** `iter-06` (released) · **`iter-07` (released)** — see [iter-07 README](../../iterations/iter-07/README.md)  
 > **Roadmap phase:** 2 — Agent orchestration foundation  
-> **Status:** **PRD confirmed**  
-> **PRD confirmed:** 2026-06-24  
-> **Doc version:** v0.1
+> **Status:** **PRD confirmed** (iter-06 + iter-07) · iter-07 **released** (2026-06-26)  
+> **PRD confirmed:** iter-06 · 2026-06-24 · iter-07 · 2026-06-25  
+> **Doc version:** v0.2
 
 ---
 
@@ -76,6 +76,9 @@ On top of MVP chat (iter-05), introduce an **extensible Workflow orchestration l
 | F-51 | Step timeline UI | [prd/workflow-orchestration.md](./prd/workflow-orchestration.md) | iter-06 |
 | F-52 | Run logs (runs + step logs) | [prd/workflow-orchestration.md](./prd/workflow-orchestration.md) | iter-06 |
 | F-53 | Stream resume (Upstash + resume) | [prd/stream-resume.md](./prd/stream-resume.md) | iter-06 |
+| F-60 | Conversation rolling summary | [prd/history-summarization.md](./prd/history-summarization.md) | iter-07 |
+| F-61 | Summary workflow nodes | [prd/history-summarization.md](./prd/history-summarization.md) | iter-07 |
+| F-62 | Inline step expand for summary | [prd/history-summarization.md](./prd/history-summarization.md) | iter-07 |
 
 ---
 
@@ -90,6 +93,8 @@ See [01-product-requirements-cn.md](./01-product-requirements-cn.md) §3 for the
 | Date | Version | Change |
 |------|---------|--------|
 | 2026-06-24 | v0.1 | iter-06 initial — PRD confirmed |
+| 2026-06-25 | v0.2 | iter-07 — history summarization PRD confirmed |
+| 2026-06-25 | v0.3 | iter-07 implemented; see [changelog/iter-07-cn.md](./changelog/iter-07-cn.md) §6–§10 |
 
 ---
 

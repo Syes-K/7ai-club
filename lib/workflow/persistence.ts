@@ -1,10 +1,22 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { matchBestRunPerUserMessage } from "@/lib/workflow/match-runs-to-messages";
 import type {
   WorkflowRunStatus,
   WorkflowRunSummary,
   WorkflowStepEvent,
   WorkflowStepStatus,
 } from "@/lib/workflow/types";
+
+const UUID_RE =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+function toUuidOrNull(value: string | undefined): string | null {
+  if (!value || !UUID_RE.test(value)) {
+    return null;
+  }
+
+  return value;
+}
 
 type WorkflowRunRow = {
   id: string;
@@ -46,6 +58,7 @@ export async function createWorkflowRun(
   params: {
     conversationId: string;
     userId: string;
+    userMessageId?: string;
   },
 ): Promise<string> {
   const { data, error } = await supabase
@@ -53,6 +66,7 @@ export async function createWorkflowRun(
     .insert({
       conversation_id: params.conversationId,
       user_id: params.userId,
+      user_message_id: toUuidOrNull(params.userMessageId),
       status: "running",
     })
     .select("id")
@@ -283,4 +297,132 @@ export async function cancelStaleRuns(
     runId: row.id,
     streamId: row.active_stream_id,
   }));
+}
+
+type WorkflowRunWithUserMessageRow = WorkflowRunRow & {
+  user_message_id: string | null;
+};
+
+export type WorkflowRunRestoreEntry = {
+  run: {
+    id: string;
+    status: WorkflowRunStatus;
+    startedAt: string;
+  };
+  userMessageId: string | null;
+  steps: WorkflowStepEvent[];
+};
+
+export function resolveRunUserMessageIds(
+  runs: Array<{ user_message_id: string | null }>,
+  orderedUserMessageIds: string[],
+): Array<string | null> {
+  let messageIndex = 0;
+
+  return runs.map((run) => {
+    if (run.user_message_id) {
+      const matchedIndex = orderedUserMessageIds.indexOf(run.user_message_id);
+      if (matchedIndex >= 0) {
+        messageIndex = matchedIndex + 1;
+      }
+      return run.user_message_id;
+    }
+
+    const inferred = orderedUserMessageIds[messageIndex] ?? null;
+    messageIndex += 1;
+    return inferred;
+  });
+}
+
+async function listUserMessagesForConversation(
+  supabase: SupabaseClient,
+  conversationId: string,
+): Promise<Array<{ id: string; createdAt: string }>> {
+  const { data, error } = await supabase
+    .from("messages")
+    .select("id, created_at")
+    .eq("conversation_id", conversationId)
+    .eq("role", "user")
+    .order("created_at", { ascending: true });
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return (data ?? []).map((row) => ({
+    id: row.id as string,
+    createdAt: row.created_at as string,
+  }));
+}
+
+export async function getWorkflowRunsForConversation(
+  supabase: SupabaseClient,
+  conversationId: string,
+  userId: string,
+): Promise<WorkflowRunRestoreEntry[]> {
+  const { data, error } = await supabase
+    .from("workflow_runs")
+    .select("id, status, started_at, user_message_id")
+    .eq("conversation_id", conversationId)
+    .eq("user_id", userId)
+    .order("started_at", { ascending: true });
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  const rows = (data ?? []) as WorkflowRunWithUserMessageRow[];
+  if (rows.length === 0) {
+    return [];
+  }
+
+  const userMessages = await listUserMessagesForConversation(
+    supabase,
+    conversationId,
+  );
+
+  const { data: stepCountsData, error: stepCountsError } = await supabase
+    .from("workflow_step_logs")
+    .select("run_id")
+    .in(
+      "run_id",
+      rows.map((row) => row.id),
+    );
+
+  if (stepCountsError) {
+    throw new Error(stepCountsError.message);
+  }
+
+  const stepCountByRunId = new Map<string, number>();
+  for (const row of stepCountsData ?? []) {
+    const runId = row.run_id as string;
+    stepCountByRunId.set(runId, (stepCountByRunId.get(runId) ?? 0) + 1);
+  }
+
+  const matches = matchBestRunPerUserMessage(
+    rows.map((row) => ({
+      id: row.id,
+      startedAt: row.started_at,
+      status: row.status,
+      userMessageId: row.user_message_id,
+      stepCount: stepCountByRunId.get(row.id) ?? 0,
+    })),
+    userMessages,
+  );
+
+  return Promise.all(
+    [...matches.entries()].map(async ([userMessageId, runRef]) => {
+      const matchedRow = rows.find((row) => row.id === runRef.id)!;
+
+      return {
+        run: {
+          id: matchedRow.id,
+          status: matchedRow.status,
+          startedAt: matchedRow.started_at,
+        },
+        userMessageId,
+        steps: await getStepLogsForRun(supabase, runRef.id),
+      };
+    }),
+  );
 }
