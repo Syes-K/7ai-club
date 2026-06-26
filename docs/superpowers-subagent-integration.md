@@ -58,7 +58,7 @@ flowchart TB
 | Requirements | `product-analyst` | `brainstorming` | `01-product-requirements*.md`, `prd/`, `changelog/iter-NN*` | Code/migrations; `writing-plans` for coding; `docs/superpowers/` |
 | Technical design | `fullstack-developer` Phase A | `brainstorming`, `writing-plans` | `02-technical-design*.md`, `design/` | `executing-plans`, `subagent-driven-development`, TDD implementation |
 | Implementation | `fullstack-developer` Phase B | `test-driven-development`, `executing-plans` / `subagent-driven-development`, `using-git-worktrees`, `dispatching-parallel-agents` | Code + `changelog/iter-NN*` task checkboxes | Any coding skill before design confirmation |
-| QA / release | `qa-engineer` | `systematic-debugging`, `requesting-code-review`, `receiving-code-review`, `finishing-a-development-branch` | `changelog/iter-NN-cn.md` AC + report | PRD edits; marking “released” without tests |
+| QA / release | `qa-engineer` | `systematic-debugging`, `requesting-code-review`, `receiving-code-review`, `finishing-a-development-branch` | changelog §5.1 + §12 + §5 AC + report (**C0→C4**) | PRD edits; PRD AC checkboxes; marking “released” without tests |
 
 Superpowers skill path: `.agents/skills/<skill-name>/SKILL.md`
 
@@ -114,8 +114,9 @@ Superpowers ships a gate-free default workflow. **7ai-club rules win on conflict
    - 7ai-club: Phase A → `design/` or `02-technical-design*.md`; Phase B → checkbox tasks in `changelog/iter-NN-cn.md`
 
 3. **`test-driven-development` vs qa-engineer**  
-   - TDD is for Phase B incremental development only  
-   - **Only qa-engineer** may check changelog AC boxes and set iteration status to released
+   - TDD is for Phase B only (unit + main-path E2E)  
+   - qa **C0→C4**: test matrix → test code gaps → run automation + manual → check changelog §5 AC  
+   - **Only qa-engineer** may check changelog AC boxes and set iteration released; PRD AC stays `[ ]`
 
 4. **Code review skills**  
    - Do not replace `qa-engineer`; Superpowers code-reviewer subagent does not replace QA sign-off

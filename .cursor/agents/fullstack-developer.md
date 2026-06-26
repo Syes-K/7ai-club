@@ -89,7 +89,8 @@ description: >
 | 组件调用关系 | 数据流（Server/Client 边界） |
 | 后台任务 | 若涉及文档入库或长时任务 |
 | 文件清单 | 拟新增/修改的文件路径 |
-| 测试计划 | 关键路径如何验证 |
+| 测试计划 | 关键路径如何验证（§11） |
+| **PRD 验收映射** | **§12 必填**：每条 AC → 实现要点 + 建议验证方式 |
 | 风险与缓解 | 超时、MCP 失败、降级策略 |
 
 对焦后询问确认，再写入文档。
@@ -115,6 +116,12 @@ docs/features/<slug>/design/<topic>-cn.md
 - 本迭代范围见 `changelog/iter-NN-cn.md`
 
 模板：`.cursor/skills/technical-design/templates/tech-design-template.md`。
+
+**§12 PRD 验收映射（强制）：**
+
+- 本迭代 changelog §5 中每条 AC 在 design §12 有一行
+- 列：**验收标准 ID · 实现要点 · 验证方式**（unit / e2e / manual / Supabase MCP）
+- qa-engineer C0 据此展开 changelog §5.1 Test Matrix；**缺 §12 则 QA 阻塞**
 
 写入后按 **门禁状态** 提示（与 `.cursor/rules/7ai-club-workflow.mdc` 一致）：
 
@@ -177,17 +184,26 @@ python3 .agents/skills/ui-ux-pro-max/scripts/search.py "chat messaging streaming
 
 简要说明：改了哪些文件、环境变量、本地如何启动。
 
+**测试覆盖清单（必填，不勾选 AC）：**
+
+| AC ID | 实现状态 | 已有自动化 | 文件路径 |
+|-------|----------|------------|----------|
+| AC-XX | done / partial | unit / e2e / 无 | `tests/...` 或 — |
+
 **测试交接清单（必填）：**
 
-1. 指向 `docs/features/<slug>/changelog/iter-NN-cn.md` 的 AC 与「手工 QA」
-2. 技术设计 §11 测试计划中的关键路径
-3. 建议测试命令：`pnpm lint`、`pnpm build`、`pnpm test`、`pnpm test:e2e`
-4. 需 mock 或手工验证的项（如 LLM 流式、第三方 Bailian）
+1. 指向 `docs/features/<slug>/changelog/iter-NN-cn.md` §5 AC 一览（qa 将写 §5.1 / §12）
+2. 技术设计 **§12 PRD 验收映射**（qa C0 输入）
+3. 上表「测试覆盖清单」
+4. 建议命令：`pnpm lint`、`pnpm build`、`pnpm test`、`CI=1 pnpm test:e2e`
+5. 需 mock 或手工验证的项（LLM 流式、第三方 provider）
+
+**禁止：** 勾选 changelog §5 AC、勾选 PRD § 验收标准、标迭代「已发布」。
 
 提示用户调用 `qa-engineer`（**不是** `技术设计已确认，可开始编码`，**不是** `测试已通过，可发布`）：
 
 > 编码已完成，状态：**待测试验收**。  
-> **下一步：** `用 qa-engineer 对 iter-NN 执行测试验收`
+> **下一步：** `用 qa-engineer 对 iter-NN 执行测试验收`（从 Phase C0 用例矩阵开始）
 
 **同步迭代索引（编码完成后）：**
 

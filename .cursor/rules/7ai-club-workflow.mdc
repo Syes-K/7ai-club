@@ -43,7 +43,7 @@ docs/features/<slug>/
 
   changelog/                     # 迭代增量（必读列表、验收索引）
     iter-NN.md
-    iter-NN-cn.md
+    iter-NN-cn.md                # §5.1 Test Matrix · §12 Manual Script
 ```
 
 **Agent 读文档：** 先 `README` → `iterations/iter-NN` → `changelog/iter-NN` → 仅加载相关 `prd/`、`design/` 子文档。
@@ -62,7 +62,8 @@ docs/iterations/<iter-id>/
 | Feature（能力） | `docs/features/mvp-chat/` | 长期存在的功能文档 |
 | 路线图阶段 | PRD frontmatter `phase: 1` | 架构路线图 1–5 |
 
-模板：`.cursor/skills/iteration-planning/templates/iter-readme-template.md`
+模板：`.cursor/skills/iteration-planning/templates/iter-readme-template.md`  
+Changelog 模板：`.cursor/skills/iteration-planning/templates/changelog-iter-template-cn.md`
 
 ## 门禁规则
 
@@ -88,8 +89,9 @@ docs/iterations/<iter-id>/
 | **PRD 已确认** | PRD 落盘 | **技术设计** | `PRD 已确认，可进入技术设计` · 或「用 fullstack-developer 读取 docs/features/\<slug\>/，先做技术设计」 | **`技术设计已确认，可开始编码`**（设计尚未开始） |
 | 技术设计草稿 | Phase A 草案 | 用户评审设计 | 修改意见 | 编码 |
 | **技术设计已确认** | `02-technical-design` 落盘 | **编码** | `技术设计已确认，可开始编码` | 回退为「进入技术设计」话术 |
-| 编码完成 | Phase B 交付 | **测试验收** | 「用 qa-engineer 对 iter-NN 执行测试验收」 | 标「已发布」、勾选 AC（属 qa-engineer） |
-| **测试已通过** | qa 验收 | **发布** | `测试已通过，可发布` | 跳过测试标发布 |
+| 编码完成 | Phase B 交付 | **测试验收**（qa C0→C4） | 「用 qa-engineer 对 iter-NN 执行测试验收」 | 标「已发布」、勾选 changelog AC（属 qa-engineer） |
+| **测试验收中** | qa C0 Matrix 已写 / C2–C3 执行中 | 完成 C4 | — | dev/用户勾选 AC |
+| **测试已通过** | qa C4 验收 | **发布** | `测试已通过，可发布` | 跳过测试标发布 |
 
 **常见错误（禁止）：** PRD 已确认后提示用户说 `技术设计已确认，可开始编码` — 该话术仅用于**技术设计评审通过之后**。
 
@@ -97,9 +99,30 @@ docs/iterations/<iter-id>/
 
 - 测试 skill：`.cursor/skills/7ai-club-testing/SKILL.md`
 - 目录：`tests/unit/`（Vitest）、`tests/e2e/`（Playwright）
-- 命令：`pnpm lint` → `pnpm build` → `pnpm test` → `pnpm test:e2e`
+- 命令：`pnpm lint` → `pnpm build` → `pnpm test` → `pnpm test:e2e`（本地 E2E 建议 `CI=1`）
 - CI 聚合：`pnpm test:ci`
-- changelog 中 AC checkbox 由 **qa-engineer** 在测试通过后更新
+
+### AC 验收权（强制）
+
+| 文档 | AC checkbox | 谁可勾选 |
+|------|-------------|----------|
+| PRD `prd/*` § 验收标准 | 保持 `[ ]` 定义态 | **无人**（非验收源） |
+| **changelog** `changelog/iter-NN*` **§5** | 测试通过后 `[x]` | **仅 qa-engineer** |
+| iter README §4.3 | 发布相关项 | qa-engineer + 用户 `测试已通过，可发布` |
+
+**禁止：** fullstack-developer / product-analyst / 用户在 QA 完成前勾选 changelog AC。
+
+### 测试三阶段（qa-engineer Phase C）
+
+| 阶段 | 名称 | 产出 |
+|------|------|------|
+| C0 | 用例设计 | changelog §5.1 Test Matrix + §12 Manual Script |
+| C1 | 测试 code | 补 `tests/`（dev Phase B 已写单元/主路径 E2E） |
+| C2–C3 | 自动化 + 手工 | lint/build/test/e2e + §12 证据 |
+| C4 | 验收签字 | 勾选 changelog §5 AC |
+
+技术设计 **§12 PRD 验收映射** 为 C0 输入（Phase A 必填）。  
+Changelog 模板：`.cursor/skills/iteration-planning/templates/changelog-iter-template-cn.md`
 
 ## 技术栈（已决）
 

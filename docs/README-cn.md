@@ -31,7 +31,7 @@ docs/
       ...
 
     changelog/                     # 迭代增量（验收清单、必读文档列表）
-      iter-02-cn.md
+      iter-02-cn.md                # §5 AC · §5.1 Test Matrix · §12 Manual Script（qa C0→C4）
 
   iterations/<iter-id>/            # 时间盒：目标、范围、待办（不重复 PRD 正文）
     README-cn.md

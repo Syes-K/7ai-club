@@ -127,8 +127,14 @@ docs/features/<slug>/changelog/iter-NN-cn.md
 
 - 全局约定、路由、Out of Scope → **总纲**
 - 可独立验收的子能力 → **`prd/<topic>`**
-- 本迭代必读列表与 AC 索引 → **`changelog/iter-NN`**
+- 本迭代必读列表与 AC 索引 → **`changelog/iter-NN`**（含 §5 AC 一览；§5.1 / §12 由 qa-engineer 在测试阶段填写）
+- 新建 changelog 使用模板：`.cursor/skills/iteration-planning/templates/changelog-iter-template-cn.md`
 - 详见 `docs/README-cn.md` 三层文档模型
+
+**PRD § 验收标准 checkbox：**
+
+- 写入时保持 **`[ ]` 定义态**（表示需求条目，非验收签字）
+- **禁止** 在 PRD 勾选 AC；测试通过后 **仅 qa-engineer** 勾选 `changelog/iter-NN*` §5
 
 使用模板结构（见 `.cursor/skills/product-requirements/templates/prd-template.md`）。frontmatter 须填写 `迭代` 与 `路线图阶段`。
 

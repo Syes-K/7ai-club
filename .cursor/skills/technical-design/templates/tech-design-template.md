@@ -181,6 +181,8 @@ interface ComponentNameProps {
 
 ## 11. 测试计划
 
+> **分工：** §11–§12 由 fullstack-developer Phase A 填写；qa-engineer C0 展开为 changelog §5.1 + §12。
+
 ### 11.1 自动化
 
 | 类型 | 路径 / 命令 | 覆盖 |
@@ -189,14 +191,14 @@ interface ComponentNameProps {
 | E2E | `tests/e2e/` · `pnpm test:e2e` | |
 | CI | `pnpm test:ci` | lint + build + unit + e2e |
 
-### 11.2 手工 QA
+### 11.2 手工 QA（初稿）
 
-- [ ] [测试项 1]
+- [ ] [测试项 1 — 对应 AC-xx]
 - [ ] [测试项 2]
 
 ### 11.3 本地验证步骤
 
-1. `pnpm lint && pnpm build && pnpm test && pnpm test:e2e`
+1. `pnpm lint && pnpm build && pnpm test && CI=1 pnpm test:e2e`
 2. 
 
 ### 11.4 环境变量
@@ -205,11 +207,21 @@ interface ComponentNameProps {
 |------|------|
 | | |
 
-## 12. PRD 验收映射
+## 12. PRD 验收映射（必填）
+
+> **C0 输入：** qa-engineer 据此编写 changelog §5.1 Test Matrix。  
+> **缺本表 → QA 阻塞。**
 
 | 验收标准 ID | 实现要点 | 验证方式 |
 |-------------|----------|----------|
-| AC-01 | | |
+| AC-01 | [本迭代如何实现] | unit / e2e / manual / Supabase MCP / 组合 |
+
+**验证方式说明：**
+
+- `unit` — Vitest，纯逻辑
+- `e2e` — Playwright，UI/路由
+- `manual` — LLM 流式、provider、视觉（changelog §12 写步骤）
+- `Supabase MCP` — RLS、归档、表数据
 
 ## 13. 开放问题 / 技术债
 

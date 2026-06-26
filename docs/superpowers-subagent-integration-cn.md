@@ -58,7 +58,7 @@ flowchart TB
 | 需求对焦 | `product-analyst` | `brainstorming` | `01-product-requirements*.md`、`prd/`、`changelog/iter-NN*` | 代码/迁移；`writing-plans` 直接进编码；`docs/superpowers/` |
 | 技术设计 | `fullstack-developer` Phase A | `brainstorming`、`writing-plans` | `02-technical-design*.md`、`design/` | `executing-plans`、`subagent-driven-development`、TDD 写实现 |
 | 编码 | `fullstack-developer` Phase B | `test-driven-development`、`executing-plans` / `subagent-driven-development`、`using-git-worktrees`、`dispatching-parallel-agents` | 代码 + `changelog/iter-NN*` | 无「技术设计已确认」前的编码 skill |
-| 测试验收 | `qa-engineer` | `systematic-debugging`、`requesting-code-review`、`receiving-code-review`、`finishing-a-development-branch` | `changelog/iter-NN-cn.md` AC + 验收报告 | 改 PRD；未跑测试就标「已发布」 |
+| 测试验收 | `qa-engineer` | `systematic-debugging`、`requesting-code-review`、`receiving-code-review`、`finishing-a-development-branch` | changelog §5.1 Test Matrix + §12 + §5 AC 勾选 + 验收报告（**C0→C4**） | 改 PRD；勾选 PRD AC；未跑测试就标「已发布」 |
 
 Superpowers skill 路径：`.agents/skills/<skill-name>/SKILL.md`
 
@@ -114,8 +114,9 @@ Superpowers 自带「无门禁工作流」。**冲突时 7ai-club 规则优先�
    - 7ai-club：Phase A → `design/` 或 `02-technical-design*.md`；Phase B → `changelog/iter-NN-cn.md` checkbox 任务
 
 3. **`test-driven-development` vs qa-engineer**  
-   - TDD 仅用于 Phase B 增量开发  
-   - **changelog AC 勾选与「已发布」仅 qa-engineer 可改**
+   - TDD 仅用于 Phase B 增量开发（单元/主路径 E2E）  
+   - qa **C0→C4**：用例矩阵 → 补测试 code → 自动化+手工 → 勾选 changelog §5 AC  
+   - **changelog AC 勾选与「已发布」仅 qa-engineer 可改**；PRD § 验收标准保持 `[ ]` 定义态
 
 4. **Code review skills**  
    - 不替代 `qa-engineer`；Superpowers code-reviewer subagent 不替代 QA 验收

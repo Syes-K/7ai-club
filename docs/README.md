@@ -15,6 +15,7 @@ docs/features/<slug>/
   prd/                           # Product topic docs
   design/                        # Technical topic docs
   changelog/                     # Per-iteration delta (required reading list)
+    iter-02.md                   # §5 AC · §5.1 Test Matrix · §12 Manual Script (qa C0→C4)
 
 docs/iterations/<iter-id>/       # Timebox goals & todos (no full PRD copy)
 ```

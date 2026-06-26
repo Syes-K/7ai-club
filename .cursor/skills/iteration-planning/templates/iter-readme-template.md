@@ -37,20 +37,24 @@
 
 ## 4. 迭代验收标准
 
-### 4.1 自动化
+> **AC 签字：** 仅 **qa-engineer** 勾选 feature `changelog/iter-NN-cn.md` §5。PRD § 验收标准保持 `[ ]` 定义态。
+
+### 4.1 自动化（qa Phase C2）
 
 - [ ] `pnpm lint` 通过
 - [ ] `pnpm build` 通过
 - [ ] `pnpm test` 通过
-- [ ] `pnpm test:e2e` 通过（或说明跳过原因）
+- [ ] `pnpm test:e2e` 通过（建议 `CI=1`；或说明跳过原因）
 
-### 4.2 手工 QA
+### 4.2 用例与手工 QA（qa Phase C0 + C3）
 
-- [ ] [见 feature changelog § 手工 QA]
+- [ ] changelog **§5.1 Test Matrix** 已填写（C0）
+- [ ] changelog **§12 Manual Script** 已执行并填证据（C3）
+- [ ] 见 feature changelog §5 / §12
 
 ### 4.3 发布
 
-- [ ] changelog AC 已全部勾选（由 `qa-engineer` 完成）
+- [ ] changelog §5 AC 已全部勾选（**qa-engineer** C4）
 - [ ] 用户确认：`测试已通过，可发布`
 
 ## 5. 依赖与风险
