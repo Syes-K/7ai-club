@@ -28,7 +28,7 @@
 
 ## iter-08 scope summary (released)
 
-Default-collapsed panel; registry + Reasoning stream; Markdown summary detail; DB/API extensions; inline step chevrons (B-04). **Released** 2026-06-26. See [changelog/iter-08.md](./changelog/iter-08.md).
+Default-collapsed panel; registry + Reasoning stream; Markdown summary detail; DB/API extensions; inline step chevrons (B-04). Post-release: Reasoning buffer, workflow poll dedup, turn memo, LLM streaming MD. **Released** 2026-06-26. See [changelog/iter-08.md](./changelog/iter-08.md).
 
 ---
 

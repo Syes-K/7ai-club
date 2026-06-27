@@ -1,7 +1,7 @@
 "use client";
 
 import type { ChatStatus, UIMessage } from "ai";
-import { useEffect } from "react";
+import { memo, useEffect } from "react";
 import { User } from "lucide-react";
 import { AssistantTurn } from "@/components/chat/assistant-turn";
 import type { AssistantTurnPhase } from "@/components/chat/assistant-turn";
@@ -47,7 +47,7 @@ function resolveTurnPhaseForView(
   return turnPhase;
 }
 
-function UserMessage({ message }: { message: UIMessage }) {
+const UserMessage = memo(function UserMessage({ message }: { message: UIMessage }) {
   const text = getMessageText(message);
 
   return (
@@ -63,9 +63,15 @@ function UserMessage({ message }: { message: UIMessage }) {
       </div>
     </div>
   );
-}
+}, (prev, next) => {
+  if (prev.message.id !== next.message.id) {
+    return false;
+  }
 
-function AssistantMessage({
+  return getMessageText(prev.message) === getMessageText(next.message);
+});
+
+const AssistantMessage = memo(function AssistantMessage({
   message,
   isStreaming,
   assistantIcon,
@@ -79,23 +85,29 @@ function AssistantMessage({
     return null;
   }
 
-  const useMarkdown = !isStreaming;
-
   return (
     <div className="flex flex-row gap-3">
       <AssistantAvatar icon={assistantIcon} />
       <div className="max-w-[80%] rounded-2xl border border-[var(--neon-primary)]/20 bg-[var(--bg-elevated)]/80 px-4 py-3 text-[var(--text-primary)]">
-        {useMarkdown ? (
-          <MarkdownContent content={text} />
-        ) : (
-          <span className="whitespace-pre-wrap text-sm leading-relaxed">
-            {text || "\u00a0"}
-          </span>
-        )}
+        <MarkdownContent content={text || "\u00a0"} />
       </div>
     </div>
   );
-}
+}, (prev, next) => {
+  if (prev.isStreaming !== next.isStreaming) {
+    return false;
+  }
+
+  if (prev.assistantIcon !== next.assistantIcon) {
+    return false;
+  }
+
+  if (prev.message.id !== next.message.id) {
+    return false;
+  }
+
+  return getMessageText(prev.message) === getMessageText(next.message);
+});
 
 export function ChatMessages({
   messages,
@@ -130,7 +142,7 @@ export function ChatMessages({
   useEffect(() => {
     const behavior = status === "streaming" ? "auto" : "smooth";
     followContent(behavior);
-  }, [messages, status, workflowStore, error, followContent]);
+  }, [messages, status, error, followContent]);
 
   return (
     <div

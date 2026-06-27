@@ -17,7 +17,11 @@ export function WorkflowStepList({
   }
 
   return (
-    <ul className="space-y-1.5" role="list" aria-label="Workflow steps">
+    <ul
+      className="m-0 list-none space-y-1.5 p-0"
+      role="list"
+      aria-label="Workflow steps"
+    >
       {steps.map((step) => {
         const Row = getStepRenderer(step);
         const isStreaming =

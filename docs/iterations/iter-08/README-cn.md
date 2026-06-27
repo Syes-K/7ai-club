@@ -59,7 +59,7 @@
 
 - [x] `pnpm lint` — 2026-06-26
 - [x] `pnpm build` — 2026-06-26
-- [x] `pnpm test` — 86 tests
+- [x] `pnpm test` — 90 tests
 - [x] `pnpm test:e2e` — 13 + 7（`iter08-manual-qa`）
 
 ### 4.2 手工 QA
@@ -82,6 +82,8 @@
 | Console 模型 Test | `connectivity-test.ts` 直连 API |
 | Reasoning 链路 | openai-compatible 客户端；provider options；V4/Qwen3 白名单 |
 | UI | 折叠头 chevron；Reasoning 自动滚动；**步骤行 inline chevron**（B-04） |
+| 性能 / 对齐 | Reasoning buffer（H-07）；workflow 轮询去重（H-08）；AssistantTurn memo（H-09）；header 对齐（H-10） |
+| 渲染 | LLM 流式 Markdown（B-05）；Reasoning 保持 `<pre>`（B-06） |
 
 ---
 
@@ -104,6 +106,7 @@
 | 2026-06-26 | 联调 H-01–H-06 |
 | 2026-06-26 | qa C0–C4：AC-80–89 全部勾选 |
 | 2026-06-26 | 发布前 UX B-04；**迭代已发布** |
+| 2026-06-26 | 发布后补丁 H-07–H-10、B-05–B-06；changelog §7/§8 更新 |
 
 ---
 

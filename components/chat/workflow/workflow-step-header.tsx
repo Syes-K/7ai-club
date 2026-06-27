@@ -34,23 +34,27 @@ export function WorkflowStepHeader({
     <button
       type="button"
       onClick={onToggle}
-      className="group flex w-full items-center gap-1.5 rounded-md px-1 py-0.5 font-mono text-xs text-[var(--text-muted)] transition-colors hover:bg-[var(--bg-base)]/40 hover:text-[var(--text-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--neon-primary)]/40"
+      className="group flex w-full items-start gap-2 rounded-md py-0.5 font-mono text-xs text-[var(--text-muted)] transition-colors hover:bg-[var(--bg-base)]/40 hover:text-[var(--text-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--neon-primary)]/40"
       aria-expanded={expanded}
       aria-label={`${header.title}. ${toggleHint}`}
     >
-      <HeaderIcon variant={header.variant} />
+      <span className="mt-0.5 shrink-0">
+        <HeaderIcon variant={header.variant} />
+      </span>
       <span className="min-w-0 flex-1 truncate text-left">{header.title}</span>
-      {expanded ? (
-        <ChevronDown
-          className="h-3.5 w-3.5 shrink-0 text-[var(--text-muted)] transition-colors group-hover:text-[var(--text-primary)]"
-          aria-hidden
-        />
-      ) : (
-        <ChevronRight
-          className="h-3.5 w-3.5 shrink-0 text-[var(--text-muted)] transition-colors group-hover:text-[var(--text-primary)]"
-          aria-hidden
-        />
-      )}
+      <span className="mt-0.5 shrink-0">
+        {expanded ? (
+          <ChevronDown
+            className="h-3.5 w-3.5 text-[var(--text-muted)] transition-colors group-hover:text-[var(--text-primary)]"
+            aria-hidden
+          />
+        ) : (
+          <ChevronRight
+            className="h-3.5 w-3.5 text-[var(--text-muted)] transition-colors group-hover:text-[var(--text-primary)]"
+            aria-hidden
+          />
+        )}
+      </span>
     </button>
   );
 }

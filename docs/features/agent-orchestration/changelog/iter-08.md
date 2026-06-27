@@ -60,7 +60,13 @@ See [iter-08-cn.md](./iter-08-cn.md) for full Chinese changelog, decisions, and 
 | H-04 | Model Test fails for `deepseek-v4-pro` | Direct HTTP connectivity probe; disable thinking per provider |
 | H-05 | No Reasoning step for Qwen3 / DeepSeek V4 | `openai-compatible` client; fix provider options key; capability whitelist |
 | H-06 | Reasoning panel no auto-scroll when expanded | Scroll-to-end while streaming |
-| B-04 | Inline step expand layout | Label + chevron on one line; Summarizing stats inside fold |
+| H-07 | Reasoning phase UI lag; 2000+ renders | Reasoning detail buffer (300ms flush); collapsed zero-subscribe; `<pre>` DOM sync |
+| H-08 | `/workflow` request storm after reply | In-flight dedup; poll cap 5×2s; stop when settled |
+| H-09 | Historical turns re-render on every LLM token | `AssistantTurn` / message rows memoized |
+| H-10 | Header icon misaligned with step list | Unified `gap-2` + `mt-0.5`; list `list-none p-0` |
+| B-04 | Inline step expand layout | Label + chevron on one line |
+| B-05 | LLM body while streaming | `MarkdownContent` during stream |
+| B-06 | Reasoning detail format | Always `<pre>` plain text |
 
 Full Chinese details: [iter-08-cn.md §7–§9](./iter-08-cn.md).
 
@@ -73,3 +79,4 @@ Full Chinese details: [iter-08-cn.md §7–§9](./iter-08-cn.md).
 | 2026-06-26 | Created iter-08 changelog — PRD confirmed |
 | 2026-06-26 | qa C0: §5.1 Test Matrix + §12 in iter-08-cn |
 | 2026-06-26 | QA C4 AC-80–89; pre-release UX B-04; **Released** |
+| 2026-06-26 | Post-release: H-07–H-10 perf/align; B-05/B-06; 90 unit tests |

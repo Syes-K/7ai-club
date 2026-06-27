@@ -6,7 +6,6 @@ import {
   EMPTY_TURN_WORKFLOW_STORE,
   applyAllRestoredWorkflows,
   applyLiveWorkflowStep,
-  applyLiveWorkflowStepDelta,
   beginTurnWorkflow,
   findLastUserMessageId,
   settleLiveTurn,
@@ -14,6 +13,17 @@ import {
   type WorkflowRestorePayload,
 } from "@/lib/chat/turn-workflow";
 import type { WorkflowStepDeltaEvent, WorkflowStepEvent } from "@/lib/workflow/types";
+import { REASONING_NODE_ID } from "@/lib/workflow/node-catalog";
+import {
+  clearAllReasoningDetailBuffers,
+  clearReasoningDetailBuffer,
+  flushPendingReasoningDeltas,
+  queueReasoningDetailDelta,
+} from "@/lib/chat/reasoning-detail-buffer";
+
+/** Fallback polls after stream ends — only while live turn is still unsettled. */
+const WORKFLOW_POLL_INTERVAL_MS = 2000;
+const WORKFLOW_POLL_MAX_TICKS = 5;
 
 export function useTurnWorkflow(
   conversationId: string,
@@ -23,40 +33,99 @@ export function useTurnWorkflow(
   },
 ) {
   const [store, setStore] = useState<TurnWorkflowStore>(EMPTY_TURN_WORKFLOW_STORE);
+  const storeRef = useRef(store);
   const restoreGenerationRef = useRef(0);
   const begunUserMessageIdRef = useRef<string | null>(null);
   const messagesRef = useRef(options.messages);
+  const loadInFlightRef = useRef<Promise<boolean> | null>(null);
+  const pollIntervalRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    storeRef.current = store;
+  }, [store]);
 
   useEffect(() => {
     messagesRef.current = options.messages;
   }, [options.messages]);
 
-  const loadWorkflowState = useCallback(async () => {
+  const stopWorkflowPoll = useCallback(() => {
+    if (pollIntervalRef.current != null) {
+      window.clearInterval(pollIntervalRef.current);
+      pollIntervalRef.current = null;
+    }
+  }, []);
+
+  const shouldStopWorkflowPoll = useCallback((): boolean => {
+    const live = storeRef.current.live;
+    return live == null || live.phase === "settled";
+  }, []);
+
+  const loadWorkflowState = useCallback(async (): Promise<boolean> => {
+    if (loadInFlightRef.current) {
+      return loadInFlightRef.current;
+    }
+
     const generation = restoreGenerationRef.current;
     const messages = messagesRef.current;
 
-    try {
-      const response = await fetch(`/api/chat/${conversationId}/workflow`);
-      if (!response.ok || generation !== restoreGenerationRef.current) {
+    const request = (async () => {
+      try {
+        const response = await fetch(`/api/chat/${conversationId}/workflow`);
+        if (!response.ok || generation !== restoreGenerationRef.current) {
+          return false;
+        }
+
+        const payload = (await response.json()) as WorkflowRestorePayload;
+        if (generation !== restoreGenerationRef.current) {
+          return false;
+        }
+
+        if (payload.runs.length === 0 || messages.length === 0) {
+          return false;
+        }
+
+        setStore((prev) => applyAllRestoredWorkflows(prev, payload, messages));
+
+        return true;
+      } catch {
         return false;
+      } finally {
+        loadInFlightRef.current = null;
       }
+    })();
 
-      const payload = (await response.json()) as WorkflowRestorePayload;
-      if (generation !== restoreGenerationRef.current) {
-        return false;
-      }
-
-      if (payload.runs.length === 0 || messages.length === 0) {
-        return false;
-      }
-
-      setStore((prev) => applyAllRestoredWorkflows(prev, payload, messages));
-
-      return true;
-    } catch {
-      return false;
-    }
+    loadInFlightRef.current = request;
+    return request;
   }, [conversationId]);
+
+  const startWorkflowPollIfNeeded = useCallback(() => {
+    stopWorkflowPoll();
+
+    if (shouldStopWorkflowPoll()) {
+      return;
+    }
+
+    let ticks = 0;
+
+    pollIntervalRef.current = window.setInterval(() => {
+      if (shouldStopWorkflowPoll()) {
+        stopWorkflowPoll();
+        return;
+      }
+
+      ticks += 1;
+      if (ticks >= WORKFLOW_POLL_MAX_TICKS) {
+        stopWorkflowPoll();
+        return;
+      }
+
+      void loadWorkflowState().then(() => {
+        if (shouldStopWorkflowPoll()) {
+          stopWorkflowPoll();
+        }
+      });
+    }, WORKFLOW_POLL_INTERVAL_MS);
+  }, [loadWorkflowState, shouldStopWorkflowPoll, stopWorkflowPoll]);
 
   const userMessageCount = options.messages.filter(
     (message) => message.role === "user",
@@ -95,8 +164,6 @@ export function useTurnWorkflow(
       return;
     }
 
-    void loadWorkflowState();
-
     setStore((prev) => {
       if (prev.live?.phase === "settled") {
         return settleLiveTurn(prev);
@@ -105,34 +172,37 @@ export function useTurnWorkflow(
       return prev;
     });
 
-    let cancelled = false;
-    let ticks = 0;
-    const intervalId = window.setInterval(() => {
-      if (cancelled || ticks >= 20) {
-        window.clearInterval(intervalId);
+    void loadWorkflowState().then(() => {
+      if (shouldStopWorkflowPoll()) {
+        stopWorkflowPoll();
         return;
       }
 
-      ticks += 1;
-      void loadWorkflowState();
-    }, 1500);
+      startWorkflowPollIfNeeded();
+    });
 
     return () => {
-      cancelled = true;
-      window.clearInterval(intervalId);
+      stopWorkflowPoll();
     };
-  }, [options.chatStatus, loadWorkflowState]);
+  }, [
+    options.chatStatus,
+    loadWorkflowState,
+    shouldStopWorkflowPoll,
+    startWorkflowPollIfNeeded,
+    stopWorkflowPoll,
+  ]);
+
+  useEffect(() => {
+    if (shouldStopWorkflowPoll()) {
+      stopWorkflowPoll();
+    }
+  }, [store.live?.phase, shouldStopWorkflowPoll, stopWorkflowPoll]);
 
   const handleWorkflowData = useCallback(
     (dataPart: { type: string; data: unknown }) => {
       if (dataPart.type === "data-workflow-step-delta") {
-        setStore((prev) =>
-          applyLiveWorkflowStepDelta(
-            prev,
-            dataPart.data as WorkflowStepDeltaEvent,
-            findLastUserMessageId(messagesRef.current),
-          ),
-        );
+        const delta = dataPart.data as WorkflowStepDeltaEvent;
+        queueReasoningDetailDelta(delta.runId, delta.nodeId, delta.delta);
         return;
       }
 
@@ -140,10 +210,20 @@ export function useTurnWorkflow(
         return;
       }
 
+      const event = dataPart.data as WorkflowStepEvent;
+
+      if (
+        event.nodeId === REASONING_NODE_ID &&
+        (event.status === "success" || event.status === "error")
+      ) {
+        flushPendingReasoningDeltas();
+        clearReasoningDetailBuffer(event.runId, event.nodeId);
+      }
+
       setStore((prev) =>
         applyLiveWorkflowStep(
           prev,
-          dataPart.data as WorkflowStepEvent,
+          event,
           findLastUserMessageId(messagesRef.current),
         ),
       );
@@ -154,8 +234,10 @@ export function useTurnWorkflow(
   const clearAll = useCallback(() => {
     restoreGenerationRef.current += 1;
     begunUserMessageIdRef.current = null;
+    stopWorkflowPoll();
+    clearAllReasoningDetailBuffers();
     setStore(EMPTY_TURN_WORKFLOW_STORE);
-  }, []);
+  }, [stopWorkflowPoll]);
 
   return {
     store,

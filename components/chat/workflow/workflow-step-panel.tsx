@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { memo, useState } from "react";
 import { WorkflowStepHeader } from "@/components/chat/workflow/workflow-step-header";
 import { WorkflowStepList } from "@/components/chat/workflow/workflow-step-list";
 import { computeStepPanelHeader } from "@/lib/workflow/step-panel-header";
@@ -13,7 +13,7 @@ interface WorkflowStepPanelProps {
   streamingNodeId?: string | null;
 }
 
-export function WorkflowStepPanel({
+export const WorkflowStepPanel = memo(function WorkflowStepPanel({
   steps,
   isSettled,
   defaultExpanded = false,
@@ -44,4 +44,4 @@ export function WorkflowStepPanel({
       ) : null}
     </div>
   );
-}
+});

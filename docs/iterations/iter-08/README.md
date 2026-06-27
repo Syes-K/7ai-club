@@ -38,3 +38,4 @@ See [README-cn.md](./README-cn.md) and [changelog iter-08](../../features/agent-
 | 2026-06-26 | Phase B delivered; H-01–H-06 |
 | 2026-06-26 | QA C0–C4; AC-80–89 signed off |
 | 2026-06-26 | **Released** (pre-release UX B-04 inline step chevrons) |
+| 2026-06-26 | Post-release patches H-07–H-10, B-05–B-06 documented |

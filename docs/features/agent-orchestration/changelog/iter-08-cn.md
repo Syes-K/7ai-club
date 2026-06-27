@@ -111,6 +111,10 @@
 | H-04 | Console **Test** `deepseek-v4-pro` 失败 `Empty response from provider` | V4 默认 thinking → 短 probe 只有 `reasoning_content`；`generateText` 只认 `text`；`providerOptions` 的 `thinking` / `enable_thinking` **未被 @ai-sdk/openai 转发** | 新增 `lib/llm/connectivity-test.ts`：**直连** `POST /chat/completions`，按 provider 写入 body（Bailian `enable_thinking: false`，DeepSeek `thinking.disabled`）；接受 `reasoning_content` 兜底 | `lib/llm/connectivity-test.ts`、`lib/llm/resolve-user-model.ts` |
 | H-05 | Bailian `qwen3.6-plus` / `deepseek-v4-pro` 聊天无 **Reasoning** 步骤 | ① `getStreamTextProviderOptions` 误用 **`LLM_PROVIDER` 环境变量**；② `createOpenAI` 不解析 `reasoning_content`；③ options 键误用 `openai` | ① 按 `resolved.provider`；② **`createOpenAICompatible`**；③ 键对齐 bailian/deepseek；④ 白名单含 deepseek-v4 | `lib/llm/provider.ts`、`lib/llm/model-capabilities.ts` | |
 | H-06 | Reasoning 展开后流式打字不跟随滚动 | `pre` 无 programmatic scroll | streaming 时滚到底 + 展开 `scrollIntoView` | `components/chat/workflow/reasoning-step-row.tsx` |
+| H-07 | Reasoning 阶段页面卡顿；Console 2000+ render | 每 token `setStore` + 全历史 `AssistantTurn` 重渲染 | **Reasoning buffer**（`reasoning-detail-buffer.ts`）：delta 不入 React state，300ms 合并 flush；折叠时零订阅；展开 `<pre>` 直写 DOM | `lib/chat/reasoning-detail-buffer.ts`、`components/chat/workflow/reasoning-detail-panel.tsx` |
+| H-08 | AI 回复后 `/workflow` 请求风暴（数十 pending） | `status→ready` 后 1.5s×20 轮询且无 in-flight 去重 | 去重 + settled 即停；最多 5 次 / 2s | `lib/chat/use-turn-workflow.ts` |
+| H-09 | LLM 流式时历史轮 `AssistantTurn` 随 token 重渲染 | `ChatMessages` 无 memo | `AssistantTurn` / `UserMessage` / `AssistantMessage` **memo** + 浅比较 | `assistant-turn.tsx`、`chat-messages.tsx` |
+| H-10 | 折叠头 icon 与步骤列表不对齐 | header `px-1` + `gap-1.5` vs 行 `gap-2` | 统一 `items-start gap-2` + icon `mt-0.5`；列表 `list-none p-0` | `workflow-step-header.tsx`、`workflow-step-list.tsx` |
 
 ---
 
@@ -122,6 +126,8 @@
 | B-02 | 折叠头在双 running 时显示哪一步 | Reasoning (45) 优先 → `Workflow · Reasoning…` |
 | B-03 | 折叠头 chevron | 仅图标；`aria-label` 含 Show/Hide steps |
 | B-04 | Reasoning / Summarizing 子折叠布局 | 标题 + chevron 同一行；Summarizing token 统计仅在展开内显示 |
+| B-05 | LLM 正文流式渲染 | **流式阶段亦用 Markdown**（`MarkdownContent`），与完成后一致 |
+| B-06 | Reasoning 详情格式 | 流式 / 完成均 **`<pre>`** plain text，不用 Markdown（性能） |
 
 ---
 
@@ -136,6 +142,8 @@
 | 节点 catalog | `lib/workflow/node-catalog.ts` |
 | 单元测试 | `tests/unit/workflow/step-panel-header.test.ts`、`sort-steps.test.ts`、`step-payload.test.ts`；`tests/unit/llm/model-capabilities.test.ts` |
 | E2E 手工 QA | `tests/e2e/iter08-manual-qa.spec.ts`（M-01–M-09） |
+| Reasoning buffer | `lib/chat/reasoning-detail-buffer.ts`；`tests/unit/chat/reasoning-detail-buffer.test.ts` |
+| Reasoning 详情面板 | `components/chat/workflow/reasoning-detail-panel.tsx` |
 | Migration | `supabase/migrations/20260626000000_iter08_workflow_step_ui.sql` |
 
 ---
@@ -167,3 +175,4 @@
 | 2026-06-26 | qa C3：Playwright `iter08-manual-qa.spec.ts` 7 pass / 2 skip；C4 勾选 AC-80–82,84–89 |
 | 2026-06-26 | AC-83 用户手工验证 pass；C4 勾选 AC-83 · **AC-80–89 全部完成** |
 | 2026-06-26 | 发布前 UX：B-04 步骤行 inline chevron（Reasoning / Summarizing）；迭代 **已发布** |
+| 2026-06-26 | 发布后补丁：H-07–H-10 性能与对齐；B-05 LLM 流式 MD；B-06 Reasoning 保持 pre；90 unit tests |

@@ -33,7 +33,9 @@
 - **DB / API** — `workflow_step_logs` 扩展（detail、skipped、kind）；workflow restore  
 - **Reasoning / 模型 Test** — capability 检测；connectivity-test；openai-compatible 客户端  
 - **步骤行 UX** — Reasoning / Summarizing 标题与 chevron 同行；token 统计折叠内展示  
-- **验收** — [changelog/iter-08-cn.md](./changelog/iter-08-cn.md) · AC-80–89 · `iter08-manual-qa.spec.ts`  
+- **性能** — Reasoning detail buffer（300ms）；workflow 恢复轮询去重；历史轮 memo 防 token 级重渲染  
+- **渲染** — LLM 流式 Markdown；Reasoning 详情 `<pre>` plain  
+- **验收** — [changelog/iter-08-cn.md](./changelog/iter-08-cn.md) · AC-80–89 · `iter08-manual-qa.spec.ts` · 90 unit tests  
 
 ---
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { memo, useEffect, useState } from "react";
 import type { UIMessage } from "ai";
 import { AssistantAvatar } from "@/components/chat/assistant-avatar";
 import { MarkdownContent } from "@/components/chat/markdown-content";
@@ -67,7 +67,66 @@ interface AssistantTurnProps {
   showThinking?: boolean;
 }
 
-export function AssistantTurn({
+function areAssistantTurnPropsEqual(
+  prev: AssistantTurnProps,
+  next: AssistantTurnProps,
+): boolean {
+  if (prev.isStreaming !== next.isStreaming) {
+    return false;
+  }
+
+  if (prev.phase !== next.phase) {
+    return false;
+  }
+
+  if (prev.assistantIcon !== next.assistantIcon) {
+    return false;
+  }
+
+  if (prev.showThinking !== next.showThinking) {
+    return false;
+  }
+
+  if (prev.message?.id !== next.message?.id) {
+    return false;
+  }
+
+  const prevText = prev.message ? getMessageText(prev.message) : "";
+  const nextText = next.message ? getMessageText(next.message) : "";
+  if (prevText !== nextText) {
+    return false;
+  }
+
+  if (prev.steps === next.steps) {
+    return true;
+  }
+
+  if (prev.steps.length !== next.steps.length) {
+    return false;
+  }
+
+  for (let index = 0; index < prev.steps.length; index += 1) {
+    const left = prev.steps[index];
+    const right = next.steps[index];
+    if (!left || !right) {
+      return false;
+    }
+
+    if (
+      left.nodeId !== right.nodeId ||
+      left.status !== right.status ||
+      left.detail !== right.detail ||
+      left.summary !== right.summary ||
+      left.error !== right.error
+    ) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
+export const AssistantTurn = memo(function AssistantTurn({
   message,
   steps,
   isStreaming,
@@ -78,7 +137,6 @@ export function AssistantTurn({
   const text = message ? getMessageText(message) : "";
   const hasText = text.trim().length > 0;
   const hasSteps = steps.length > 0;
-  const useMarkdown = !isStreaming;
 
   const showThinkingRow = showThinking && !hasSteps && !hasText;
   const showBody = hasText;
@@ -115,16 +173,8 @@ export function AssistantTurn({
           />
         ) : null}
 
-        {showBody ? (
-          useMarkdown ? (
-            <MarkdownContent content={text} />
-          ) : (
-            <span className="whitespace-pre-wrap text-sm leading-relaxed">
-              {text}
-            </span>
-          )
-        ) : null}
+        {showBody ? <MarkdownContent content={text} /> : null}
       </div>
     </div>
   );
-}
+}, areAssistantTurnPropsEqual);
