@@ -58,7 +58,8 @@ const UserMessage = memo(function UserMessage({ message }: { message: UIMessage 
       <div className="max-w-[80%] rounded-2xl bg-[var(--neon-primary)] px-4 py-3 text-white">
         <MarkdownContent
           content={text}
-          className="[&_a]:text-white [&_code]:text-white/90"
+          linkClassName="text-white decoration-white/70 hover:text-white/90"
+          className="[&_code]:bg-white/15 [&_code]:text-white/90"
         />
       </div>
     </div>

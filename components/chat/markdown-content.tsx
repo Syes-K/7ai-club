@@ -9,9 +9,15 @@ import { cn } from "@/lib/utils";
 interface MarkdownContentProps {
   content: string;
   className?: string;
+  /** Applied to rendered `<a>` tags; overrides default link color. */
+  linkClassName?: string;
 }
 
-export function MarkdownContent({ content, className }: MarkdownContentProps) {
+export function MarkdownContent({
+  content,
+  className,
+  linkClassName,
+}: MarkdownContentProps) {
   if (!content.trim()) {
     return <span>&nbsp;</span>;
   }
@@ -27,7 +33,10 @@ export function MarkdownContent({ content, className }: MarkdownContentProps) {
               href={href}
               target="_blank"
               rel="noopener noreferrer"
-              className="cursor-pointer"
+              className={cn(
+                "cursor-pointer underline hover:opacity-90",
+                linkClassName ?? "text-[var(--neon-primary)]",
+              )}
             >
               {children}
             </a>

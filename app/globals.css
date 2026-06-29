@@ -96,11 +96,6 @@ body {
   padding: 0;
 }
 
-.markdown-body a {
-  color: var(--neon-primary);
-  text-decoration: underline;
-}
-
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
