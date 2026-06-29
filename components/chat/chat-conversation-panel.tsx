@@ -44,6 +44,9 @@ export function ChatConversationPanel({
 
   const canResumeStream = shouldResumeChatStream(initialMessages);
 
+  // resume: false disables useChat's mount-time auto-resume. We call resumeStream()
+  // manually below (with shouldResumeChatStream + resumeAttemptedRef) so we only
+  // reconnect when the last DB message is user, and avoid Strict Mode double GET.
   const { messages, sendMessage, status, error, setMessages, resumeStream } =
     useChat({
     id: conversationId,

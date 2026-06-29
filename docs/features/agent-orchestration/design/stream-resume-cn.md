@@ -17,9 +17,231 @@
 
 ---
 
-## 2. 依赖与配置
+## 2. 流式输出原理
 
-### 2.1 npm
+### 2.1 SSE 与 AI SDK UI Message Stream
+
+聊天回复采用 **Server-Sent Events（SSE）** 长连接，而非一次性 JSON 响应：
+
+| 层级 | 职责 |
+|------|------|
+| **HTTP** | `POST /api/chat` 返回 `Content-Type: text/event-stream`，连接保持打开直至生成结束 |
+| **AI SDK** | `createUIMessageStream` 产出 **UI Message 协议**事件（`start`、`text-delta`、`data-workflow-step`、`finish` 等） |
+| **编码** | `createUIMessageStreamResponse` 将事件序列化为 SSE 帧（`data: {...}\n\n`） |
+| **客户端** | `useChat` + `DefaultChatTransport` 解析 SSE，`text-delta` 增量更新 assistant 气泡 |
+
+一次典型 token 流的事件顺序：
+
+```
+start (messageId)
+  → data-workflow-step (running / success) × N
+  → text-delta × M
+  → finish
+```
+
+Workflow 步骤与 LLM token **复用同一条 SSE 连接**，客户端按 `type` 分发到步骤时间线与 Markdown 渲染。
+
+### 2.2 为何刷新会断流
+
+普通 SSE 是 **单连接、无状态** 的：
+
+```mermaid
+sequenceDiagram
+  participant UI as 浏览器
+  participant POST as POST /api/chat
+  participant LLM as LLM
+
+  UI->>POST: 建立 SSE 连接
+  POST->>LLM: streamText
+  LLM-->>POST: token chunk
+  POST-->>UI: text-delta
+  Note over UI: 用户刷新页面
+  UI-xPOST: TCP 连接关闭
+  Note over POST,LLM: 服务端 Workflow 可能仍在运行
+  LLM-->>POST: 后续 token 无处投递
+```
+
+问题：
+
+1. 刷新关闭原 TCP 连接，**已发出但未渲染的 token 丢失**  
+2. 服务端 run 可能仍为 `running`（iter-06 **不** 用 `req.signal` abort LLM）  
+3. 最终消息虽会落 Supabase，但 **进行中的 partial 回复** 无法在无缓冲时续收
+
+### 2.3 Resumable Stream 核心机制
+
+Vercel AI SDK [Resume Streams](https://sdk.vercel.ai/docs/ai-sdk-ui/03-chatbot-resume-streams) + `resumable-stream` 包在 SSE 之上增加 **可重连的 chunk 缓冲层**：
+
+| 概念 | 说明 |
+|------|------|
+| **streamId** | 每次 POST 生成的 UUID，与 `workflow_runs.active_stream_id` 一一对应 |
+| **tee 写入** | `consumeSseStream` 钩子拿到编码后的 SSE 字节流，**同时**发给当前客户端并写入 Upstash |
+| **offset 索引** | Redis 按序号存储 chunk，resume 时可从任意 offset 重放 |
+| **pub/sub 续传** | 新 GET 连接 replay 已缓冲 chunk 后，subscribe 后续实时 chunk |
+| **指针表** | Supabase 存 `active_stream_id`（哪条流可 resume）；Redis 存 chunk 正文（临时） |
+
+```mermaid
+flowchart LR
+  subgraph Server["Next.js Server"]
+    WR[WorkflowRunner]
+    UIS[createUIMessageStream]
+    SSE[SSE 编码]
+    RS[resumable-stream]
+  end
+
+  subgraph Client["浏览器"]
+    UC[useChat]
+  end
+
+  subgraph Store["持久化"]
+    DB[(Supabase)]
+    RD[(Upstash Redis)]
+  end
+
+  WR --> UIS --> SSE
+  SSE --> UC
+  SSE --> RS
+  RS --> RD
+  RS -. resume .-> UC
+  WR --> DB
+  RS -->|active_stream_id| DB
+```
+
+**设计约束（PRD §3.4）：** Redis **仅** 缓冲 SSE chunk，不替代 Supabase 存消息/步骤；不写入 API Key 或完整用户消息正文。
+
+---
+
+## 3. 技术实现流程
+
+### 3.1 首次 POST — 正常流式生成
+
+```mermaid
+sequenceDiagram
+  participant UI as ChatConversationPanel
+  participant POST as POST /api/chat
+  participant WR as WorkflowRunner
+  participant LLM as streamText
+  participant RS as resumable-stream
+  participant RD as Upstash Redis
+  participant DB as Supabase
+
+  UI->>POST: message + conversationId
+  POST->>DB: saveUserMessage
+  POST->>DB: insert workflow_runs (running)
+  POST->>POST: generateId() → streamId
+
+  POST->>WR: createUIMessageStream.execute
+  WR-->>UI: SSE start (assistantMessageId)
+  WR->>DB: workflow_step_logs
+
+  POST->>RS: consumeSseStream → createNewResumableStream(streamId)
+  RS->>RD: 写入 chunk + pub/sub channel
+  POST->>DB: setActiveStreamId(runId, streamId)
+
+  loop token 流
+    WR->>LLM: llm_stream
+    LLM-->>WR: text chunk
+    WR-->>UI: text-delta (经 SSE)
+    RS->>RD: 同步缓冲同一 chunk
+  end
+
+  WR->>DB: saveAssistantMessage + run completed
+  POST->>POST: onFinish → scheduleRunCleanup
+  POST->>RD: purgeResumableStream
+  POST->>DB: active_stream_id = null
+```
+
+要点：
+
+- `consumeSseStream` 在 **SSE 编码之后** 介入，缓冲的是线上真实字节流，resume 端无需重新跑 Workflow  
+- `assistantMessageId` 在 `start` 事件即固定（UUID），刷新前后同一气泡 id 一致  
+- 清理在 `onFinish` / error 路径通过 `after()` 异步执行，不阻塞响应尾部
+
+### 3.2 刷新后 — Resume 重连
+
+```mermaid
+sequenceDiagram
+  participant UI as ChatConversationPanel
+  participant GET as GET /api/chat/[id]/stream
+  participant DB as Supabase
+  participant RS as resumable-stream
+  participant RD as Upstash Redis
+  participant POST as POST /api/chat (仍在运行)
+
+  Note over UI: 页面 mount，initialMessages 末条为 user
+  UI->>UI: shouldResumeChatStream → true
+  UI->>GET: resumeStream()（单次 ref 守卫）
+
+  GET->>DB: auth + getActiveRunForConversation
+  alt 无 active_stream_id / Redis 未配置
+    GET-->>UI: 204 No Content
+    Note over UI: 展示 DB 已有消息 + steps
+  else 末条已为 assistant（已落库）
+    GET-->>UI: 204（防重复气泡）
+  else 有活跃流
+    GET->>RS: resumeExistingStream(streamId)
+    RS->>RD: replay 已缓冲 chunks
+    RS-->>GET: ReadableStream
+    GET-->>UI: SSE（UI_MESSAGE_STREAM_HEADERS）
+    loop 续传
+      POST->>RD: 新 chunk
+      RD-->>UI: text-delta / step 事件
+    end
+  end
+```
+
+客户端策略（与 PRD 初稿 `resume: true` 的差异）：
+
+| 项 | 行为 |
+|----|------|
+| 触发条件 | 末条消息为 **user**（尚无 assistant 落库） |
+| 调用方式 | 手动 `resumeStream()` + `resumeAttemptedRef`，避免 Strict Mode 双调用 |
+| 204 处理 | 无活跃流时静默降级，展示 Supabase 历史 + workflow steps |
+
+### 3.3 Run 终态 — Redis 清理
+
+```mermaid
+sequenceDiagram
+  participant WR as WorkflowRunner
+  participant POST as POST handler
+  participant Purge as purgeResumableStream
+  participant RD as Upstash Redis
+  participant DB as Supabase
+
+  alt completed（onFinish）
+    WR->>DB: finishWorkflowRun(completed)
+  else error（catch / onFinish）
+    WR->>DB: finishWorkflowRun(error)
+  else cancelled（后续 Stop）
+    WR->>DB: finishWorkflowRun(cancelled)
+  else 新 POST 取消 stale run
+    POST->>DB: cancelStaleRuns
+  end
+
+  POST->>Purge: after() → purgeResumableStream(streamId)
+  Purge->>RD: sentinel DONE + del keys
+  POST->>DB: clearActiveStreamId
+  Note over RD: 异常时 TTL 45min 兜底过期
+```
+
+### 3.4 三层存储职责
+
+| 数据 | 存储 | 生命周期 |
+|------|------|----------|
+| 已完成 workflow 步骤 | `workflow_step_logs` | 永久 |
+| 最终 assistant / user 消息 | `messages` | 永久 |
+| 进行中 SSE chunk | Upstash Redis | run 活跃期；终态 purge 或 TTL |
+| 活跃流指针 | `workflow_runs.active_stream_id` | run `running` 期间；终态置 null |
+
+刷新后的数据优先级：
+
+1. 尝试 resume Redis 流（进行中 partial token + 步骤事件）  
+2. 同时 / 否则从 DB 恢复步骤时间线与已持久化消息  
+
+---
+
+## 4. 依赖与配置
+
+### 4.1 npm
 
 ```bash
 pnpm add resumable-stream @upstash/redis
@@ -27,7 +249,7 @@ pnpm add resumable-stream @upstash/redis
 
 `resumable-stream` 按 [AI SDK Resume Streams](https://sdk.vercel.ai/docs/ai-sdk-ui/03-chatbot-resume-streams) 配置；若包内已封装 Upstash 连接，则 `@upstash/redis` 仅用于 **显式 purge** 辅助（实现时以包文档为准）。
 
-### 2.2 环境变量
+### 4.2 环境变量
 
 | 变量 | 必填 | 说明 |
 |------|------|------|
@@ -36,7 +258,7 @@ pnpm add resumable-stream @upstash/redis
 
 写入 `.env.example` 与 Vercel 环境。
 
-### 2.3 能力检测
+### 4.3 能力检测
 
 ```typescript
 // lib/redis/client.ts
@@ -52,9 +274,9 @@ export function isRedisConfigured(): boolean {
 
 ---
 
-## 3. Resumable Stream 集成
+## 5. Resumable Stream 集成
 
-### 3.1 创建流（POST `/api/chat`）
+### 5.1 创建流（POST `/api/chat`）
 
 ```typescript
 import { after } from "next/server";
@@ -72,13 +294,13 @@ return createUIMessageStreamResponse({
     await ctx.createNewResumableStream(streamId, () => sseStream);
     await setActiveStreamId(runId, streamId);
   },
-  // onFinish / onError → 见 §5 清理
+  // onFinish / onError → 见 §7 清理
 });
 ```
 
 `streamId` 与 `workflow_runs.active_stream_id` 一一对应。
 
-### 3.2 Resume 流（GET `/api/chat/[conversationId]/stream`）
+### 5.2 Resume 流（GET `/api/chat/[conversationId]/stream`）
 
 **路径选择理由：** `DefaultChatTransport` 默认 `reconnectToStream` → `GET {api}/{chatId}/stream`，与 `api: "/api/chat"` 组合为 `/api/chat/{conversationId}/stream`。
 
@@ -117,7 +339,7 @@ export async function GET(
 }
 ```
 
-### 3.3 前端
+### 5.3 前端
 
 ```typescript
 // lib/chat/stream-resume.ts
@@ -148,9 +370,9 @@ useEffect(() => {
 
 ---
 
-## 4. Redis Key 与 TTL
+## 6. Redis Key 与 TTL
 
-### 4.1 Key 命名
+### 6.1 Key 命名
 
 以 `resumable-stream` 库实际前缀为准；应用层额外记录：
 
@@ -161,7 +383,7 @@ useEffect(() => {
 
 **辅助索引（可选）：** `workflow:run:{runId}:streamId` → 便于 purge 时查找（若库未暴露 delete API）。
 
-### 4.2 TTL 兜底
+### 6.2 TTL 兜底
 
 创建 resumable stream 时配置 **最大 TTL 45 分钟**（`< maxDuration` 130s 的数倍，防泄漏）：
 
@@ -172,9 +394,9 @@ useEffect(() => {
 
 ---
 
-## 5. Redis 清理（必做）
+## 7. Redis 清理（必做）
 
-### 5.1 `lib/redis/purge.ts`
+### 7.1 `lib/redis/purge.ts`
 
 ```typescript
 export async function purgeResumableStream(streamId: string | null): Promise<void>
@@ -186,7 +408,7 @@ export async function purgeResumableStream(streamId: string | null): Promise<voi
 2. 调用 `resumable-stream` 提供的 delete / 或 `@upstash/redis` 按 pattern 删除  
 3. 失败 → `console.error` + 依赖 TTL；**不** 抛出到用户响应路径  
 
-### 5.2 触发时机
+### 7.2 触发时机
 
 | 事件 | 动作 |
 |------|------|
@@ -205,7 +427,7 @@ after(async () => {
 });
 ```
 
-### 5.3 与 PRD 对齐
+### 7.3 与 PRD 对齐
 
 > 每个 chat run 结束/异常后清空该 run 的 Redis 数据
 
@@ -213,7 +435,7 @@ after(async () => {
 
 ---
 
-## 6. 刷新 vs 取消
+## 8. 刷新 vs 取消
 
 | 场景 | 服务端 | 客户端 |
 |------|--------|--------|
@@ -225,7 +447,7 @@ after(async () => {
 
 ---
 
-## 7. 错误处理
+## 9. 错误处理
 
 | 情况 | 行为 |
 |------|------|
@@ -235,7 +457,7 @@ after(async () => {
 
 ---
 
-## 8. 文件变更
+## 10. 文件变更
 
 | 操作 | 路径 |
 |------|------|
@@ -252,7 +474,7 @@ after(async () => {
 
 ---
 
-## 9. 测试计划
+## 11. 测试计划
 
 | AC | 验证 |
 |----|------|
@@ -264,9 +486,10 @@ after(async () => {
 
 ---
 
-## 10. 修订记录
+## 12. 修订记录
 
 | 日期 | 变更 |
 |------|------|
 | 2026-06-24 | iter-06 技术设计草稿 |
-| 2026-06-24 | §3.2–3.3 resume 防重复（assistant 已落库 204、条件 resumeStream）；§8 文件清单 |
+| 2026-06-24 | §5.2–5.3 resume 防重复（assistant 已落库 204、条件 resumeStream）；§10 文件清单 |
+| 2026-06-29 | 新增 §2 流式输出原理、§3 技术实现流程图（mermaid）；英文版 [stream-resume.md](./stream-resume.md) §2–§3 同步 |
