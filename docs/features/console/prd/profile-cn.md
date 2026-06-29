@@ -104,9 +104,9 @@ F-21 — `/console/profile`：Account 信息 + Preferences（对话模型偏好�
 |------|-----------|------|
 | Enable summarization | Toggle | 默认 On |
 | Trigger turn count | Number input | 默认 20；≥ 1 |
-| Retain turn count | Number input | 默认 6；≥ 0 |
+| Retain turn count | Number input | 默认 4；≥ 0 |
 | Trigger token count | Number input | 默认 8000；≥ 1 |
-| Retain token count | Number input | 默认 4000；≥ 1 |
+| Retain token count | Number input | 默认 2000；≥ 1 |
 | Summary model | Dropdown | 首项 `Same as chat model`；其余为 Passed 配置 |
 
 **View 模式（English 示例）：**
@@ -115,7 +115,7 @@ F-21 — `/console/profile`：Account 信息 + Preferences（对话模型偏好�
 Conversation memory
 Summarization: Enabled
 Trigger: 20 turns / 8000 tokens
-Retain: 6 turns / 4000 tokens
+Retain: 4 turns / 2000 tokens
 Summary model: Same as chat model
 ```
 

@@ -76,9 +76,9 @@ Values used when the user has **never customized** summarization settings:
 |-----------|---------|-------|
 | Enable summarization | **On** | |
 | Trigger turn count | **20** | ~20 complete turns before possible trigger |
-| Retain turn count | **6** | Keep last 6 full turns verbatim |
+| Retain turn count | **4** | Keep last 4 full turns verbatim |
 | Trigger token count | **8000** | |
-| Retain token count | **4000** | Target context size after compression |
+| Retain token count | **2000** | Target context size after compression |
 | Summary model | **Same as chat model** | |
 
 ### 5.3 Trigger & retain (hybrid · confirmed)

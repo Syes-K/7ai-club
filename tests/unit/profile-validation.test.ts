@@ -30,9 +30,9 @@ const mockProfile = {
   preferred_model_config_id: null,
   summarization_enabled: true,
   summary_trigger_turns: 20,
-  summary_retain_turns: 6,
+  summary_retain_turns: 4,
   summary_trigger_tokens: 8000,
-  summary_retain_tokens: 4000,
+  summary_retain_tokens: 2000,
   summary_model_config_id: null,
 };
 
@@ -83,9 +83,9 @@ describe("profile validation (iter-07 memory)", () => {
       {
         summarizationEnabled: true,
         summaryTriggerTurns: 20,
-        summaryRetainTurns: 6,
+        summaryRetainTurns: 4,
         summaryTriggerTokens: 8000,
-        summaryRetainTokens: 4000,
+        summaryRetainTokens: 2000,
         summaryModelConfigId: SUMMARY_SAME_AS_CHAT_ID,
       },
       allowed,

@@ -3,9 +3,9 @@
 ALTER TABLE public.user_profiles
   ADD COLUMN summarization_enabled BOOLEAN NOT NULL DEFAULT true,
   ADD COLUMN summary_trigger_turns INT NOT NULL DEFAULT 20,
-  ADD COLUMN summary_retain_turns INT NOT NULL DEFAULT 6,
+  ADD COLUMN summary_retain_turns INT NOT NULL DEFAULT 4,
   ADD COLUMN summary_trigger_tokens INT NOT NULL DEFAULT 8000,
-  ADD COLUMN summary_retain_tokens INT NOT NULL DEFAULT 4000,
+  ADD COLUMN summary_retain_tokens INT NOT NULL DEFAULT 2000,
   ADD COLUMN summary_model_config_id UUID
     REFERENCES public.user_model_configs(id) ON DELETE SET NULL;
 

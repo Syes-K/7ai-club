@@ -80,9 +80,9 @@ iter-06 的 `load_context` 加载 **全部** `messages` 送入 LLM。对话变�
 |------|--------|------|
 | Enable summarization | **On** | 默认开启 |
 | Trigger turn count | **20** | 约 20 轮完整对话后可能触发 |
-| Retain turn count | **6** | 始终保留最近 6 轮原文 |
+| Retain turn count | **4** | 始终保留最近 4 轮原文 |
 | Trigger token count | **8000** | 估算超 8k token 可能触发 |
-| Retain token count | **4000** | 压缩后上下文目标约 4k token |
+| Retain token count | **2000** | 压缩后上下文目标约 2k token |
 | Summary model | **Same as chat model** | 未单独选择摘要模型 |
 
 ### 5.3 触发与保留（混合 · 产品已决）

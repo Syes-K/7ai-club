@@ -55,7 +55,7 @@
 | 触发策略 | **混合 OR** — turns 或 tokens 超阈即评估 |
 | 保留策略 | **混合 AND** — 保留最近 N 轮 + token 上限 |
 | 摘要模型 | Preferences **可配置**；默认 Same as chat model |
-| 系统预设默认值 | Enable On · trigger 20/8000 · retain 6/4000 |
+| 系统预设默认值 | Enable On · trigger 20/8000 · retain 4/2000 |
 | 用户可见性 | **仅 workflow 步骤**；inline 折叠展开；无系统气泡 |
 | Clear chat | 删除 messages + memory summary |
 | **Node 时机** | **方案 B** — `load_history_summary` 在 LLM 前；`evaluate` + `summarize` 在 assistant 落库后 |
@@ -144,7 +144,7 @@
 
 ## 9. 步骤指标说明（人工 QA 参考）
 
-Preferences 示例：**Trigger 6 turns / 2000 tokens · Retain 2 turns / 500 tokens**。
+Preferences 示例：**Trigger 4 turns / 2000 tokens · Retain 2 turns / 500 tokens**。
 
 | 步骤 | 展示示例 | 含义 |
 |------|----------|------|

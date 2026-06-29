@@ -36,9 +36,9 @@ export function profileToSummarizationPrefs(
   return {
     summarization_enabled: profile?.summarization_enabled ?? true,
     summary_trigger_turns: profile?.summary_trigger_turns ?? 20,
-    summary_retain_turns: profile?.summary_retain_turns ?? 6,
+    summary_retain_turns: profile?.summary_retain_turns ?? 4,
     summary_trigger_tokens: profile?.summary_trigger_tokens ?? 8000,
-    summary_retain_tokens: profile?.summary_retain_tokens ?? 4000,
+    summary_retain_tokens: profile?.summary_retain_tokens ?? 2000,
     summary_model_config_id: profile?.summary_model_config_id ?? null,
   };
 }

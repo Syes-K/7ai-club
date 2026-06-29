@@ -73,9 +73,9 @@ sequenceDiagram
 |----|------|------|------|
 | `summarization_enabled` | `BOOLEAN NOT NULL` | `true` | 开关 |
 | `summary_trigger_turns` | `INT NOT NULL` | `20` | `CHECK (>= 1)` |
-| `summary_retain_turns` | `INT NOT NULL` | `6` | `CHECK (>= 0)` |
+| `summary_retain_turns` | `INT NOT NULL` | `4` | `CHECK (>= 0)` |
 | `summary_trigger_tokens` | `INT NOT NULL` | `8000` | `CHECK (>= 1)` |
-| `summary_retain_tokens` | `INT NOT NULL` | `4000` | `CHECK (>= 1)` |
+| `summary_retain_tokens` | `INT NOT NULL` | `2000` | `CHECK (>= 1)` |
 | `summary_model_config_id` | `UUID NULL` | `NULL` | FK → `user_model_configs(id) ON DELETE SET NULL`；`NULL` = Same as chat |
 
 **表级 CHECK：**
@@ -326,9 +326,9 @@ llmUiMessages?: UIMessage[];
   "preferredModelConfigId": "uuid-or-platform-default",
   "summarizationEnabled": true,
   "summaryTriggerTurns": 20,
-  "summaryRetainTurns": 6,
+  "summaryRetainTurns": 4,
   "summaryTriggerTokens": 8000,
-  "summaryRetainTokens": 4000,
+  "summaryRetainTokens": 2000,
   "summaryModelConfigId": null
 }
 ```

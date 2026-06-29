@@ -22,7 +22,7 @@
 - 独立 Save；Toggle Off 时数字字段 disabled  
 - 校验：`retain ≤ trigger`（turns / tokens）
 
-**编码期：** 远程 DB 需 iter-07 migration；用户自定义 trigger（如 6/2000 · retain 2/500）已支持。
+**编码期：** 远程 DB 需 iter-07 migration；用户自定义 trigger（如 4/2000 · retain 2/500）已支持。
 
 ---
 

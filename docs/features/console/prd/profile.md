@@ -93,9 +93,9 @@ Add a **Conversation memory** section inside the Preferences card (English UI). 
 |-------|--------------|---------|
 | Enable summarization | Toggle | On |
 | Trigger turn count | Number | 20 |
-| Retain turn count | Number | 6 |
+| Retain turn count | Number | 4 |
 | Trigger token count | Number | 8000 |
-| Retain token count | Number | 4000 |
+| Retain token count | Number | 2000 |
 | Summary model | Dropdown | Same as chat model (+ Passed configs) |
 
 **Validation:** `retain_turns ≤ trigger_turns`; `retain_tokens ≤ trigger_tokens`; numeric fields disabled when toggle Off.
