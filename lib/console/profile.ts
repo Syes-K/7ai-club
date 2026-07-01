@@ -1,6 +1,10 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/server";
 import {
+  DEFAULT_RAG_CONFIDENCE,
+  DEFAULT_RAG_TOP_K,
+} from "@/lib/rag/defaults";
+import {
   DEFAULT_SUMMARIZATION_ENABLED,
   DEFAULT_SUMMARY_RETAIN_TOKENS,
   DEFAULT_SUMMARY_RETAIN_TURNS,
@@ -18,10 +22,14 @@ export type UserProfile = {
   summary_trigger_tokens: number;
   summary_retain_tokens: number;
   summary_model_config_id: string | null;
+  rag_confidence_threshold: number;
+  rag_top_k: number;
+  rag_embedding_provider: string;
+  rag_embedding_model: string;
 };
 
 const PROFILE_SELECT =
-  "user_id, nickname, preferred_model_config_id, summarization_enabled, summary_trigger_turns, summary_retain_turns, summary_trigger_tokens, summary_retain_tokens, summary_model_config_id";
+  "user_id, nickname, preferred_model_config_id, summarization_enabled, summary_trigger_turns, summary_retain_turns, summary_trigger_tokens, summary_retain_tokens, summary_model_config_id, rag_confidence_threshold, rag_top_k, rag_embedding_provider, rag_embedding_model";
 
 function normalizeProfile(row: Record<string, unknown>): UserProfile {
   return {
@@ -46,6 +54,14 @@ function normalizeProfile(row: Record<string, unknown>): UserProfile {
       DEFAULT_SUMMARY_RETAIN_TOKENS,
     summary_model_config_id:
       (row.summary_model_config_id as string | null) ?? null,
+    rag_confidence_threshold:
+      (row.rag_confidence_threshold as number | undefined) ??
+      DEFAULT_RAG_CONFIDENCE,
+    rag_top_k: (row.rag_top_k as number | undefined) ?? DEFAULT_RAG_TOP_K,
+    rag_embedding_provider:
+      (row.rag_embedding_provider as string | undefined) ?? "siliconflow",
+    rag_embedding_model:
+      (row.rag_embedding_model as string | undefined) ?? "BAAI/bge-m3",
   };
 }
 
@@ -82,6 +98,10 @@ export async function upsertUserProfile(
     summaryTriggerTokens?: number;
     summaryRetainTokens?: number;
     summaryModelConfigId?: string | null;
+    ragConfidenceThreshold?: number;
+    ragTopK?: number;
+    ragEmbeddingProvider?: string;
+    ragEmbeddingModel?: string;
   },
 ): Promise<UserProfile> {
   const supabase = await createClient();
@@ -110,6 +130,18 @@ export async function upsertUserProfile(
   }
   if ("summaryModelConfigId" in fields) {
     row.summary_model_config_id = fields.summaryModelConfigId ?? null;
+  }
+  if ("ragConfidenceThreshold" in fields) {
+    row.rag_confidence_threshold = fields.ragConfidenceThreshold;
+  }
+  if ("ragTopK" in fields) {
+    row.rag_top_k = fields.ragTopK;
+  }
+  if ("ragEmbeddingProvider" in fields) {
+    row.rag_embedding_provider = fields.ragEmbeddingProvider;
+  }
+  if ("ragEmbeddingModel" in fields) {
+    row.rag_embedding_model = fields.ragEmbeddingModel;
   }
 
   const { data, error } = await supabase

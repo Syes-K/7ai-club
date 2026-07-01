@@ -4,7 +4,7 @@ import { throwIfError } from "@/lib/data/errors";
 import type { UserLlmProviderId } from "@/lib/llm/provider";
 
 const PUBLIC_COLUMNS =
-  "id, user_id, provider, model_name, test_status, tested_at, test_error, api_key_set, created_at, updated_at";
+  "id, user_id, provider, model_name, model_type, embedding_dimensions, test_status, tested_at, test_error, api_key_set, created_at, updated_at";
 
 export async function listUserModelConfigRows(): Promise<ModelConfigRow[]> {
   const supabase = createClient();
@@ -31,6 +31,8 @@ export async function updateUserModelConfig(
   fields: {
     provider?: UserLlmProviderId;
     modelName?: string;
+    modelType?: import("@/lib/constants/model-types").ModelTypeId;
+    embeddingDimensions?: number | null;
   },
 ): Promise<ModelConfigRow> {
   const supabase = createClient();
@@ -53,6 +55,12 @@ export async function updateUserModelConfig(
   }
   if (fields.modelName) {
     row.model_name = fields.modelName;
+  }
+  if (fields.modelType) {
+    row.model_type = fields.modelType;
+  }
+  if ("embeddingDimensions" in fields) {
+    row.embedding_dimensions = fields.embeddingDimensions ?? null;
   }
 
   const { data, error } = await supabase

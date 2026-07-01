@@ -27,6 +27,8 @@ F-21 — `/console/profile`：Account 信息 + Preferences（对话模型偏好�
 | US-34 | 作为用户，Account 与 Preferences 分开保存，互不影响    | P0  | iter-05 |
 | US-35 | 作为用户，Profile 默认展示详情，点击 Edit 才进入编辑       | P1  | iter-05 |
 | US-36 | 作为用户，我能在 Preferences 配置对话摘要策略与摘要模型       | P0  | iter-07 |
+| US-97 | 作为用户，我希望配置 RAG 召回置信度与 TopK                    | P0  | iter-09 |
+| US-98 | 作为用户，我希望选择 embedding 模型（新知识库用）             | P0  | iter-09 |
 
 
 ---
@@ -123,7 +125,13 @@ Summary model: Same as chat model
 
 **作用范围：** 用户级全局；Chat workflow 的 `evaluate_summarization` / `summarize_history` 读取。详见 [agent-orchestration/prd/history-summarization-cn.md](../../agent-orchestration/prd/history-summarization-cn.md)。
 
-### 3.5 与 iter-03 的差异
+### 3.5 RAG retrieval（iter-09）
+
+Preferences 内新增 **RAG retrieval** 区块（English UI），**独立 Save**。字段：Confidence threshold（默认 0.75）、Top K（默认 5）、Embedding model（默认 env）。改 embedding model 时确认对话框；**已有 KB 创建时锁定模型，不自动 re-embed**。
+
+详见 [knowledge-base/prd/rag-preferences-cn.md](../../knowledge-base/prd/rag-preferences-cn.md)。
+
+### 3.6 与 iter-03 的差异
 
 
 | iter-03                          | iter-05              |
@@ -153,6 +161,10 @@ Summary model: Same as chat model
 
 - [ ] **AC-70** — Conversation memory 字段可编辑、校验、Save 持久化（见 agent-orchestration changelog）
 
+### iter-09
+
+- [ ] **AC-94** — RAG retrieval Preferences（见 [knowledge-base/changelog/iter-09-cn.md](../../knowledge-base/changelog/iter-09-cn.md)）
+
 ---
 
 ## 5. 修订记录
@@ -164,5 +176,6 @@ Summary model: Same as chat model
 | 2026-06-16 | 明确 compact vs 全顶栏；标记 iter-03 已交付                 |
 | 2026-06-17 | iter-05 — 双 Card、Preferences 绑定 Models Passed 配置 |
 | 2026-06-25 | iter-07 — Preferences 增加 Conversation memory 摘要配置 |
+| 2026-06-30 | iter-09 — Preferences 增加 RAG retrieval 配置 |
 
 

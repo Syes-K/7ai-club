@@ -48,10 +48,18 @@ export function ConsolePage({
   );
 }
 
-export function ConsoleTable({ children }: { children: ReactNode }) {
+export function ConsoleTable({
+  children,
+  className,
+}: {
+  children: ReactNode;
+  className?: string;
+}) {
   return (
     <div className="mt-8 overflow-x-auto rounded-lg border border-[var(--neon-primary)]/15">
-      <table className="w-full min-w-[720px] text-left text-sm">{children}</table>
+      <table className={cn("w-full min-w-[720px] text-left text-sm", className)}>
+        {children}
+      </table>
     </div>
   );
 }

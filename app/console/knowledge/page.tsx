@@ -1,10 +1,5 @@
-import { PlaceholderPage } from "@/components/console/placeholder-page";
+import { KnowledgeBasesManager } from "@/components/console/knowledge-bases-manager";
 
 export default function ConsoleKnowledgePage() {
-  return (
-    <PlaceholderPage
-      title="Knowledge Base"
-      description="Upload documents and bind knowledge to assistants. RAG support is coming soon."
-    />
-  );
+  return <KnowledgeBasesManager />;
 }

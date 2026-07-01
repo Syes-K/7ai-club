@@ -29,7 +29,8 @@ export async function POST(req: Request) {
     return new Response(parsed.error ?? "Invalid request", { status: 422 });
   }
 
-  const { provider, modelName, apiKey } = parsed.fields;
+  const { provider, modelName, apiKey, modelType, embeddingDimensions } =
+    parsed.fields;
   if (!isUserLlmProviderId(provider)) {
     return new Response("Invalid provider", { status: 422 });
   }
@@ -53,11 +54,13 @@ export async function POST(req: Request) {
       user_id: user.id,
       provider,
       model_name: modelName,
+      model_type: modelType,
+      embedding_dimensions: embeddingDimensions,
       test_status: "untested",
       api_key_set: true,
     })
     .select(
-      "id, user_id, provider, model_name, test_status, tested_at, test_error, api_key_set, created_at, updated_at",
+      "id, user_id, provider, model_name, model_type, embedding_dimensions, test_status, tested_at, test_error, api_key_set, created_at, updated_at",
     )
     .single();
 

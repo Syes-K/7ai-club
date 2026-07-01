@@ -14,6 +14,16 @@ import {
   DEFAULT_SUMMARY_TRIGGER_TOKENS,
   DEFAULT_SUMMARY_TRIGGER_TURNS,
 } from "@/lib/memory/defaults";
+import {
+  DEFAULT_RAG_CONFIDENCE,
+  DEFAULT_RAG_EMBEDDING_MODEL,
+  DEFAULT_RAG_EMBEDDING_PROVIDER,
+  DEFAULT_RAG_TOP_K,
+} from "@/lib/rag/defaults";
+import {
+  listEmbeddingModelOptionsForUser,
+  resolveEmbeddingLabel,
+} from "@/lib/console/model-configs-server";
 import { createClient } from "@/lib/supabase/server";
 
 export default async function ConsoleProfilePage() {
@@ -28,7 +38,14 @@ export default async function ConsoleProfilePage() {
 
   const profile = await getUserProfile(user.id).catch(() => null);
   const modelOptions = await listPassedModelOptionsForUser(user.id).catch(() => []);
+  const embeddingModelOptions = await listEmbeddingModelOptionsForUser(
+    user.id,
+  ).catch(() => []);
   const preferredConfigId = profile?.preferred_model_config_id ?? null;
+  const ragEmbeddingProvider =
+    profile?.rag_embedding_provider ?? DEFAULT_RAG_EMBEDDING_PROVIDER;
+  const ragEmbeddingModel =
+    profile?.rag_embedding_model ?? DEFAULT_RAG_EMBEDDING_MODEL;
 
   return (
     <ProfilePage
@@ -53,6 +70,17 @@ export default async function ConsoleProfilePage() {
           profile?.summary_model_config_id ?? null,
           modelOptions,
         ),
+        ragConfidenceThreshold:
+          profile?.rag_confidence_threshold ?? DEFAULT_RAG_CONFIDENCE,
+        ragTopK: profile?.rag_top_k ?? DEFAULT_RAG_TOP_K,
+        ragEmbeddingProvider,
+        ragEmbeddingModel,
+        ragEmbeddingLabel: resolveEmbeddingLabel(
+          ragEmbeddingProvider,
+          ragEmbeddingModel,
+          embeddingModelOptions,
+        ),
+        embeddingModelOptions,
       }}
     />
   );

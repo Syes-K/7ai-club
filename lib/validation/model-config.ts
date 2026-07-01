@@ -1,5 +1,11 @@
 import { isUserLlmProviderId } from "@/lib/llm/provider";
 import { USER_LLM_PROVIDER_IDS } from "@/lib/constants/model-providers";
+import {
+  isModelTypeId,
+  MODEL_TYPE_IDS,
+  type ModelTypeId,
+} from "@/lib/constants/model-types";
+import { DEFAULT_RAG_EMBEDDING_DIMENSIONS } from "@/lib/rag/defaults";
 
 export const MODEL_NAME_MAX_LENGTH = 128;
 export const API_KEY_MIN_LENGTH = 8;
@@ -36,12 +42,27 @@ export function validateProvider(value: unknown): string | null {
   return null;
 }
 
+export function validateModelType(value: unknown): string | null {
+  if (typeof value !== "string" || !isModelTypeId(value)) {
+    return "Invalid model type";
+  }
+  return null;
+}
+
 export function parseCreateModelBody(body: {
   provider?: unknown;
   modelName?: unknown;
   apiKey?: unknown;
+  modelType?: unknown;
+  embeddingDimensions?: unknown;
 }): {
-  fields?: { provider: string; modelName: string; apiKey: string };
+  fields?: {
+    provider: string;
+    modelName: string;
+    apiKey: string;
+    modelType: ModelTypeId;
+    embeddingDimensions: number | null;
+  };
   error?: string;
 } {
   const providerError = validateProvider(body.provider);
@@ -67,11 +88,33 @@ export function parseCreateModelBody(body: {
     return { error: apiKeyError };
   }
 
+  const modelTypeRaw =
+    body.modelType == null || body.modelType === ""
+      ? "chat"
+      : body.modelType;
+  const modelTypeError = validateModelType(modelTypeRaw);
+  if (modelTypeError) {
+    return { error: modelTypeError };
+  }
+  const modelType = modelTypeRaw as ModelTypeId;
+
+  let embeddingDimensions: number | null = null;
+  if (modelType === "embedding") {
+    const raw =
+      body.embeddingDimensions ?? DEFAULT_RAG_EMBEDDING_DIMENSIONS;
+    if (typeof raw !== "number" || !Number.isInteger(raw) || raw < 64 || raw > 8192) {
+      return { error: "Invalid embedding dimensions" };
+    }
+    embeddingDimensions = raw;
+  }
+
   return {
     fields: {
       provider: body.provider as string,
       modelName: body.modelName.trim(),
       apiKey: body.apiKey.trim(),
+      modelType,
+      embeddingDimensions,
     },
   };
 }
@@ -94,11 +137,23 @@ export function parseUpdateModelKeyBody(body: {
 export function parseUpdateModelMetadataBody(body: {
   provider?: unknown;
   modelName?: unknown;
+  modelType?: unknown;
+  embeddingDimensions?: unknown;
 }): {
-  fields?: { provider?: string; modelName?: string };
+  fields?: {
+    provider?: string;
+    modelName?: string;
+    modelType?: ModelTypeId;
+    embeddingDimensions?: number | null;
+  };
   error?: string;
 } {
-  const fields: { provider?: string; modelName?: string } = {};
+  const fields: {
+    provider?: string;
+    modelName?: string;
+    modelType?: ModelTypeId;
+    embeddingDimensions?: number | null;
+  } = {};
 
   if ("provider" in body) {
     const providerError = validateProvider(body.provider);
@@ -119,9 +174,40 @@ export function parseUpdateModelMetadataBody(body: {
     fields.modelName = body.modelName.trim();
   }
 
-  if (!fields.provider && !fields.modelName) {
+  if ("modelType" in body) {
+    const modelTypeError = validateModelType(body.modelType);
+    if (modelTypeError) {
+      return { error: modelTypeError };
+    }
+    fields.modelType = body.modelType as ModelTypeId;
+  }
+
+  if ("embeddingDimensions" in body) {
+    const raw = body.embeddingDimensions;
+    if (raw == null) {
+      fields.embeddingDimensions = null;
+    } else if (
+      typeof raw !== "number" ||
+      !Number.isInteger(raw) ||
+      raw < 64 ||
+      raw > 8192
+    ) {
+      return { error: "Invalid embedding dimensions" };
+    } else {
+      fields.embeddingDimensions = raw;
+    }
+  }
+
+  if (
+    !fields.provider &&
+    !fields.modelName &&
+    !fields.modelType &&
+    !("embeddingDimensions" in body)
+  ) {
     return { error: "No fields to update" };
   }
 
   return { fields };
 }
+
+export { MODEL_TYPE_IDS };

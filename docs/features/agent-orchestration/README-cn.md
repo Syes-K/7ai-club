@@ -4,8 +4,8 @@
 > **中文：** [README-cn.md](./README-cn.md)
 
 > **Feature slug：** `agent-orchestration`  
-> **迭代：** [`iter-06`](../../iterations/iter-06/README-cn.md)（**已发布**）· [`iter-07`](../../iterations/iter-07/README-cn.md)（**已发布**）· [`iter-08`](../../iterations/iter-08/README-cn.md)（**已发布**）  
-> **路线图阶段：** 2 — Agent 编排基础（为 RAG / MCP / Skills 铺路）
+> **迭代：** [`iter-06`](../../iterations/iter-06/README-cn.md)（**已发布**）· [`iter-07`](../../iterations/iter-07/README-cn.md)（**已发布**）· [`iter-08`](../../iterations/iter-08/README-cn.md)（**已发布**）· [`iter-09`](../../iterations/iter-09/README-cn.md)（**RAG 节点 — 已发布**）  
+> **路线图阶段：** 2 — Agent 编排基础 + 知识库 RAG
 
 ---
 

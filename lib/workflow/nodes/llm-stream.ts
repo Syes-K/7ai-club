@@ -21,14 +21,22 @@ import { REASONING_NODE_ID } from "@/lib/workflow/node-catalog";
 import type { WorkflowContext, StepEmitter } from "@/lib/workflow/types";
 
 function buildSystemPrompt(ctx: WorkflowContext): string {
-  const base = ctx.assistant?.system_prompt ?? "";
-  const memory = ctx.memorySummary?.content?.trim();
-
-  if (!memory) {
-    return base;
+  const parts: string[] = [];
+  const base = ctx.assistant?.system_prompt?.trim();
+  if (base) {
+    parts.push(base);
   }
 
-  return `${base}\n\n## Conversation memory\n${memory}`;
+  const memory = ctx.memorySummary?.content?.trim();
+  if (memory) {
+    parts.push(`## Conversation memory\n${memory}`);
+  }
+
+  if (ctx.ragContextText?.trim()) {
+    parts.push(`## Retrieved knowledge\n${ctx.ragContextText.trim()}`);
+  }
+
+  return parts.join("\n\n");
 }
 
 function getReasoningDelta(part: { type: string; delta?: string; text?: string }): string {

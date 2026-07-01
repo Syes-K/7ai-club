@@ -8,8 +8,14 @@ import {
   getProviderLabel,
   USER_LLM_PROVIDER_IDS,
 } from "@/lib/constants/model-providers";
+import {
+  MODEL_TYPE_IDS,
+  getModelTypeLabel,
+  type ModelTypeId,
+} from "@/lib/constants/model-types";
 import type { ModelConfigDto } from "@/lib/data/types";
 import type { UserLlmProviderId } from "@/lib/llm/provider";
+import { DEFAULT_RAG_EMBEDDING_DIMENSIONS } from "@/lib/rag/defaults";
 import { MODEL_NAME_MAX_LENGTH } from "@/lib/validation/model-config";
 
 type FormMode = "create" | "edit";
@@ -17,10 +23,19 @@ type FormMode = "create" | "edit";
 interface ModelConfigFormDialogProps {
   open: boolean;
   mode: FormMode;
-  initial?: Pick<ModelConfigDto, "provider" | "modelName">;
+  initial?: Pick<
+    ModelConfigDto,
+    "provider" | "modelName" | "modelType" | "embeddingDimensions"
+  >;
   saving: boolean;
   error: string | null;
-  onSave: (values: { provider: string; modelName: string; apiKey?: string }) => void;
+  onSave: (values: {
+    provider: string;
+    modelName: string;
+    modelType: ModelTypeId;
+    embeddingDimensions?: number;
+    apiKey?: string;
+  }) => void;
   onCancel: () => void;
 }
 
@@ -38,6 +53,12 @@ export function ModelConfigFormDialog({
     initial?.provider ?? "bailian",
   );
   const [modelName, setModelName] = useState(initial?.modelName ?? "");
+  const [modelType, setModelType] = useState<ModelTypeId>(
+    initial?.modelType ?? "chat",
+  );
+  const [embeddingDimensions, setEmbeddingDimensions] = useState(
+    String(initial?.embeddingDimensions ?? DEFAULT_RAG_EMBEDDING_DIMENSIONS),
+  );
   const [apiKey, setApiKey] = useState("");
 
   useEffect(() => {
@@ -49,9 +70,13 @@ export function ModelConfigFormDialog({
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    const parsedDimensions = Number.parseInt(embeddingDimensions, 10);
     onSave({
       provider,
       modelName: modelName.trim(),
+      modelType,
+      embeddingDimensions:
+        modelType === "embedding" ? parsedDimensions : undefined,
       apiKey: mode === "create" ? apiKey.trim() : undefined,
     });
   }
@@ -71,6 +96,28 @@ export function ModelConfigFormDialog({
       </h2>
 
       <form onSubmit={handleSubmit} className="mt-4 space-y-4">
+        <div className="space-y-2">
+          <Label htmlFor="model-type">Model type</Label>
+          <select
+            id="model-type"
+            value={modelType}
+            onChange={(e) => setModelType(e.target.value as ModelTypeId)}
+            disabled={mode === "edit"}
+            className="flex h-10 w-full rounded-lg border border-[var(--neon-primary)]/25 bg-[var(--bg-base)] px-3 text-sm text-[var(--text-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--neon-primary)] disabled:opacity-60"
+          >
+            {MODEL_TYPE_IDS.map((id) => (
+              <option key={id} value={id}>
+                {getModelTypeLabel(id)}
+              </option>
+            ))}
+          </select>
+          {mode === "edit" && (
+            <p className="text-xs text-[var(--text-muted)]">
+              Model type cannot be changed after creation.
+            </p>
+          )}
+        </div>
+
         <div className="space-y-2">
           <Label htmlFor="model-provider">Provider</Label>
           <select
@@ -94,10 +141,30 @@ export function ModelConfigFormDialog({
             value={modelName}
             onChange={(e) => setModelName(e.target.value)}
             maxLength={MODEL_NAME_MAX_LENGTH}
-            placeholder="e.g. qwen3.6-plus"
+            placeholder={
+              modelType === "embedding"
+                ? "e.g. BAAI/bge-m3"
+                : "e.g. qwen3.6-plus"
+            }
             required
           />
         </div>
+
+        {modelType === "embedding" && (
+          <div className="space-y-2">
+            <Label htmlFor="embedding-dimensions">Embedding dimensions</Label>
+            <Input
+              id="embedding-dimensions"
+              type="number"
+              min={64}
+              max={8192}
+              step={1}
+              value={embeddingDimensions}
+              onChange={(e) => setEmbeddingDimensions(e.target.value)}
+              required
+            />
+          </div>
+        )}
 
         {mode === "create" && (
           <div className="space-y-2">

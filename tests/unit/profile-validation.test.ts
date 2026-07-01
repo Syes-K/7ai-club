@@ -24,6 +24,24 @@ import {
 } from "@/lib/validation/profile";
 import { saveAccount, savePreferences } from "@/lib/services/browser/profile";
 
+const allowedEmbeddingKeys = new Set(["siliconflow:BAAI/bge-m3"]);
+
+vi.mock("@/lib/services/browser/embedding-models", () => ({
+  listEmbeddingModelOptions: vi.fn().mockResolvedValue([
+    {
+      key: "siliconflow:BAAI/bge-m3",
+      provider: "siliconflow",
+      model: "BAAI/bge-m3",
+      label: "Platform default — siliconflow — BAAI/bge-m3",
+      dimensions: 1024,
+      isPlatformDefault: true,
+    },
+  ]),
+  buildAllowedEmbeddingKeys: vi.fn().mockReturnValue(
+    new Set(["siliconflow:BAAI/bge-m3"]),
+  ),
+}));
+
 const mockProfile = {
   user_id: "user-1",
   nickname: "Angela",
@@ -53,6 +71,7 @@ describe("profile validation (iter-05)", () => {
     const result = parsePreferencesPatch(
       { preferredModelConfigId: PLATFORM_DEFAULT_CONFIG_ID },
       allowed,
+      allowedEmbeddingKeys,
     );
     expect(result.error).toBeUndefined();
     expect(result.fields?.preferredModelConfigId).toBeNull();
@@ -62,6 +81,7 @@ describe("profile validation (iter-05)", () => {
     const result = parsePreferencesPatch(
       { preferredModelConfigId: "missing" },
       allowed,
+      allowedEmbeddingKeys,
     );
     expect(result.error).toBe("Selected model is not available");
   });
@@ -70,6 +90,7 @@ describe("profile validation (iter-05)", () => {
     const result = parsePreferencesPatch(
       { preferredModelConfigId: "cfg-1" },
       allowed,
+      allowedEmbeddingKeys,
     );
     expect(result.fields?.preferredModelConfigId).toBe("cfg-1");
   });
@@ -89,6 +110,7 @@ describe("profile validation (iter-07 memory)", () => {
         summaryModelConfigId: SUMMARY_SAME_AS_CHAT_ID,
       },
       allowed,
+      allowedEmbeddingKeys,
     );
 
     expect(result.error).toBeUndefined();
@@ -102,6 +124,7 @@ describe("profile validation (iter-07 memory)", () => {
         summaryRetainTurns: 8,
       },
       allowed,
+      allowedEmbeddingKeys,
     );
 
     expect(result.error).toBe("Retain turns cannot exceed trigger turns");
@@ -114,9 +137,64 @@ describe("profile validation (iter-07 memory)", () => {
         summaryRetainTokens: 2000,
       },
       allowed,
+      allowedEmbeddingKeys,
     );
 
     expect(result.error).toBe("Retain tokens cannot exceed trigger tokens");
+  });
+});
+
+describe("profile validation (iter-09 RAG preferences)", () => {
+  const allowed = new Set([PLATFORM_DEFAULT_CONFIG_ID, "cfg-1"]);
+  const allowedEmbeddingKeys = new Set(["siliconflow:BAAI/bge-m3"]);
+
+  it("AC-94: parsePreferencesPatch accepts RAG confidence and TopK", () => {
+    const result = parsePreferencesPatch(
+      { ragConfidenceThreshold: 0.65, ragTopK: 3 },
+      allowed,
+      allowedEmbeddingKeys,
+    );
+
+    expect(result.error).toBeUndefined();
+    expect(result.fields?.ragConfidenceThreshold).toBe(0.65);
+    expect(result.fields?.ragTopK).toBe(3);
+  });
+
+  it("AC-94: parsePreferencesPatch rejects invalid confidence", () => {
+    const result = parsePreferencesPatch(
+      { ragConfidenceThreshold: 1.5 },
+      allowed,
+      allowedEmbeddingKeys,
+    );
+
+    expect(result.error).toBe("Confidence threshold must be between 0 and 1");
+  });
+
+  it("AC-94: parsePreferencesPatch requires embedding provider and model together", () => {
+    const result = parsePreferencesPatch(
+      { ragEmbeddingProvider: "siliconflow" },
+      allowed,
+      allowedEmbeddingKeys,
+    );
+
+    expect(result.error).toBe(
+      "Embedding model provider and model are required together",
+    );
+  });
+
+  it("AC-94: parsePreferencesPatch accepts whitelisted embedding model", () => {
+    const result = parsePreferencesPatch(
+      {
+        ragEmbeddingProvider: "siliconflow",
+        ragEmbeddingModel: "BAAI/bge-m3",
+      },
+      allowed,
+      allowedEmbeddingKeys,
+    );
+
+    expect(result.error).toBeUndefined();
+    expect(result.fields?.ragEmbeddingProvider).toBe("siliconflow");
+    expect(result.fields?.ragEmbeddingModel).toBe("BAAI/bge-m3");
   });
 });
 

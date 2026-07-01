@@ -153,6 +153,45 @@ F-24 — `/console/models`：用户 BYOK 模型配置、加密 API Key、连通�
 - 若该配置为 Profile 当前 Preferences 选中项：**禁止删除**（English 错误：「This model is your current preference. Choose another model in Profile first.」）
 - 平台默认：不可删除
 
+### 3.10 iter-09 增量 — Model type（含 Embedding）
+
+> **迭代：** iter-09（knowledge-base RAG）· migration `20260630180000_user_model_config_type.sql`
+
+**新增字段（每条用户配置）：**
+
+| 字段 | 说明 |
+|------|------|
+| **Model type** | `chat`（默认）· `embedding` · `image` · `video` · `audio` · `moderation` · `rerank` |
+| **Embedding dimensions** | 仅 `type=embedding` 必填（如 1024）；入库时写入 KB 行 |
+
+**唯一约束：** `(user_id, provider, model_name, model_type)` — 同 provider + model name 可分别存在 chat 与 embedding 记录。
+
+**列表（English UI）：** 增加 **Type** 列；Test status 旁展示 type。
+
+**Add / Edit 表单：**
+
+| 字段 | 规则 |
+|------|------|
+| Model type | 下拉；默认 `chat` |
+| Embedding dimensions | type=embedding 时必填正整数 |
+
+**Test 行为（按 type）：**
+
+| Model type | 探针 |
+|------------|------|
+| `chat`（及 image/video 等未单独实现） | 最小 chat completion（§3.8） |
+| `embedding` | 调用 provider `/embeddings`；校验返回向量维度与填写 dimensions 一致 |
+
+**消费规则（iter-09）：**
+
+| Model type | Profile 可选 | 用途 |
+|------------|-------------|------|
+| `chat` + Passed | **Preferred chat model** | Chat / workflow LLM |
+| `embedding` + Passed | **Embedding model**（RAG Preferences） | 新建 KB 默认 embedding；ingest / retrieve 用对应 API Key |
+| 其他 type | iter-09 **不可选** | 预留 |
+
+平台默认 chat 配置规则不变；**Embedding platform default** 仍来自 env（`RAG_EMBEDDING_*`），在 Profile embedding 下拉**排第一**，非 Models 表行。
+
 ---
 
 ## 4. 权限与安全（产品层）
@@ -223,5 +262,6 @@ F-24 — `/console/models`：用户 BYOK 模型配置、加密 API Key、连通�
 | 日期         | 变更                   |
 | ---------- | -------------------- |
 | 2026-06-17 | iter-05 初稿 — PRD 已确认 |
+| 2026-06-30 | §3.10 iter-09 — model type + embedding test / Profile 消费规则 |
 
 

@@ -35,6 +35,8 @@ export async function listPassedModelOptions() {
 export async function createModelConfig(body: {
   provider: unknown;
   modelName: unknown;
+  modelType?: unknown;
+  embeddingDimensions?: unknown;
   apiKey: unknown;
 }): Promise<ModelConfigDto> {
   const parsed = parseCreateModelBody(body);
@@ -58,7 +60,11 @@ export async function createModelConfig(body: {
 
 export async function updateModelConfigMetadata(
   id: string,
-  body: { provider?: unknown; modelName?: unknown },
+  body: {
+    provider?: unknown;
+    modelName?: unknown;
+    embeddingDimensions?: unknown;
+  },
 ): Promise<ModelConfigDto> {
   const parsed = parseUpdateModelMetadataBody(body);
   if (parsed.error || !parsed.fields) {
@@ -68,6 +74,7 @@ export async function updateModelConfigMetadata(
   const row = await updateUserModelConfig(id, {
     provider: parsed.fields.provider as UserLlmProviderId | undefined,
     modelName: parsed.fields.modelName,
+    embeddingDimensions: parsed.fields.embeddingDimensions,
   });
 
   return rowToModelConfigDto(row);

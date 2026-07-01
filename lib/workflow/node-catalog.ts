@@ -19,6 +19,12 @@ export const WORKFLOW_NODE_CATALOG: Record<string, WorkflowNodeCatalogEntry> = {
     label: "Loading memory summary",
   },
   resolve_model: { order: 40, kind: "default", label: "Resolve model" },
+  rag_query_optimize: {
+    order: 42,
+    kind: "default",
+    label: "Optimizing query for retrieval",
+  },
+  rag_retrieve: { order: 43, kind: "default", label: "Retrieving knowledge" },
   reasoning: { order: 45, kind: "reasoning", label: "Reasoning" },
   llm_stream: { order: 50, kind: "default", label: "Generate response" },
   evaluate_summarization: {

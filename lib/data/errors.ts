@@ -27,5 +27,10 @@ export function mapRpcError(error: unknown): string {
     return `This assistant is used in ${count} chat(s). Delete those chats first.`;
   }
 
+  if (message.startsWith("kb_in_use:")) {
+    const count = message.split(":")[1] ?? "0";
+    return `This knowledge base is bound to ${count} assistant(s). Unbind it first.`;
+  }
+
   return message;
 }

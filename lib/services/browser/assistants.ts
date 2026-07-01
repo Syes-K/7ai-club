@@ -3,6 +3,8 @@ import {
   deleteAssistant,
   ensureUserAssistants,
   getPlatformTemplateModel,
+  loadAssistantKnowledgeBaseIds,
+  saveAssistantKnowledgeBaseIds,
   updateAssistant,
 } from "@/lib/data/browser/assistants";
 import type { AssistantDto, AssistantOption, AssistantRow } from "@/lib/data/types";
@@ -12,7 +14,10 @@ import {
   validateAssistantCreate,
 } from "@/lib/validation/assistant";
 
-function toAssistantDto(row: AssistantRow): AssistantDto {
+function toAssistantDto(
+  row: AssistantRow,
+  knowledgeBaseIds: string[] = [],
+): AssistantDto {
   return {
     id: row.id,
     icon: row.icon,
@@ -20,6 +25,7 @@ function toAssistantDto(row: AssistantRow): AssistantDto {
     openingMessage: row.opening_message,
     systemPrompt: row.system_prompt,
     updatedAt: row.updated_at,
+    knowledgeBaseIds,
   };
 }
 
@@ -33,7 +39,7 @@ function toAssistantOption(row: AssistantRow): AssistantOption {
 
 export async function listAssistants(): Promise<AssistantDto[]> {
   const rows = await ensureUserAssistants();
-  return rows.map(toAssistantDto);
+  return rows.map((row) => toAssistantDto(row));
 }
 
 export async function listAssistantOptions(): Promise<AssistantOption[]> {
@@ -46,6 +52,7 @@ export async function createUserAssistant(values: {
   name: string;
   openingMessage: string | null;
   systemPrompt: string;
+  knowledgeBaseIds?: string[];
 }): Promise<AssistantDto> {
   const validationError = validateAssistantCreate(values);
   if (validationError) {
@@ -61,7 +68,10 @@ export async function createUserAssistant(values: {
     model,
   });
 
-  return toAssistantDto(row);
+  const kbIds = values.knowledgeBaseIds ?? [];
+  await saveAssistantKnowledgeBaseIds(row.id, kbIds);
+
+  return toAssistantDto(row, kbIds);
 }
 
 export async function updateUserAssistant(
@@ -80,7 +90,23 @@ export async function updateUserAssistant(
     openingMessage: parsed.values.openingMessage,
   });
 
-  return toAssistantDto(row);
+  const kbIds = Array.isArray(body.knowledgeBaseIds)
+    ? (body.knowledgeBaseIds as unknown[]).filter(
+        (id): id is string => typeof id === "string",
+      )
+    : await loadAssistantKnowledgeBaseIds(assistantId);
+
+  if ("knowledgeBaseIds" in body) {
+    await saveAssistantKnowledgeBaseIds(assistantId, kbIds);
+  }
+
+  return toAssistantDto(row, kbIds);
+}
+
+export async function getAssistantKnowledgeBaseIdsForEdit(
+  assistantId: string,
+): Promise<string[]> {
+  return loadAssistantKnowledgeBaseIds(assistantId);
 }
 
 export async function deleteUserAssistant(assistantId: string): Promise<void> {

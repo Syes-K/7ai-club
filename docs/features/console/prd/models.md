@@ -151,6 +151,38 @@ Re-test required after provider, model name, or API key changes.
 - If config is current Profile preference: **block** (English: "This model is your current preference. Choose another model in Profile first.")
 - Platform default: not deletable
 
+### 3.10 iter-09 delta — Model type (incl. Embedding)
+
+> **Iteration:** iter-09 (knowledge-base RAG) · migration `20260630180000_user_model_config_type.sql`
+
+**New fields (per user config):**
+
+| Field | Description |
+|-------|-------------|
+| **Model type** | `chat` (default) · `embedding` · `image` · `video` · `audio` · `moderation` · `rerank` |
+| **Embedding dimensions** | Required when `type=embedding` (e.g. 1024); stored on KB at create |
+
+**Unique constraint:** `(user_id, provider, model_name, model_type)` — same provider + model name may exist as both chat and embedding.
+
+**List (English UI):** add **Type** column.
+
+**Test behavior by type:**
+
+| Model type | Probe |
+|------------|-------|
+| `chat` | Minimal chat completion (§3.8) |
+| `embedding` | Provider `/embeddings`; dimensions must match configured value |
+
+**Consumption (iter-09):**
+
+| Model type | Profile | Usage |
+|------------|---------|-------|
+| `chat` + Passed | Preferred chat model | Chat / workflow LLM |
+| `embedding` + Passed | Embedding model (RAG Preferences) | New KB default; ingest / retrieve uses matching API key |
+| Other types | Not selectable in iter-09 | Reserved |
+
+Platform default chat rules unchanged. **Embedding platform default** from env (`RAG_EMBEDDING_*`), listed **first** in Profile embedding dropdown (not a Models table row).
+
 ---
 
 ## 4. Permissions & Security (Product Layer)
@@ -221,5 +253,6 @@ Re-test required after provider, model name, or API key changes.
 | Date       | Change                          |
 | ---------- | ------------------------------- |
 | 2026-06-17 | iter-05 initial — PRD confirmed |
+| 2026-06-30 | §3.10 iter-09 — model type + embedding test / Profile consumption |
 
 

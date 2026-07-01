@@ -46,6 +46,9 @@ function statusLabel(status: ModelConfigDto["testStatus"]): string {
   }
 }
 
+const MODEL_PILL_CLASS =
+  "inline-flex shrink-0 items-center whitespace-nowrap rounded-full border px-2 py-0.5 text-xs";
+
 interface ModelsManagerProps {
   initialConfigs: ModelConfigDto[];
 }
@@ -96,6 +99,8 @@ export function ModelsManager({ initialConfigs }: ModelsManagerProps) {
   async function handleFormSave(values: {
     provider: string;
     modelName: string;
+    modelType: import("@/lib/constants/model-types").ModelTypeId;
+    embeddingDimensions?: number;
     apiKey?: string;
   }) {
     setSaving(true);
@@ -108,12 +113,18 @@ export function ModelsManager({ initialConfigs }: ModelsManagerProps) {
           await createModelConfig({
             provider: values.provider,
             modelName: values.modelName,
+            modelType: values.modelType,
+            embeddingDimensions: values.embeddingDimensions,
             apiKey: values.apiKey,
           });
         } else if (editing) {
           await updateModelConfigMetadata(editing.id, {
             provider: values.provider,
             modelName: values.modelName,
+            embeddingDimensions:
+              editing.modelType === "embedding"
+                ? values.embeddingDimensions
+                : undefined,
           });
         }
         setFormOpen(false);
@@ -182,7 +193,7 @@ export function ModelsManager({ initialConfigs }: ModelsManagerProps) {
   return (
     <ConsolePage
       title="Model management"
-      description="Configure providers, model names, and API keys. Only tested models can be used in chat."
+      description="Configure providers, model names, API keys, and model types. Chat models power conversations; embedding models power knowledge-base vectorization."
       busy={busy}
       busyLabel={busyLabel}
       action={
@@ -197,12 +208,22 @@ export function ModelsManager({ initialConfigs }: ModelsManagerProps) {
       {configs.length === 0 ? (
         <p className="mt-8 text-sm text-[var(--text-muted)]">No models configured.</p>
       ) : (
-        <ConsoleTable>
+        <ConsoleTable className="table-fixed">
+          <colgroup>
+            <col className="w-[11%]" />
+            <col className="w-[20%]" />
+            <col className="w-[9%]" />
+            <col className="w-[9.5rem]" />
+            <col className="w-[10%]" />
+            <col className="w-[10%]" />
+            <col />
+          </colgroup>
           <ConsoleTableHead>
             <tr>
               <ConsoleTh>Provider</ConsoleTh>
               <ConsoleTh>Model</ConsoleTh>
               <ConsoleTh>Type</ConsoleTh>
+              <ConsoleTh>Source</ConsoleTh>
               <ConsoleTh>API key</ConsoleTh>
               <ConsoleTh>Test</ConsoleTh>
               <ConsoleTh>Actions</ConsoleTh>
@@ -216,8 +237,24 @@ export function ModelsManager({ initialConfigs }: ModelsManagerProps) {
                   {config.modelName}
                 </td>
                 <td className="px-4 py-3">
+                  <span
+                    className={cn(
+                      MODEL_PILL_CLASS,
+                      "border-[var(--neon-primary)]/25 text-[var(--text-primary)]",
+                    )}
+                  >
+                    {config.modelTypeLabel}
+                  </span>
+                </td>
+                <td className="whitespace-nowrap px-4 py-3">
                   {config.isPlatformDefault ? (
-                    <span className="rounded-full border border-[var(--neon-primary)]/30 px-2 py-0.5 text-xs text-[var(--neon-primary)]">
+                    <span
+                      className={cn(
+                        MODEL_PILL_CLASS,
+                        "border-[var(--neon-primary)]/30 text-[var(--neon-primary)]",
+                      )}
+                      title="Platform default"
+                    >
                       Platform default
                     </span>
                   ) : (
@@ -231,7 +268,7 @@ export function ModelsManager({ initialConfigs }: ModelsManagerProps) {
                   <div className="space-y-1">
                     <span
                       className={cn(
-                        "inline-block rounded-full border px-2 py-0.5 text-xs",
+                        MODEL_PILL_CLASS,
                         statusBadgeClass(config.testStatus),
                       )}
                     >
@@ -309,7 +346,12 @@ export function ModelsManager({ initialConfigs }: ModelsManagerProps) {
         mode={formMode}
         initial={
           editing
-            ? { provider: editing.provider, modelName: editing.modelName }
+            ? {
+                provider: editing.provider,
+                modelName: editing.modelName,
+                modelType: editing.modelType,
+                embeddingDimensions: editing.embeddingDimensions,
+              }
             : undefined
         }
         saving={saving}

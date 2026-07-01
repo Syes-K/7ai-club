@@ -40,6 +40,8 @@ import {
   upsertWorkflowStepLog,
 } from "@/lib/workflow/persistence";
 import { runWorkflow } from "@/lib/workflow/runner";
+import { ragQueryOptimizeNode } from "@/lib/rag/workflow/rag-query-optimize";
+import { ragRetrieveNode } from "@/lib/rag/workflow/rag-retrieve";
 import type { WorkflowContext } from "@/lib/workflow/types";
 
 type ChatRequestBody = {
@@ -161,6 +163,15 @@ export async function POST(req: Request) {
           ctx,
           emit,
         );
+
+        if (ctx.knowledgeBases?.length) {
+          await runWorkflow(
+            [ragQueryOptimizeNode, ragRetrieveNode],
+            ctx,
+            emit,
+          );
+        }
+
         await runLlmStreamNode(ctx, writer, emit);
         await runPostLlmMemorySteps(ctx, emit);
       } catch (error) {

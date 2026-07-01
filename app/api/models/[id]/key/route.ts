@@ -77,7 +77,7 @@ export async function PATCH(req: Request, context: RouteContext) {
     })
     .eq("id", id)
     .select(
-      "id, user_id, provider, model_name, test_status, tested_at, test_error, api_key_set, created_at, updated_at",
+      "id, user_id, provider, model_name, model_type, embedding_dimensions, test_status, tested_at, test_error, api_key_set, created_at, updated_at",
     )
     .single();
 

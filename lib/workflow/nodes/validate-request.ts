@@ -6,8 +6,12 @@ import {
 import { getUserProfile } from "@/lib/console/profile";
 import { loadDbMessagesWithArchive } from "@/lib/memory/persistence";
 import { buildLlmUiMessages } from "@/lib/memory/assemble-llm-messages";
-import type { ProfileRow } from "@/lib/workflow/types";
-import type { WorkflowNode } from "@/lib/workflow/types";
+import { loadAssistantKnowledgeBaseBindings } from "@/lib/rag/bindings";
+import {
+  DEFAULT_RAG_CONFIDENCE,
+  DEFAULT_RAG_TOP_K,
+} from "@/lib/rag/defaults";
+import type { ProfileRow, WorkflowNode } from "@/lib/workflow/types";
 import type { UserProfile } from "@/lib/console/profile";
 
 function toProfileRow(profile: UserProfile | null): ProfileRow | null {
@@ -23,6 +27,11 @@ function toProfileRow(profile: UserProfile | null): ProfileRow | null {
     summary_trigger_tokens: profile.summary_trigger_tokens,
     summary_retain_tokens: profile.summary_retain_tokens,
     summary_model_config_id: profile.summary_model_config_id,
+    rag_confidence_threshold:
+      profile.rag_confidence_threshold ?? DEFAULT_RAG_CONFIDENCE,
+    rag_top_k: profile.rag_top_k ?? DEFAULT_RAG_TOP_K,
+    rag_embedding_provider: profile.rag_embedding_provider ?? "siliconflow",
+    rag_embedding_model: profile.rag_embedding_model ?? "BAAI/bge-m3",
   };
 }
 
@@ -60,6 +69,15 @@ export const loadContextNode: WorkflowNode = {
     ctx.llmUiMessages = buildLlmUiMessages(dbMessages);
     ctx.assistant = assistant;
     ctx.profile = toProfileRow(profile);
+
+    if (assistant?.id) {
+      ctx.knowledgeBases = await loadAssistantKnowledgeBaseBindings(
+        assistant.id,
+        ctx.supabase,
+      );
+    } else {
+      ctx.knowledgeBases = [];
+    }
 
     const activeCount = ctx.llmUiMessages.length;
     const totalCount = dbMessages.length;

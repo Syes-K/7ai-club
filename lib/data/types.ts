@@ -1,5 +1,6 @@
 import type { UIMessage } from "ai";
 import type { UserLlmProviderId } from "@/lib/llm/provider";
+import type { ModelTypeId } from "@/lib/constants/model-types";
 
 export type DbMessage = {
   id: string;
@@ -49,6 +50,7 @@ export type AssistantDto = {
   openingMessage: string | null;
   systemPrompt: string;
   updatedAt: string;
+  knowledgeBaseIds: string[];
 };
 
 export type AssistantOption = {
@@ -67,6 +69,10 @@ export type UserProfile = {
   summary_trigger_tokens: number;
   summary_retain_tokens: number;
   summary_model_config_id: string | null;
+  rag_confidence_threshold: number;
+  rag_top_k: number;
+  rag_embedding_provider: string;
+  rag_embedding_model: string;
 };
 
 export type ModelConfigRow = {
@@ -74,6 +80,8 @@ export type ModelConfigRow = {
   user_id: string;
   provider: UserLlmProviderId;
   model_name: string;
+  model_type: ModelTypeId;
+  embedding_dimensions: number | null;
   test_status: "untested" | "passed" | "failed";
   tested_at: string | null;
   test_error: string | null;
@@ -86,7 +94,10 @@ export type ModelConfigDto = {
   id: string;
   provider: UserLlmProviderId;
   modelName: string;
+  modelType: ModelTypeId;
+  embeddingDimensions: number | null;
   providerLabel: string;
+  modelTypeLabel: string;
   testStatus: "untested" | "passed" | "failed";
   testedAt: string | null;
   testError: string | null;
@@ -97,6 +108,15 @@ export type ModelConfigDto = {
 export type ModelConfigOption = {
   id: string;
   label: string;
+};
+
+export type EmbeddingModelOption = {
+  key: string;
+  provider: string;
+  model: string;
+  label: string;
+  dimensions: number;
+  isPlatformDefault: boolean;
 };
 
 export type ProfileDto = {
@@ -112,4 +132,21 @@ export type ProfileDto = {
   summaryRetainTokens: number;
   summaryModelConfigId: string | null;
   summaryModelLabel: string;
+  ragConfidenceThreshold: number;
+  ragTopK: number;
+  ragEmbeddingProvider: string;
+  ragEmbeddingModel: string;
+  ragEmbeddingLabel: string;
+  embeddingModelOptions: EmbeddingModelOption[];
+};
+
+export type KnowledgeBaseListItem = {
+  id: string;
+  name: string;
+  description: string | null;
+  source_type: "text" | "file";
+  source_filename: string | null;
+  status: "processing" | "ready" | "error";
+  error_message: string | null;
+  updated_at: string;
 };

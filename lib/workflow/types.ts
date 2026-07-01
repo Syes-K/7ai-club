@@ -3,6 +3,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import type { ResolvedUserModel } from "@/lib/llm/provider";
 import type { DbMessageWithArchive } from "@/lib/data/types";
 import type { MemorySummaryRow, SummarizationPlan } from "@/lib/memory/types";
+import type { KnowledgeBaseBinding, RagHit } from "@/lib/rag/types";
 
 export type WorkflowStepStatus = "running" | "success" | "error" | "skipped";
 
@@ -59,6 +60,10 @@ export type ProfileRow = {
   summary_trigger_tokens: number;
   summary_retain_tokens: number;
   summary_model_config_id: string | null;
+  rag_confidence_threshold: number;
+  rag_top_k: number;
+  rag_embedding_provider: string;
+  rag_embedding_model: string;
 };
 
 export type WorkflowContext = {
@@ -77,6 +82,11 @@ export type WorkflowContext = {
   memorySummary?: MemorySummaryRow | null;
   summarizationPlan?: SummarizationPlan;
   resolved?: ResolvedUserModel;
+  knowledgeBases?: KnowledgeBaseBinding[];
+  ragOptimizedQuery?: string;
+  ragHits?: RagHit[];
+  ragContextText?: string;
+  ragHitsDetail?: string;
 };
 
 export type StepEmitter = (event: WorkflowStepEvent) => Promise<void>;
@@ -120,6 +130,8 @@ export const WORKFLOW_NODE_ORDER = [
   "load_context",
   "load_history_summary",
   "resolve_model",
+  "rag_query_optimize",
+  "rag_retrieve",
   "reasoning",
   WORKFLOW_FINAL_NODE_ID,
   ...POST_LLM_NODE_IDS,

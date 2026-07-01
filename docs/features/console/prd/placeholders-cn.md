@@ -51,7 +51,7 @@ F-20 — Console 布局、侧栏、鉴权、占位页、C2 视觉、导航入口
 
 | 路由                   | 标题             | 正文（English）            |
 | -------------------- | -------------- | ---------------------- |
-| `/console/knowledge` | Knowledge Base | 简短说明 + **Coming soon** |
+| `/console/knowledge` | Knowledge Base | iter-09 起完整 CRUD — 见 [knowledge-base](../../knowledge-base/README-cn.md) |
 | `/console/mcp`       | MCP            | 简短说明 + **Coming soon** |
 
 

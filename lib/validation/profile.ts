@@ -3,6 +3,7 @@ import {
   PLATFORM_DEFAULT_CONFIG_ID,
   SUMMARY_SAME_AS_CHAT_ID,
 } from "@/lib/constants/model-providers";
+import { formatEmbeddingModelKey } from "@/lib/console/model-configs";
 
 export const NICKNAME_MAX_LENGTH = 32;
 
@@ -49,6 +50,45 @@ function parseSummaryModelConfigId(
   return { value: normalizePreferredConfigId(raw) };
 }
 
+function parseRagConfidenceThreshold(
+  value: unknown,
+): { value?: number; error?: string } {
+  if (typeof value !== "number" || !Number.isFinite(value)) {
+    return { error: "Invalid confidence threshold" };
+  }
+  if (value <= 0 || value > 1) {
+    return { error: "Confidence threshold must be between 0 and 1" };
+  }
+  return { value: Math.round(value * 1000) / 1000 };
+}
+
+function parseRagTopK(value: unknown): { value?: number; error?: string } {
+  if (typeof value !== "number" || !Number.isInteger(value)) {
+    return { error: "Invalid Top K" };
+  }
+  if (value < 1 || value > 50) {
+    return { error: "Top K must be between 1 and 50" };
+  }
+  return { value };
+}
+
+function parseRagEmbedding(
+  providerRaw: unknown,
+  modelRaw: unknown,
+  allowedEmbeddingKeys: Set<string>,
+): { value?: { provider: string; model: string }; error?: string } {
+  if (typeof providerRaw !== "string" || typeof modelRaw !== "string") {
+    return { error: "Invalid embedding model" };
+  }
+
+  const key = formatEmbeddingModelKey(providerRaw, modelRaw);
+  if (!allowedEmbeddingKeys.has(key)) {
+    return { error: "Selected embedding model is not available" };
+  }
+
+  return { value: { provider: providerRaw, model: modelRaw } };
+}
+
 export function parseAccountPatch(body: {
   nickname?: unknown;
 }): {
@@ -81,6 +121,10 @@ export type PreferencesPatchFields = {
   summaryTriggerTokens?: number;
   summaryRetainTokens?: number;
   summaryModelConfigId?: string | null;
+  ragConfidenceThreshold?: number;
+  ragTopK?: number;
+  ragEmbeddingProvider?: string;
+  ragEmbeddingModel?: string;
 };
 
 export function parsePreferencesPatch(
@@ -92,8 +136,13 @@ export function parsePreferencesPatch(
     summaryTriggerTokens?: unknown;
     summaryRetainTokens?: unknown;
     summaryModelConfigId?: unknown;
+    ragConfidenceThreshold?: unknown;
+    ragTopK?: unknown;
+    ragEmbeddingProvider?: unknown;
+    ragEmbeddingModel?: unknown;
   },
   allowedIds: Set<string>,
+  allowedEmbeddingKeys: Set<string>,
 ): {
   fields?: PreferencesPatchFields;
   error?: string;
@@ -105,7 +154,11 @@ export function parsePreferencesPatch(
     "summaryRetainTurns" in body ||
     "summaryTriggerTokens" in body ||
     "summaryRetainTokens" in body ||
-    "summaryModelConfigId" in body;
+    "summaryModelConfigId" in body ||
+    "ragConfidenceThreshold" in body ||
+    "ragTopK" in body ||
+    "ragEmbeddingProvider" in body ||
+    "ragEmbeddingModel" in body;
 
   if (!hasAnyField) {
     return { error: "No fields to update" };
@@ -179,6 +232,32 @@ export function parsePreferencesPatch(
     const parsed = parseSummaryModelConfigId(body.summaryModelConfigId, allowedIds);
     if (parsed.error) return parsed;
     fields.summaryModelConfigId = parsed.value ?? null;
+  }
+
+  if ("ragConfidenceThreshold" in body) {
+    const parsed = parseRagConfidenceThreshold(body.ragConfidenceThreshold);
+    if (parsed.error) return parsed;
+    fields.ragConfidenceThreshold = parsed.value;
+  }
+
+  if ("ragTopK" in body) {
+    const parsed = parseRagTopK(body.ragTopK);
+    if (parsed.error) return parsed;
+    fields.ragTopK = parsed.value;
+  }
+
+  if ("ragEmbeddingProvider" in body || "ragEmbeddingModel" in body) {
+    if (!("ragEmbeddingProvider" in body) || !("ragEmbeddingModel" in body)) {
+      return { error: "Embedding model provider and model are required together" };
+    }
+    const parsed = parseRagEmbedding(
+      body.ragEmbeddingProvider,
+      body.ragEmbeddingModel,
+      allowedEmbeddingKeys,
+    );
+    if (parsed.error || !parsed.value) return parsed;
+    fields.ragEmbeddingProvider = parsed.value.provider;
+    fields.ragEmbeddingModel = parsed.value.model;
   }
 
   const triggerTurns = fields.summaryTriggerTurns;

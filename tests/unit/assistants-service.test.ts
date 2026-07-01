@@ -6,6 +6,8 @@ const createAssistant = vi.fn();
 const getPlatformTemplateModel = vi.fn();
 const deleteAssistant = vi.fn();
 
+const saveAssistantKnowledgeBaseIds = vi.fn();
+
 vi.mock("@/lib/data/browser/assistants", () => ({
   ensureUserAssistants: (...args: unknown[]) => ensureUserAssistants(...args),
   createAssistant: (...args: unknown[]) => createAssistant(...args),
@@ -15,6 +17,9 @@ vi.mock("@/lib/data/browser/assistants", () => ({
     getPlatformTemplateModel(...args),
   listUserAssistants: vi.fn(),
   getAssistantById: vi.fn(),
+  loadAssistantKnowledgeBaseIds: vi.fn().mockResolvedValue([]),
+  saveAssistantKnowledgeBaseIds: (...args: unknown[]) =>
+    saveAssistantKnowledgeBaseIds(...args),
 }));
 
 import {
@@ -39,7 +44,8 @@ describe("AC-32 assistants browser layer", () => {
     ensureUserAssistants.mockReset();
     createAssistant.mockReset();
     getPlatformTemplateModel.mockReset();
-    deleteAssistant.mockReset();
+    saveAssistantKnowledgeBaseIds.mockReset();
+    saveAssistantKnowledgeBaseIds.mockResolvedValue(undefined);
     getPlatformTemplateModel.mockResolvedValue("qwen3.6-plus");
   });
 

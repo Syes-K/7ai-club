@@ -1,6 +1,10 @@
 import { createClient } from "@/lib/supabase/client";
 import type { AssistantRow } from "@/lib/data/types";
 import { DataError, throwIfError } from "@/lib/data/errors";
+import {
+  getAssistantKnowledgeBaseIds,
+  setAssistantKnowledgeBases,
+} from "@/lib/data/browser/knowledge-bases";
 
 const ASSISTANT_COLUMNS =
   "id, name, icon, opening_message, system_prompt, model, user_id, updated_at";
@@ -118,6 +122,19 @@ export async function getAssistantById(
 
   throwIfError(error);
   return data as AssistantRow | null;
+}
+
+export async function loadAssistantKnowledgeBaseIds(
+  assistantId: string,
+): Promise<string[]> {
+  return getAssistantKnowledgeBaseIds(assistantId);
+}
+
+export async function saveAssistantKnowledgeBaseIds(
+  assistantId: string,
+  kbIds: string[],
+): Promise<void> {
+  await setAssistantKnowledgeBases(assistantId, kbIds);
 }
 
 export async function getPlatformTemplateModel(): Promise<string> {

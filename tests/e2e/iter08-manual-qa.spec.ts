@@ -18,6 +18,10 @@ async function openWorkflowE2EConversation(page: Page) {
     state: "visible",
     timeout: 30_000,
   });
+  await page
+    .locator('main [role="status"][aria-busy="true"]')
+    .waitFor({ state: "hidden", timeout: 60_000 })
+    .catch(() => {});
   return true;
 }
 
@@ -70,9 +74,13 @@ async function expandLastTurnWorkflow(page: Page) {
 
 async function sendMessage(page: Page, text: string) {
   const input = page.getByPlaceholder("Type a message");
-  await expect(input).toBeEnabled({ timeout: 15_000 });
-  await input.fill(text);
-  await input.press("Enter");
+  await expect(input).toBeEnabled({ timeout: 60_000 });
+  await input.click();
+  await input.fill("");
+  await input.pressSequentially(text, { delay: 5 });
+  const sendButton = page.getByRole("button", { name: "Send message" });
+  await expect(sendButton).toBeEnabled({ timeout: 15_000 });
+  await sendButton.click();
 }
 
 async function setPreferredModel(page: Page, matches: (label: string) => boolean) {

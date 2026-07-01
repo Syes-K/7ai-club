@@ -86,6 +86,7 @@
 | F-67 | 动态节点协议 | [prd/workflow-step-ui-cn.md](./prd/workflow-step-ui-cn.md) | iter-08 |
 | F-68 | 三态展示统一 | [prd/workflow-step-ui-cn.md](./prd/workflow-step-ui-cn.md) | iter-08 |
 | F-69 | API & DB 步骤 schema 整理 | [prd/workflow-step-ui-cn.md](./prd/workflow-step-ui-cn.md) | iter-08 |
+| F-95 | Chat RAG 节点（query optimize + retrieve） | [knowledge-base/prd/chat-rag-nodes-cn.md](../knowledge-base/prd/chat-rag-nodes-cn.md) | iter-09 |
 
 ---
 
@@ -107,6 +108,7 @@
 | [changelog/iter-06-cn.md](./changelog/iter-06-cn.md) | iter-06 必读 + AC 索引 |
 | [changelog/iter-07-cn.md](./changelog/iter-07-cn.md) | iter-07 必读 + AC-70–77 |
 | [changelog/iter-08-cn.md](./changelog/iter-08-cn.md) | iter-08 必读 + AC-80–89 |
+| [knowledge-base/changelog/iter-09-cn.md](../knowledge-base/changelog/iter-09-cn.md) | iter-09 RAG 节点 · AC-96–100 |
 
 ---
 
@@ -118,6 +120,7 @@
 | 2026-06-25 | v0.2 | iter-07 — 历史对话摘要 PRD 已确认 |
 | 2026-06-25 | v0.3 | iter-07 编码完成；变更见 [changelog/iter-07-cn.md](./changelog/iter-07-cn.md) §6–§10 |
 | 2026-06-26 | v0.4 | iter-08 — Workflow 步骤 UI 重构 PRD 已确认 |
+| 2026-06-30 | v0.5 | iter-09 — RAG workflow 节点（见 knowledge-base） |
 
 ---
 

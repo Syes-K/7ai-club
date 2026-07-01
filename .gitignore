@@ -51,4 +51,5 @@ yarn-error.log*
 next-env.d.ts
 
 .cursor/mcp.json
+/.agents/skills/
 

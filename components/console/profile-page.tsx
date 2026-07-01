@@ -28,7 +28,13 @@ export function ProfilePage({ profile }: ProfilePageProps) {
           initialSummaryRetainTokens={profile.summaryRetainTokens}
           initialSummaryModelConfigId={profile.summaryModelConfigId}
           initialSummaryModelLabel={profile.summaryModelLabel}
+          initialRagConfidenceThreshold={profile.ragConfidenceThreshold}
+          initialRagTopK={profile.ragTopK}
+          initialRagEmbeddingProvider={profile.ragEmbeddingProvider}
+          initialRagEmbeddingModel={profile.ragEmbeddingModel}
+          initialRagEmbeddingLabel={profile.ragEmbeddingLabel}
           modelOptions={profile.modelOptions}
+          embeddingModelOptions={profile.embeddingModelOptions}
         />
       </div>
     </ConsolePage>

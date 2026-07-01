@@ -22,6 +22,7 @@ iter-03 交付时扩展 **Icon（emoji）** 与 **Opening message**（见 §3.2�
 | US-22 | 作为用户，我希望用名称和系统提示词创建助理，以便定制行为 | P0 |
 | US-23 | 作为用户，我希望编辑或删除未使用的助理，以便管理列表 | P0 |
 | US-25 | 作为用户，我希望为助理设置图标和开场白，以便在聊天中识别并自动展示欢迎语 | P1 |
+| US-99 | 作为用户，我希望为助理挂载多个知识库，以便对话时检索资料 | P0 |
 
 ---
 
@@ -40,8 +41,9 @@ iter-03 交付时扩展 **Icon（emoji）** 与 **Opening message**（见 §3.2�
 | Icon | 否 | emoji 文本，最长 16 字符；Chat 侧栏/消息/选择器展示 |
 | Opening message | 否 | 最长 2000 字符；创建对话时写入首条 `assistant` 消息 |
 | System prompt | 是 | 多行文本；列表不展示，仅在表单编辑 |
+| Knowledge bases | 否 | 多选；仅 **Ready** 状态 KB（iter-09）；详见 [knowledge-base/prd/assistant-kb-binding-cn.md](../../knowledge-base/prd/assistant-kb-binding-cn.md) |
 
-**本迭代不含：** 每助理 model、KB、MCP。
+**本迭代不含：** 每助理 model、MCP。
 
 ### 3.3 删除
 
@@ -68,6 +70,10 @@ iter-03 交付时扩展 **Icon（emoji）** 与 **Opening message**（见 §3.2�
 - [x] **AC-07** — 可编辑已有助理
 - [x] **AC-08** — 无对话时可删；有对话时阻止并提示
 
+### iter-09
+
+- [ ] **AC-95** — 助理表单可多选 Ready 知识库（见 [knowledge-base/changelog/iter-09-cn.md](../../knowledge-base/changelog/iter-09-cn.md)）
+
 ---
 
 ## 5. 修订记录
@@ -76,3 +82,4 @@ iter-03 交付时扩展 **Icon（emoji）** 与 **Opening message**（见 §3.2�
 |------|------|
 | 2026-06-16 | 初稿 — 多助理 |
 | 2026-06-16 | 补充 Icon、Opening message；标记 iter-03 已交付 |
+| 2026-06-30 | iter-09 — Knowledge bases 多选绑定 |

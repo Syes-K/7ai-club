@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import Link from "next/link";
 import { Pencil, Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,9 +10,11 @@ import { ASSISTANT_ICON_MAX_LENGTH } from "@/lib/validation/assistant";
 import {
   createUserAssistant,
   deleteUserAssistant,
+  getAssistantKnowledgeBaseIdsForEdit,
   listAssistants,
   updateUserAssistant,
 } from "@/lib/services/browser/assistants";
+import { listReadyKnowledgeBaseOptions } from "@/lib/data/browser/knowledge-bases";
 import type { AssistantDto } from "@/lib/data/types";
 import { formatConversationTimestamp } from "@/lib/chat/format";
 import {
@@ -21,6 +24,7 @@ import {
   ConsoleTableHead,
   ConsoleTh,
 } from "@/components/console/console-page";
+import { ConsoleMultiSelect } from "@/components/console/console-multi-select";
 import { usePageBusy } from "@/components/console/use-page-busy";
 
 type AssistantRow = AssistantDto;
@@ -30,12 +34,16 @@ type AssistantFormValues = {
   name: string;
   openingMessage: string;
   systemPrompt: string;
+  knowledgeBaseIds: string[];
 };
+
+type KnowledgeBaseOption = { id: string; name: string };
 
 interface AssistantFormDialogProps {
   open: boolean;
   mode: "create" | "edit";
   initial?: AssistantFormValues;
+  readyKnowledgeBases: KnowledgeBaseOption[];
   saving: boolean;
   error: string | null;
   onSave: (values: AssistantFormValues) => void;
@@ -46,6 +54,7 @@ function AssistantFormDialog({
   open,
   mode,
   initial,
+  readyKnowledgeBases,
   saving,
   error,
   onSave,
@@ -56,6 +65,9 @@ function AssistantFormDialog({
   const [name, setName] = useState(initial?.name ?? "");
   const [openingMessage, setOpeningMessage] = useState(initial?.openingMessage ?? "");
   const [systemPrompt, setSystemPrompt] = useState(initial?.systemPrompt ?? "");
+  const [selectedKbIds, setSelectedKbIds] = useState<string[]>(
+    initial?.knowledgeBaseIds ?? [],
+  );
 
   useEffect(() => {
     const dialog = dialogRef.current;
@@ -71,6 +83,7 @@ function AssistantFormDialog({
       name: name.trim(),
       openingMessage: openingMessage.trim(),
       systemPrompt: systemPrompt.trim(),
+      knowledgeBaseIds: selectedKbIds,
     });
   }
 
@@ -139,6 +152,31 @@ function AssistantFormDialog({
           />
         </div>
 
+        <div className="space-y-2">
+          <Label htmlFor="assistant-knowledge-bases">Knowledge bases</Label>
+          {readyKnowledgeBases.length === 0 ? (
+            <p className="text-sm text-[var(--text-muted)]">
+              No ready knowledge bases. Create one in{" "}
+              <Link href="/console/knowledge" className="text-[var(--neon-primary)] hover:underline">
+                Knowledge Base
+              </Link>
+              .
+            </p>
+          ) : (
+            <ConsoleMultiSelect
+              id="assistant-knowledge-bases"
+              options={readyKnowledgeBases.map((kb) => ({
+                value: kb.id,
+                label: kb.name,
+              }))}
+              value={selectedKbIds}
+              onChange={setSelectedKbIds}
+              disabled={saving}
+              placeholder="Select knowledge bases…"
+            />
+          )}
+        </div>
+
         {error && <p className="text-sm text-red-400">{error}</p>}
 
         <div className="flex justify-end gap-3 pt-2">
@@ -175,6 +213,11 @@ export function AssistantsManager() {
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
 
+  const [readyKnowledgeBases, setReadyKnowledgeBases] = useState<KnowledgeBaseOption[]>(
+    [],
+  );
+  const [formInitial, setFormInitial] = useState<AssistantFormValues | undefined>();
+
   async function loadAssistants() {
     setLoadError(null);
     const rows = await listAssistants();
@@ -196,11 +239,24 @@ export function AssistantsManager() {
     };
   }, [runBusy]);
 
+  async function loadReadyKnowledgeBases() {
+    const options = await listReadyKnowledgeBaseOptions();
+    setReadyKnowledgeBases(options);
+  }
+
   function openCreate() {
     if (busy) return;
     setFormMode("create");
     setEditingId(null);
     setFormError(null);
+    setFormInitial({
+      icon: "",
+      name: "",
+      openingMessage: "",
+      systemPrompt: "",
+      knowledgeBaseIds: [],
+    });
+    void loadReadyKnowledgeBases().catch(() => {});
     setFormOpen(true);
   }
 
@@ -209,7 +265,24 @@ export function AssistantsManager() {
     setFormMode("edit");
     setEditingId(row.id);
     setFormError(null);
-    setFormOpen(true);
+    setFormInitial(undefined);
+    void runBusy("Loading assistant…", async () => {
+      const [options, kbIds] = await Promise.all([
+        listReadyKnowledgeBaseOptions(),
+        getAssistantKnowledgeBaseIdsForEdit(row.id),
+      ]);
+      setReadyKnowledgeBases(options);
+      setFormInitial({
+        icon: row.icon ?? "",
+        name: row.name,
+        openingMessage: row.openingMessage ?? "",
+        systemPrompt: row.systemPrompt,
+        knowledgeBaseIds: kbIds,
+      });
+      setFormOpen(true);
+    }).catch((err) => {
+      setLoadError(err instanceof Error ? err.message : "Failed to load assistant");
+    });
   }
 
   async function handleSave(values: AssistantFormValues) {
@@ -221,6 +294,7 @@ export function AssistantsManager() {
       name: values.name,
       openingMessage: values.openingMessage || null,
       systemPrompt: values.systemPrompt,
+      knowledgeBaseIds: values.knowledgeBaseIds,
     };
 
     const label = formMode === "create" ? "Creating assistant…" : "Saving assistant…";
@@ -261,6 +335,19 @@ export function AssistantsManager() {
   }
 
   const editingAssistant = assistants.find((row) => row.id === editingId);
+  const dialogInitial =
+    formMode === "create"
+      ? formInitial
+      : formInitial ??
+        (editingAssistant
+          ? {
+              icon: editingAssistant.icon ?? "",
+              name: editingAssistant.name,
+              openingMessage: editingAssistant.openingMessage ?? "",
+              systemPrompt: editingAssistant.systemPrompt,
+              knowledgeBaseIds: editingAssistant.knowledgeBaseIds,
+            }
+          : undefined);
 
   return (
     <ConsolePage
@@ -345,19 +432,15 @@ export function AssistantsManager() {
       )}
 
       <AssistantFormDialog
-        key={formMode === "create" ? "create" : (editingId ?? "edit")}
-        open={formOpen}
-        mode={formMode}
-        initial={
-          editingAssistant
-            ? {
-                icon: editingAssistant.icon ?? "",
-                name: editingAssistant.name,
-                openingMessage: editingAssistant.openingMessage ?? "",
-                systemPrompt: editingAssistant.systemPrompt,
-              }
-            : undefined
+        key={
+          formMode === "create"
+            ? "create"
+            : `${editingId ?? "edit"}-${dialogInitial?.knowledgeBaseIds.join(",") ?? ""}`
         }
+        open={formOpen && (formMode === "create" || formInitial != null)}
+        mode={formMode}
+        readyKnowledgeBases={readyKnowledgeBases}
+        initial={dialogInitial}
         saving={saving}
         error={formError}
         onSave={handleSave}

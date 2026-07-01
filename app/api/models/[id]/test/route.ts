@@ -34,7 +34,19 @@ export async function POST(_req: Request, context: RouteContext) {
   }
 
   let resolved;
+  let modelType = "chat";
+  let embeddingDimensions: number | null = null;
   try {
+    const supabaseRow = await supabase
+      .from("user_model_configs")
+      .select("model_type, embedding_dimensions")
+      .eq("id", id)
+      .eq("user_id", user.id)
+      .maybeSingle();
+    if (supabaseRow.data) {
+      modelType = supabaseRow.data.model_type as string;
+      embeddingDimensions = supabaseRow.data.embedding_dimensions as number | null;
+    }
     resolved = await loadResolvedModelForTest(user.id, id);
   } catch (error) {
     const message = error instanceof Error ? error.message : "Model config not found";
@@ -42,7 +54,10 @@ export async function POST(_req: Request, context: RouteContext) {
     return new Response(message, { status });
   }
 
-  const result = await runModelConnectivityTest(resolved);
+  const result = await runModelConnectivityTest(resolved, {
+    modelType,
+    embeddingDimensions,
+  });
   const testedAt = new Date().toISOString();
   const service = createServiceClient();
 
@@ -56,7 +71,7 @@ export async function POST(_req: Request, context: RouteContext) {
     .eq("id", id)
     .eq("user_id", user.id)
     .select(
-      "id, user_id, provider, model_name, test_status, tested_at, test_error, api_key_set, created_at, updated_at",
+      "id, user_id, provider, model_name, model_type, embedding_dimensions, test_status, tested_at, test_error, api_key_set, created_at, updated_at",
     )
     .single();
 
