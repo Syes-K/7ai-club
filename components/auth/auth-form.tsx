@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { getAuthErrorMessage } from "@/lib/auth/errors";
+import { PRODUCT_ANALYTICS_EVENTS, trackProductEvent } from "@/lib/analytics";
 import { getEmailRedirectTo } from "@/lib/auth/redirect";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -53,6 +54,7 @@ export function AuthForm({ mode, next }: { mode: AuthMode; next?: string }) {
           password,
         });
         if (signInError) throw signInError;
+        trackProductEvent(PRODUCT_ANALYTICS_EVENTS.signInComplete);
       } else {
         const { data, error: signUpError } = await supabase.auth.signUp({
           email,
@@ -65,11 +67,13 @@ export function AuthForm({ mode, next }: { mode: AuthMode; next?: string }) {
         if (signUpError) throw signUpError;
 
         if (!data.session) {
+          trackProductEvent(PRODUCT_ANALYTICS_EVENTS.signUpComplete);
           setInfo(
             "Account created. If email confirmation is enabled, check your inbox and confirm before signing in.",
           );
           return;
         }
+        trackProductEvent(PRODUCT_ANALYTICS_EVENTS.signUpComplete);
       }
 
       router.push(redirectTo);

@@ -12,6 +12,7 @@ import {
 import { ChatShellProvider } from "@/components/chat/chat-shell-context";
 import { ChatSidebar } from "@/components/chat/chat-sidebar";
 import { SiteHeader } from "@/components/layout/site-header";
+import { PRODUCT_ANALYTICS_EVENTS, trackProductEvent } from "@/lib/analytics";
 import type { ConversationSummary, ConversationSession } from "@/lib/data/types";
 import {
   createConversation,
@@ -226,6 +227,7 @@ export function ChatAppShell({
     setCreating(true);
     try {
       const id = await createConversation(assistantId);
+      trackProductEvent(PRODUCT_ANALYTICS_EVENTS.conversationStarted);
       setPickerOpen(false);
       setSidebarOpen(false);
       const list = await refreshConversations();
