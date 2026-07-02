@@ -138,10 +138,16 @@ test.describe("iter-09 knowledge base RAG", () => {
     await expect(page.getByRole("heading", { name: kbName.trim() })).toBeVisible();
     await expect(page.getByText("Ready", { exact: true })).toBeVisible();
 
-    await page
-      .getByLabel("Query")
+    await page.getByRole("button", { name: "Recall test" }).click();
+    await expect(page.getByRole("heading", { name: "Recall test" })).toBeVisible();
+
+    const recallDialog = page.getByRole("dialog").filter({
+      has: page.getByRole("heading", { name: "Recall test" }),
+    });
+    await recallDialog
+      .getByPlaceholder("Ask a question to test retrieval")
       .fill("What is the E2E-KB-MARKER-iter09 refund policy?");
-    await page.getByRole("button", { name: "Run recall test" }).click();
+    await recallDialog.getByRole("button", { name: "Run recall test" }).click();
 
     await expect(page.getByRole("columnheader", { name: "Score" })).toBeVisible({
       timeout: 60_000,
@@ -166,6 +172,7 @@ test.describe("iter-09 knowledge base RAG", () => {
     await preferences.getByRole("button", { name: "Edit" }).click();
     await expect(preferences.getByLabel("Confidence threshold")).toBeVisible();
     await expect(preferences.getByLabel("Top K")).toBeVisible();
+    await expect(preferences.getByLabel("Query optimization")).toBeVisible();
     await expect(preferences.getByLabel("Embedding model")).toBeVisible();
   });
 

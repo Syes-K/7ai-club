@@ -40,6 +40,7 @@ export const recallTestSchema = z.object({
   query: z.string().trim().min(1).max(4000),
   confidenceThreshold: z.number().finite().gt(0).lte(1).optional(),
   topK: z.number().int().min(1).max(50).optional(),
+  queryOptimize: z.boolean().optional(),
 });
 
 export const replaceKnowledgeBaseTextSchema = z.object({

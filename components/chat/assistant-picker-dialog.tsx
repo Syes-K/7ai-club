@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import type { AssistantOption } from "@/lib/data/types";
@@ -92,9 +93,17 @@ export function AssistantPickerDialog({
       onClose={handleCancel}
     >
       <h2 className="font-mono text-lg font-semibold">Choose an assistant</h2>
-      <p className="mt-1 text-sm text-[var(--text-muted)]">
-        Select which assistant powers this chat.
-      </p>
+      <div className="mt-1 flex items-end justify-between gap-4">
+        <p className="text-sm text-[var(--text-muted)]">
+          Select which assistant powers this chat.
+        </p>
+        <Link
+          href="/console/assistants"
+          className="shrink-0 text-xs text-[var(--neon-primary)] hover:underline"
+        >
+          Manage assistants
+        </Link>
+      </div>
 
       <div className="mt-4 min-h-[8rem]">
         {loading && (
@@ -105,10 +114,13 @@ export function AssistantPickerDialog({
         )}
         {!loading && !error && assistants.length === 0 && (
           <p className="text-sm text-[var(--text-muted)]">
-            No assistants yet. Create one in{" "}
-            <a href="/console/assistants" className="text-[var(--neon-primary)] underline">
-              Console
-            </a>
+            No assistants yet.{" "}
+            <Link
+              href="/console/assistants?create=1"
+              className="text-[var(--neon-primary)] hover:underline"
+            >
+              Create your first assistant
+            </Link>
             .
           </p>
         )}

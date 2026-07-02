@@ -62,6 +62,12 @@ export const EMBEDDING_MODEL_OPTIONS = [
     label: "SiliconFlow — BAAI/bge-m3",
     dimensions: 1024,
   },
+  {
+    provider: "siliconflow",
+    model: "BAAI/bge-large-en-v1.5",
+    label: "SiliconFlow — BAAI/bge-m3",
+    dimensions: 1024,
+  },
   // 后续扩展须与 RAG_EMBEDDING_DIMENSIONS (1024) 一致
 ] as const;
 

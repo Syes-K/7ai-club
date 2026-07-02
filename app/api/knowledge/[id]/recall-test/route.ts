@@ -4,6 +4,7 @@ export const maxDuration = 30;
 import { createClient } from "@/lib/supabase/server";
 import { resolveUserModelForChat } from "@/lib/llm/resolve-user-model";
 import { optimizeRagQuery } from "@/lib/rag/optimize-query";
+import { DEFAULT_RAG_QUERY_OPTIMIZE_ENABLED } from "@/lib/rag/defaults";
 import { retrieveBestChunk, retrieveChunks } from "@/lib/rag/retrieve";
 import { getUserProfileForRag, resolveRagPreferences } from "@/lib/rag/profile";
 import { recallTestSchema } from "@/lib/validation/knowledge-base";
@@ -76,6 +77,10 @@ export async function POST(req: Request, context: RouteContext) {
   const threshold =
     parsed.data.confidenceThreshold ?? ragPrefs.confidenceThreshold;
   const topK = parsed.data.topK ?? ragPrefs.topK;
+  const queryOptimizeEnabled =
+    parsed.data.queryOptimize ??
+    ragPrefs.queryOptimizeEnabled ??
+    DEFAULT_RAG_QUERY_OPTIMIZE_ENABLED;
   const binding = kbBinding(kb);
 
   const resolved = await resolveUserModelForChat(
@@ -83,9 +88,10 @@ export async function POST(req: Request, context: RouteContext) {
     profile?.preferred_model_config_id ?? null,
     supabase,
   );
-  const retrievalQuery = resolved
-    ? await optimizeRagQuery(originalQuery, resolved)
-    : originalQuery;
+  const retrievalQuery =
+    queryOptimizeEnabled && resolved
+      ? await optimizeRagQuery(originalQuery, resolved)
+      : originalQuery;
 
   const hits = await retrieveChunks({
     supabase,
@@ -119,7 +125,9 @@ export async function POST(req: Request, context: RouteContext) {
     meta: {
       originalQuery,
       optimizedQuery: retrievalQuery,
-      queryOptimized: retrievalQuery !== originalQuery,
+      queryOptimized: queryOptimizeEnabled && retrievalQuery !== originalQuery,
+      queryOptimizeEnabled,
+      profileQueryOptimizeEnabled: ragPrefs.queryOptimizeEnabled,
       threshold,
       topK,
       profileThreshold: ragPrefs.confidenceThreshold,

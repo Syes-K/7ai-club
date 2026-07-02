@@ -9,6 +9,7 @@ import { buildLlmUiMessages } from "@/lib/memory/assemble-llm-messages";
 import { loadAssistantKnowledgeBaseBindings } from "@/lib/rag/bindings";
 import {
   DEFAULT_RAG_CONFIDENCE,
+  DEFAULT_RAG_QUERY_OPTIMIZE_ENABLED,
   DEFAULT_RAG_TOP_K,
 } from "@/lib/rag/defaults";
 import type { ProfileRow, WorkflowNode } from "@/lib/workflow/types";
@@ -32,6 +33,8 @@ function toProfileRow(profile: UserProfile | null): ProfileRow | null {
     rag_top_k: profile.rag_top_k ?? DEFAULT_RAG_TOP_K,
     rag_embedding_provider: profile.rag_embedding_provider ?? "siliconflow",
     rag_embedding_model: profile.rag_embedding_model ?? "BAAI/bge-m3",
+    rag_query_optimize_enabled:
+      profile.rag_query_optimize_enabled ?? DEFAULT_RAG_QUERY_OPTIMIZE_ENABLED,
   };
 }
 

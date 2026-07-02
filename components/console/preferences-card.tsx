@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
+import { FieldHint } from "@/components/ui/field-hint";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ConsoleSection } from "@/components/console/console-section";
@@ -37,6 +38,7 @@ interface PreferencesCardProps {
   initialRagEmbeddingProvider: string;
   initialRagEmbeddingModel: string;
   initialRagEmbeddingLabel: string;
+  initialRagQueryOptimizeEnabled: boolean;
   modelOptions: ModelConfigOption[];
   embeddingModelOptions: EmbeddingModelOption[];
 }
@@ -60,6 +62,7 @@ export function PreferencesCard({
   initialRagEmbeddingProvider,
   initialRagEmbeddingModel,
   initialRagEmbeddingLabel,
+  initialRagQueryOptimizeEnabled,
   modelOptions,
   embeddingModelOptions,
 }: PreferencesCardProps) {
@@ -92,6 +95,9 @@ export function PreferencesCard({
   const [ragEmbeddingKey, setRagEmbeddingKey] = useState(
     `${initialRagEmbeddingProvider}:${initialRagEmbeddingModel}`,
   );
+  const [ragQueryOptimizeEnabled, setRagQueryOptimizeEnabled] = useState(
+    initialRagQueryOptimizeEnabled,
+  );
   const [embeddingConfirmOpen, setEmbeddingConfirmOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -116,6 +122,7 @@ export function PreferencesCard({
     setRagConfidenceThreshold(String(initialRagConfidenceThreshold));
     setRagTopK(String(initialRagTopK));
     setRagEmbeddingKey(`${initialRagEmbeddingProvider}:${initialRagEmbeddingModel}`);
+    setRagQueryOptimizeEnabled(initialRagQueryOptimizeEnabled);
   }
 
   function parseEmbeddingKey(key: string): { provider: string; model: string } {
@@ -151,6 +158,7 @@ export function PreferencesCard({
       ragTopK: Number(ragTopK),
       ragEmbeddingProvider: embedding.provider,
       ragEmbeddingModel: embedding.model,
+      ragQueryOptimizeEnabled,
     });
     setSaved(true);
     setEditing(false);
@@ -176,7 +184,8 @@ export function PreferencesCard({
       summaryModelConfigId === initialSummaryUiId &&
       ragConfidenceThreshold === String(initialRagConfidenceThreshold) &&
       ragTopK === String(initialRagTopK) &&
-      ragEmbeddingKey === `${initialRagEmbeddingProvider}:${initialRagEmbeddingModel}`
+      ragEmbeddingKey === `${initialRagEmbeddingProvider}:${initialRagEmbeddingModel}` &&
+      ragQueryOptimizeEnabled === initialRagQueryOptimizeEnabled
     );
   }
 
@@ -409,6 +418,21 @@ export function PreferencesCard({
               </div>
             </div>
 
+            <div className="flex items-center gap-2">
+              <input
+                id="rag-query-optimize"
+                type="checkbox"
+                checked={ragQueryOptimizeEnabled}
+                onChange={(e) => setRagQueryOptimizeEnabled(e.target.checked)}
+                disabled={saving}
+                className="h-4 w-4 rounded border-[var(--neon-primary)]/40 accent-[var(--neon-primary)]"
+              />
+              <Label htmlFor="rag-query-optimize" className="inline-flex items-center gap-1.5">
+                Query optimization
+                <FieldHint text="When enabled, rewrites your message into a search query using your chat model before vector retrieval. Disable to search with the original text (recommended for exact phrase tests)." />
+              </Label>
+            </div>
+
             <div className="space-y-2">
               <Label htmlFor="rag-embedding-model">Embedding model</Label>
               <select
@@ -477,6 +501,10 @@ export function PreferencesCard({
               <p>
                 <span className="text-[var(--text-muted)]">Top K: </span>
                 {initialRagTopK}
+              </p>
+              <p>
+                <span className="text-[var(--text-muted)]">Query optimization: </span>
+                {initialRagQueryOptimizeEnabled ? "Enabled" : "Disabled"}
               </p>
               <p>
                 <span className="text-[var(--text-muted)]">Embedding model: </span>

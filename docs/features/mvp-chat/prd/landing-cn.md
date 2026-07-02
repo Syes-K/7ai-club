@@ -39,13 +39,36 @@ F-10 营销首页、F-11 全局顶栏与用户展示、C2 · Electric Ocean 视�
 
 **边界：** Open console 不实现 — 隐藏或 Coming soon。
 
+### 3.1 iter-10 — Landing 布局与能力区（2026-07-02）
+
+| 项 | 决策 |
+|----|------|
+| 主内容区 | Hero + 能力网格 **一体** 垂直居中（`landingMainContentClass`） |
+| Footer | `min-h-dvh` + flex column；Footer `mt-auto` **贴视口底** |
+| Header | Landing 使用 **fullWidth** 顶栏（与 Chat/Console 一致） |
+| 能力区 | **6** 项 `[01]`–`[06]`；卡片文字 **12px**；`[06] MCP & tools` 为 roadmap（无链接） |
+| CTA | Hero 仅 **Start chat**；无 Open console |
+
+**验收：** [changelog/iter-10-cn.md](../changelog/iter-10-cn.md) AC-101–102
+
 ---
 
 ## 4. F-11 顶栏与用户
 
 - 首页与 Chat 共享 header（或视觉一致组件）
-- 已登录：**头像 + 下拉**（完整邮箱、Sign out）；首页/Chat `compactUserMenu`
-- 未登录：Sign in、Register
+- 已登录：**头像 + 下拉**（Console、Sign out）；首页 `compactUserMenu`
+- 未登录：Sign in（Landing **无 Register**；注册经登录页 Sign up 切换）
+
+### 4.1 iter-10 — 顶栏精简（2026-07-02）
+
+| 项 | 决策 |
+|----|------|
+| Landing | 无顶栏 **Chat**；未登录仅 **Sign in**（LogIn icon） |
+| Console | 仅 **UserMenu** 下拉；Landing 顶栏不显示 Console 文字链 |
+| UserMenu | 去掉「Signed in as」；直接显示昵称/邮箱 |
+| Auth | Sign up / Sign in 切换保留 `?next=` |
+
+**验收：** AC-103–104 · [iter-10 changelog](../changelog/iter-10-cn.md)
 
 ---
 
@@ -73,9 +96,10 @@ F-10 营销首页、F-11 全局顶栏与用户展示、C2 · Electric Ocean 视�
 
 - [x] **AC-10**：`/` 展示 Landing，不 auto-redirect
 - [x] **AC-11**：Start chat 路径正确（guest → login；authed → chat）
-- [x] **AC-12**：顶栏 Chat 链接有效
+- [x] **AC-12**：顶栏 Chat 链接有效（**iter-10：** Landing 顶栏无 Chat；Chat 壳层仍保留）
 - [x] **AC-13**：右上角用户标识（头像下拉）
 - [x] **AC-18**：首页与 Chat C2 视觉一致
+- [x] **AC-101–105** — iter-10 增量见 [changelog/iter-10-cn.md](../changelog/iter-10-cn.md)（**已发布 2026-07-03**）
 
 ---
 
@@ -85,3 +109,4 @@ F-10 营销首页、F-11 全局顶栏与用户展示、C2 · Electric Ocean 视�
 |------|------|
 | 2026-06-15 | iter-02 从总纲拆出 |
 | 2026-06-16 | 本地实现完成；compact 用户菜单 |
+| 2026-07-02 | iter-10 §3.3–3.4 Landing 纵向布局、6 项能力区、Header 精简 |

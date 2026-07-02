@@ -75,6 +75,16 @@ describe("AC-93 recall test validation", () => {
     expect(parsed.data?.topK).toBe(3);
   });
 
+  it("accepts optional queryOptimize override", () => {
+    const parsed = recallTestSchema.safeParse({
+      query: "Before you start selling",
+      queryOptimize: true,
+    });
+
+    expect(parsed.success).toBe(true);
+    expect(parsed.data?.queryOptimize).toBe(true);
+  });
+
   it("rejects empty query", () => {
     const parsed = recallTestSchema.safeParse({ query: "   " });
     expect(parsed.success).toBe(false);

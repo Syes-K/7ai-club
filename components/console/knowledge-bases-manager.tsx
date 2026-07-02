@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { Eye, Loader2, Plus, Trash2 } from "lucide-react";
+import { Eye, Loader2, Plus, ScanSearch, Trash2 } from "lucide-react";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -13,6 +13,18 @@ import {
   ConsoleTableHead,
   ConsoleTh,
 } from "@/components/console/console-page";
+import { ConsoleFileInput } from "@/components/console/console-file-input";
+import {
+  CONSOLE_TABLE_ACTIONS_CELL_13,
+  CONSOLE_TABLE_ACTIONS_HEAD_13,
+  CONSOLE_TABLE_ACTION_BUTTON_CLASS,
+  CONSOLE_TABLE_ACTIONS_WRAP_13,
+  CONSOLE_TABLE_PRE_ACTIONS_CELL,
+} from "@/components/console/console-table-actions";
+import {
+  KnowledgeBaseRecallTestDialog,
+  type KnowledgeBaseRecallTarget,
+} from "@/components/console/knowledge-base-recall-test-dialog";
 import { usePageBusy } from "@/components/console/use-page-busy";
 import type { KnowledgeBaseListItem } from "@/lib/data/types";
 import {
@@ -66,12 +78,6 @@ function sourceTypeLabel(row: KnowledgeBaseListItem): string {
   }
   return "Text";
 }
-
-const KB_TABLE_ACTIONS_CLASS =
-  "sticky right-0 z-10 w-[11rem] min-w-[11rem] max-w-[11rem] bg-[var(--bg-base)] px-3 py-3 shadow-[-10px_0_16px_-12px_rgba(0,0,0,0.45)] group-hover:bg-white/[0.02]";
-
-const KB_TABLE_ACTIONS_HEAD_CLASS =
-  "sticky right-0 z-10 w-[11rem] min-w-[11rem] max-w-[11rem] bg-[var(--bg-elevated)] px-3 py-3 shadow-[-10px_0_16px_-12px_rgba(0,0,0,0.35)]";
 
 interface CreateKnowledgeBaseDialogProps {
   open: boolean;
@@ -202,12 +208,12 @@ function CreateKnowledgeBaseDialog({
         ) : (
           <div className="space-y-2">
             <Label htmlFor="kb-file">File</Label>
-            <Input
+            <ConsoleFileInput
               id="kb-file"
-              type="file"
               accept=".md,.txt,.markdown,.pdf,.docx"
               required
-              onChange={(e) => setFile(e.target.files?.[0] ?? null)}
+              file={file}
+              onFileChange={setFile}
               disabled={saving}
             />
             <p className="text-xs text-[var(--text-muted)]">
@@ -241,6 +247,9 @@ export function KnowledgeBasesManager() {
   const [creating, setCreating] = useState(false);
 
   const [deleteTarget, setDeleteTarget] = useState<KnowledgeBaseListItem | null>(
+    null,
+  );
+  const [recallTarget, setRecallTarget] = useState<KnowledgeBaseRecallTarget | null>(
     null,
   );
   const [deleting, setDeleting] = useState(false);
@@ -360,12 +369,12 @@ export function KnowledgeBasesManager() {
       {!busy && rows.length > 0 && (
         <ConsoleTable className="table-fixed">
           <colgroup>
-            <col className="w-[18%]" />
-            <col className="w-[20%]" />
-            <col className="w-[26%]" />
+            <col className="w-[19%]" />
+            <col className="w-[21%]" />
+            <col className="w-[27%]" />
             <col className="w-[9%]" />
             <col className="w-[11%]" />
-            <col className="w-[11rem]" />
+            <col className="w-[13rem]" />
           </colgroup>
           <ConsoleTableHead>
             <tr>
@@ -374,7 +383,7 @@ export function KnowledgeBasesManager() {
               <ConsoleTh>Source</ConsoleTh>
               <ConsoleTh>Status</ConsoleTh>
               <ConsoleTh>Updated</ConsoleTh>
-              <ConsoleTh className={KB_TABLE_ACTIONS_HEAD_CLASS}>Actions</ConsoleTh>
+              <ConsoleTh className={CONSOLE_TABLE_ACTIONS_HEAD_13}>Actions</ConsoleTh>
             </tr>
           </ConsoleTableHead>
           <ConsoleTableBody>
@@ -415,22 +424,38 @@ export function KnowledgeBasesManager() {
                     {statusLabel(row.status)}
                   </span>
                 </td>
-                <td className="whitespace-nowrap px-4 py-3 text-[var(--text-muted)]">
+                <td className={CONSOLE_TABLE_PRE_ACTIONS_CELL} title={formatConversationTimestamp(row.updated_at)}>
                   {formatConversationTimestamp(row.updated_at)}
                 </td>
-                <td className={KB_TABLE_ACTIONS_CLASS}>
-                  <div className="flex flex-col items-stretch gap-1">
+                <td className={CONSOLE_TABLE_ACTIONS_CELL_13}>
+                  <div className={CONSOLE_TABLE_ACTIONS_WRAP_13}>
                     <Link
                       href={`/console/knowledge/${row.id}`}
                       className={cn(
                         buttonVariants({ variant: "ghost", size: "sm" }),
-                        "justify-start px-2",
+                        CONSOLE_TABLE_ACTION_BUTTON_CLASS,
                         busy && "pointer-events-none opacity-50",
                       )}
                     >
-                      <Eye className="h-4 w-4" />
+                      <Eye className="h-3.5 w-3.5 shrink-0" />
                       View
                     </Link>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      disabled={busy || row.status !== "ready"}
+                      onClick={() =>
+                        setRecallTarget({
+                          id: row.id,
+                          name: row.name,
+                          status: row.status,
+                        })
+                      }
+                      className={CONSOLE_TABLE_ACTION_BUTTON_CLASS}
+                    >
+                      <ScanSearch className="h-3.5 w-3.5 shrink-0" />
+                      Test
+                    </Button>
                     <Button
                       variant="ghost"
                       size="sm"
@@ -440,9 +465,12 @@ export function KnowledgeBasesManager() {
                         setDeleteError(null);
                         setDeleteTarget(row);
                       }}
-                      className="justify-start px-2 text-red-400 hover:text-red-300"
+                      className={cn(
+                        CONSOLE_TABLE_ACTION_BUTTON_CLASS,
+                        "text-red-400 hover:text-red-300",
+                      )}
                     >
-                      <Trash2 className="h-4 w-4" />
+                      <Trash2 className="h-3.5 w-3.5 shrink-0" />
                       Delete
                     </Button>
                   </div>
@@ -460,6 +488,13 @@ export function KnowledgeBasesManager() {
         onSave={handleCreate}
         onCancel={() => !creating && setCreateOpen(false)}
       />
+
+      {recallTarget && (
+        <KnowledgeBaseRecallTestDialog
+          target={recallTarget}
+          onClose={() => setRecallTarget(null)}
+        />
+      )}
 
       {deleteTarget && (
         <dialog

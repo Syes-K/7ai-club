@@ -39,6 +39,7 @@ export async function savePreferences(body: {
   ragTopK?: unknown;
   ragEmbeddingProvider?: unknown;
   ragEmbeddingModel?: unknown;
+  ragQueryOptimizeEnabled?: unknown;
 }): Promise<{
   preferredModelConfigId: string | null;
   summarizationEnabled: boolean;
@@ -51,6 +52,7 @@ export async function savePreferences(body: {
   ragTopK: number;
   ragEmbeddingProvider: string;
   ragEmbeddingModel: string;
+  ragQueryOptimizeEnabled: boolean;
 }> {
   const passedOptions = await listPassedModelOptions();
   const allowedIds = new Set(passedOptions.map((option) => option.id));
@@ -74,6 +76,7 @@ export async function savePreferences(body: {
     ragTopK: parsed.fields.ragTopK,
     ragEmbeddingProvider: parsed.fields.ragEmbeddingProvider,
     ragEmbeddingModel: parsed.fields.ragEmbeddingModel,
+    ragQueryOptimizeEnabled: parsed.fields.ragQueryOptimizeEnabled,
   });
 
   const stored = profile.preferred_model_config_id;
@@ -89,6 +92,7 @@ export async function savePreferences(body: {
     ragTopK: profile.rag_top_k,
     ragEmbeddingProvider: profile.rag_embedding_provider,
     ragEmbeddingModel: profile.rag_embedding_model,
+    ragQueryOptimizeEnabled: profile.rag_query_optimize_enabled,
   };
 }
 

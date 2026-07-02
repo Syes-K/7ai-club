@@ -12,7 +12,7 @@ export function LandingHero({ user }: LandingHeroProps) {
   const chatHref = user ? "/chat" : "/login?next=/chat";
 
   return (
-    <section className="mx-auto flex max-w-4xl flex-col items-center px-4 py-20 text-center md:px-6 md:py-28">
+    <section className="flex w-full flex-col items-center text-center">
       <p className="font-mono text-xs tracking-[0.2em] text-[var(--neon-primary)]">
         {LANDING_COPY.eyebrow}
       </p>
@@ -24,10 +24,10 @@ export function LandingHero({ user }: LandingHeroProps) {
       <p className="mt-4 font-mono text-sm tracking-widest text-[var(--text-muted)] md:text-base">
         {LANDING_COPY.tagline}
       </p>
-      <p className="mt-6 max-w-xl text-lg text-[var(--text-primary)]/80">
+      <p className="mt-6 max-w-xl text-lg text-[var(--text-primary)]/80 lg:max-w-2xl lg:text-xl">
         {LANDING_COPY.value}
       </p>
-      <div className="mt-10">
+      <div className="mt-10 lg:mt-12">
         <Link
           href={chatHref}
           className={cn(

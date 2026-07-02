@@ -2,6 +2,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/server";
 import {
   DEFAULT_RAG_CONFIDENCE,
+  DEFAULT_RAG_QUERY_OPTIMIZE_ENABLED,
   DEFAULT_RAG_TOP_K,
 } from "@/lib/rag/defaults";
 import {
@@ -26,10 +27,11 @@ export type UserProfile = {
   rag_top_k: number;
   rag_embedding_provider: string;
   rag_embedding_model: string;
+  rag_query_optimize_enabled: boolean;
 };
 
 const PROFILE_SELECT =
-  "user_id, nickname, preferred_model_config_id, summarization_enabled, summary_trigger_turns, summary_retain_turns, summary_trigger_tokens, summary_retain_tokens, summary_model_config_id, rag_confidence_threshold, rag_top_k, rag_embedding_provider, rag_embedding_model";
+  "user_id, nickname, preferred_model_config_id, summarization_enabled, summary_trigger_turns, summary_retain_turns, summary_trigger_tokens, summary_retain_tokens, summary_model_config_id, rag_confidence_threshold, rag_top_k, rag_embedding_provider, rag_embedding_model, rag_query_optimize_enabled";
 
 function normalizeProfile(row: Record<string, unknown>): UserProfile {
   return {
@@ -62,6 +64,9 @@ function normalizeProfile(row: Record<string, unknown>): UserProfile {
       (row.rag_embedding_provider as string | undefined) ?? "siliconflow",
     rag_embedding_model:
       (row.rag_embedding_model as string | undefined) ?? "BAAI/bge-m3",
+    rag_query_optimize_enabled:
+      (row.rag_query_optimize_enabled as boolean | undefined) ??
+      DEFAULT_RAG_QUERY_OPTIMIZE_ENABLED,
   };
 }
 
@@ -102,6 +107,7 @@ export async function upsertUserProfile(
     ragTopK?: number;
     ragEmbeddingProvider?: string;
     ragEmbeddingModel?: string;
+    ragQueryOptimizeEnabled?: boolean;
   },
 ): Promise<UserProfile> {
   const supabase = await createClient();
@@ -142,6 +148,9 @@ export async function upsertUserProfile(
   }
   if ("ragEmbeddingModel" in fields) {
     row.rag_embedding_model = fields.ragEmbeddingModel;
+  }
+  if ("ragQueryOptimizeEnabled" in fields) {
+    row.rag_query_optimize_enabled = fields.ragQueryOptimizeEnabled;
   }
 
   const { data, error } = await supabase

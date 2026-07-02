@@ -83,6 +83,10 @@
 | KB 列表 UI | View 增加 Eye icon；Name/Description/Source `line-clamp-2`；Actions 两行 |
 | Models UI | Source「Platform default」pill 单行不换行 |
 
+### 4.5 iter-10 承接（2026-07-02 → **已发布 2026-07-03**）
+
+iter-09 关闭后的 UX / RAG 调优已交付 **[iter-10](../iter-10/README-cn.md)**。见各 feature `changelog/iter-10-cn.md`。
+
 ---
 
 ## 5. 依赖与风险

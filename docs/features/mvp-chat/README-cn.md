@@ -4,7 +4,7 @@
 > **中文：** [README-cn.md](./README-cn.md)
 
 > **Feature slug：** `mvp-chat`  
-> **迭代：** [`iter-01`](../../iterations/iter-01/README-cn.md)（已交付）· [`iter-02`](../../iterations/iter-02/README-cn.md)（已交付）· [`iter-03`](../../iterations/iter-03/README-cn.md)（已交付）· [`iter-04`](../../iterations/iter-04/README-cn.md)（**已交付 — 混合数据访问**）  
+> **迭代：** [`iter-01`](../../iterations/iter-01/README-cn.md)（已交付）… [`iter-04`](../../iterations/iter-04/README-cn.md)（已交付）· [`iter-10`](../../iterations/iter-10/README-cn.md)（**已发布 · 2026-07-03**）  
 > **路线图阶段：** 1 — MVP 聊天
 
 ---
@@ -49,6 +49,12 @@
 
 - CRUD 迁浏览器 Supabase；`app/api/` 仅余 `POST /api/chat`
 - 详见 [iter-04 README-cn.md](../../iterations/iter-04/README-cn.md)、[changelog/iter-04-cn.md](./changelog/iter-04-cn.md)
+
+## iter-10（已发布 — 发布后 UX）
+
+- Landing 纵向布局、Header 精简、能力区 6 项
+- 助手选择 **Manage assistants**；Auth `?next=` 保留
+- 详见 [iter-10 README-cn.md](../../iterations/iter-10/README-cn.md)、[changelog/iter-10-cn.md](./changelog/iter-10-cn.md)
 
 ---
 

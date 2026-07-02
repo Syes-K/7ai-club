@@ -165,11 +165,10 @@ export async function POST(req: Request) {
         );
 
         if (ctx.knowledgeBases?.length) {
-          await runWorkflow(
-            [ragQueryOptimizeNode, ragRetrieveNode],
-            ctx,
-            emit,
-          );
+          const ragNodes = ctx.profile?.rag_query_optimize_enabled
+            ? [ragQueryOptimizeNode, ragRetrieveNode]
+            : [ragRetrieveNode];
+          await runWorkflow(ragNodes, ctx, emit);
         }
 
         await runLlmStreamNode(ctx, writer, emit);

@@ -21,6 +21,12 @@ import {
   ConsoleTableHead,
   ConsoleTh,
 } from "@/components/console/console-page";
+import {
+  CONSOLE_TABLE_ACTIONS_CELL_13,
+  CONSOLE_TABLE_ACTIONS_HEAD_13,
+  CONSOLE_TABLE_ACTION_BUTTON_CLASS,
+  CONSOLE_TABLE_ACTIONS_WRAP_13,
+} from "@/components/console/console-table-actions";
 import { usePageBusy } from "@/components/console/use-page-busy";
 import { cn } from "@/lib/utils";
 
@@ -211,12 +217,12 @@ export function ModelsManager({ initialConfigs }: ModelsManagerProps) {
         <ConsoleTable className="table-fixed">
           <colgroup>
             <col className="w-[11%]" />
-            <col className="w-[20%]" />
+            <col className="w-[22%]" />
             <col className="w-[9%]" />
             <col className="w-[9.5rem]" />
             <col className="w-[10%]" />
             <col className="w-[10%]" />
-            <col />
+            <col className="w-[13rem]" />
           </colgroup>
           <ConsoleTableHead>
             <tr>
@@ -226,12 +232,12 @@ export function ModelsManager({ initialConfigs }: ModelsManagerProps) {
               <ConsoleTh>Source</ConsoleTh>
               <ConsoleTh>API key</ConsoleTh>
               <ConsoleTh>Test</ConsoleTh>
-              <ConsoleTh>Actions</ConsoleTh>
+              <ConsoleTh className={CONSOLE_TABLE_ACTIONS_HEAD_13}>Actions</ConsoleTh>
             </tr>
           </ConsoleTableHead>
           <ConsoleTableBody>
             {configs.map((config) => (
-              <tr key={config.id} className="hover:bg-white/[0.02]">
+              <tr key={config.id} className="group hover:bg-white/[0.02]">
                 <td className="px-4 py-3 font-medium">{config.providerLabel}</td>
                 <td className="px-4 py-3 font-mono text-[var(--text-primary)]">
                   {config.modelName}
@@ -264,7 +270,7 @@ export function ModelsManager({ initialConfigs }: ModelsManagerProps) {
                 <td className="px-4 py-3 text-[var(--text-muted)]">
                   {config.apiKeySet ? "Configured" : "Not set"}
                 </td>
-                <td className="px-4 py-3">
+                <td className="max-w-[8.5rem] overflow-hidden px-4 py-3">
                   <div className="space-y-1">
                     <span
                       className={cn(
@@ -275,23 +281,26 @@ export function ModelsManager({ initialConfigs }: ModelsManagerProps) {
                       {statusLabel(config.testStatus)}
                     </span>
                     {config.testError && (
-                      <p className="max-w-xs text-xs text-red-400">{config.testError}</p>
+                      <p className="truncate text-xs text-red-400" title={config.testError}>
+                        {config.testError}
+                      </p>
                     )}
                   </div>
                 </td>
-                <td className="px-4 py-3">
+                <td className={CONSOLE_TABLE_ACTIONS_CELL_13}>
                   {config.isPlatformDefault ? (
                     <span className="text-xs text-[var(--text-muted)]">—</span>
                   ) : (
-                    <div className="flex flex-wrap gap-2">
+                    <div className={CONSOLE_TABLE_ACTIONS_WRAP_13}>
                       <Button
                         type="button"
                         variant="ghost"
                         size="sm"
                         disabled={busy}
                         onClick={() => openEdit(config)}
+                        className={CONSOLE_TABLE_ACTION_BUTTON_CLASS}
                       >
-                        <Pencil className="h-4 w-4" />
+                        <Pencil className="h-3.5 w-3.5 shrink-0" />
                         Edit
                       </Button>
                       <Button
@@ -300,8 +309,9 @@ export function ModelsManager({ initialConfigs }: ModelsManagerProps) {
                         size="sm"
                         disabled={busy}
                         onClick={() => openKeyDialog(config)}
+                        className={CONSOLE_TABLE_ACTION_BUTTON_CLASS}
                       >
-                        <KeyRound className="h-4 w-4" />
+                        <KeyRound className="h-3.5 w-3.5 shrink-0" />
                         Update key
                       </Button>
                       <Button
@@ -310,8 +320,9 @@ export function ModelsManager({ initialConfigs }: ModelsManagerProps) {
                         size="sm"
                         disabled={busy}
                         onClick={() => handleTest(config)}
+                        className={CONSOLE_TABLE_ACTION_BUTTON_CLASS}
                       >
-                        <FlaskConical className="h-4 w-4" />
+                        <FlaskConical className="h-3.5 w-3.5 shrink-0" />
                         Test
                       </Button>
                       <Button
@@ -320,9 +331,12 @@ export function ModelsManager({ initialConfigs }: ModelsManagerProps) {
                         size="sm"
                         disabled={busy}
                         onClick={() => handleDelete(config)}
-                        className="text-red-400 hover:text-red-300"
+                        className={cn(
+                          CONSOLE_TABLE_ACTION_BUTTON_CLASS,
+                          "text-red-400 hover:text-red-300",
+                        )}
                       >
-                        <Trash2 className="h-4 w-4" />
+                        <Trash2 className="h-3.5 w-3.5 shrink-0" />
                         Delete
                       </Button>
                     </div>

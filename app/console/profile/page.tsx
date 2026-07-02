@@ -18,6 +18,7 @@ import {
   DEFAULT_RAG_CONFIDENCE,
   DEFAULT_RAG_EMBEDDING_MODEL,
   DEFAULT_RAG_EMBEDDING_PROVIDER,
+  DEFAULT_RAG_QUERY_OPTIMIZE_ENABLED,
   DEFAULT_RAG_TOP_K,
 } from "@/lib/rag/defaults";
 import {
@@ -80,6 +81,9 @@ export default async function ConsoleProfilePage() {
           ragEmbeddingModel,
           embeddingModelOptions,
         ),
+        ragQueryOptimizeEnabled:
+          profile?.rag_query_optimize_enabled ??
+          DEFAULT_RAG_QUERY_OPTIMIZE_ENABLED,
         embeddingModelOptions,
       }}
     />

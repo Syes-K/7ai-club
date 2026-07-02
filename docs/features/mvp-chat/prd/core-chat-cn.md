@@ -42,6 +42,18 @@ F-01 – F-08：邮箱注册/登录/登出、路由保护、流式聊天、对�
 
 - 单默认助理，seed 配置；无管理 UI
 
+### F-09b iter-10 — 助手选择弹窗（2026-07-02）
+
+New chat 打开 `AssistantPickerDialog`：
+
+| 项 | 行为 |
+|----|------|
+| Manage assistants | 副标题行右侧链接 → `/console/assistants` |
+| 空列表 | 文案链至 `/console/assistants?create=1` 自动打开 Create |
+| 主流程 | 选 assistant → Create chat（不变） |
+
+**验收：** [changelog/iter-10-cn.md](../changelog/iter-10-cn.md) AC-105
+
 ---
 
 ## 4. 验收标准（iter-01，已验收）

@@ -6,6 +6,7 @@ import {
   DEFAULT_RAG_EMBEDDING_DIMENSIONS,
   DEFAULT_RAG_EMBEDDING_MODEL,
   DEFAULT_RAG_EMBEDDING_PROVIDER,
+  DEFAULT_RAG_QUERY_OPTIMIZE_ENABLED,
   DEFAULT_RAG_TOP_K,
 } from "@/lib/rag/defaults";
 
@@ -13,6 +14,10 @@ describe("AC-94 RAG defaults", () => {
   it("uses confidence 0.65 and TopK 3 per iter-09 code constants", () => {
     expect(DEFAULT_RAG_CONFIDENCE).toBe(0.65);
     expect(DEFAULT_RAG_TOP_K).toBe(3);
+  });
+
+  it("disables query optimization by default", () => {
+    expect(DEFAULT_RAG_QUERY_OPTIMIZE_ENABLED).toBe(false);
   });
 
   it("uses SiliconFlow BGE-M3 1024-dim embedding defaults", () => {

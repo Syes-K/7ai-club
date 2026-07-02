@@ -1,6 +1,6 @@
 import Link from "next/link";
 import type { User } from "@supabase/supabase-js";
-import { MessageSquare, Settings } from "lucide-react";
+import { LogIn, MessageSquare, Settings } from "lucide-react";
 import { landingContainerClass } from "@/lib/constants/landing-layout";
 import { LANDING_COPY } from "@/lib/constants/landing";
 import { UserMenu } from "@/components/layout/user-menu";
@@ -12,7 +12,7 @@ interface SiteHeaderProps {
   className?: string;
   /** Hide Chat link when already on chat routes */
   showChatLink?: boolean;
-  /** Show Console link for signed-in users */
+  /** Show Console in nav bar (default: UserMenu only) */
   showConsoleLink?: boolean;
   /** Full-width bar for app shell (chat / console) */
   fullWidth?: boolean;
@@ -25,7 +25,7 @@ export function SiteHeader({
   nickname,
   className,
   showChatLink = true,
-  showConsoleLink = true,
+  showConsoleLink = false,
   fullWidth = false,
   compactUserMenu = false,
 }: SiteHeaderProps) {
@@ -77,20 +77,13 @@ export function SiteHeader({
               compact={compactUserMenu}
             />
           ) : (
-            <>
-              <Link
-                href="/login"
-                className="text-sm text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors cursor-pointer"
-              >
-                Sign in
-              </Link>
-              <Link
-                href="/register"
-                className="rounded-lg border border-[var(--neon-primary)]/40 px-3 py-1.5 text-sm text-[var(--neon-primary)] hover:bg-[var(--neon-primary)]/10 transition-colors cursor-pointer"
-              >
-                Register
-              </Link>
-            </>
+            <Link
+              href="/login"
+              className="flex items-center gap-1.5 text-sm text-[var(--text-muted)] hover:text-[var(--neon-primary)] transition-colors cursor-pointer"
+            >
+              <LogIn className="h-4 w-4 shrink-0" aria-hidden />
+              Sign in
+            </Link>
           )}
         </nav>
       </div>

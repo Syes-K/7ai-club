@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Pencil, Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -25,7 +26,15 @@ import {
   ConsoleTh,
 } from "@/components/console/console-page";
 import { ConsoleMultiSelect } from "@/components/console/console-multi-select";
+import {
+  CONSOLE_TABLE_ACTIONS_CELL_9_5,
+  CONSOLE_TABLE_ACTIONS_HEAD_9_5,
+  CONSOLE_TABLE_ACTION_BUTTON_CLASS,
+  CONSOLE_TABLE_ACTIONS_WRAP_9_5,
+  CONSOLE_TABLE_PRE_ACTIONS_CELL,
+} from "@/components/console/console-table-actions";
 import { usePageBusy } from "@/components/console/use-page-busy";
+import { cn } from "@/lib/utils";
 
 type AssistantRow = AssistantDto;
 
@@ -110,7 +119,7 @@ function AssistantFormDialog({
             onChange={(e) => setIcon(e.target.value)}
             maxLength={ASSISTANT_ICON_MAX_LENGTH}
             placeholder="Optional emoji"
-            className="max-w-[8rem] text-center text-xl"
+            className="max-w-[8rem] text-left text-xl"
           />
           <p className="text-xs text-[var(--text-muted)]">
             Optional emoji shown in lists and chat header.
@@ -198,7 +207,13 @@ function truncate(text: string | null, maxLen: number): string {
   return `${text.slice(0, maxLen - 1)}…`;
 }
 
-export function AssistantsManager() {
+export function AssistantsManager({
+  openCreateOnMount = false,
+}: {
+  openCreateOnMount?: boolean;
+}) {
+  const router = useRouter();
+  const openedCreateFromMount = useRef(false);
   const { busy, busyLabel, runBusy } = usePageBusy();
   const [assistants, setAssistants] = useState<AssistantRow[]>([]);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -217,6 +232,7 @@ export function AssistantsManager() {
     [],
   );
   const [formInitial, setFormInitial] = useState<AssistantFormValues | undefined>();
+  const [initialLoadDone, setInitialLoadDone] = useState(false);
 
   async function loadAssistants() {
     setLoadError(null);
@@ -229,11 +245,15 @@ export function AssistantsManager() {
     void runBusy("Loading assistants…", async () => {
       const rows = await listAssistants();
       if (!cancelled) setAssistants(rows);
-    }).catch((err) => {
-      if (!cancelled) {
-        setLoadError(err instanceof Error ? err.message : "Failed to load");
-      }
-    });
+    })
+      .catch((err) => {
+        if (!cancelled) {
+          setLoadError(err instanceof Error ? err.message : "Failed to load");
+        }
+      })
+      .finally(() => {
+        if (!cancelled) setInitialLoadDone(true);
+      });
     return () => {
       cancelled = true;
     };
@@ -259,6 +279,31 @@ export function AssistantsManager() {
     void loadReadyKnowledgeBases().catch(() => {});
     setFormOpen(true);
   }
+
+  useEffect(() => {
+    if (
+      !openCreateOnMount ||
+      openedCreateFromMount.current ||
+      !initialLoadDone ||
+      busy
+    ) {
+      return;
+    }
+    openedCreateFromMount.current = true;
+    setFormMode("create");
+    setEditingId(null);
+    setFormError(null);
+    setFormInitial({
+      icon: "",
+      name: "",
+      openingMessage: "",
+      systemPrompt: "",
+      knowledgeBaseIds: [],
+    });
+    void loadReadyKnowledgeBases().catch(() => {});
+    setFormOpen(true);
+    router.replace("/console/assistants", { scroll: false });
+  }, [openCreateOnMount, initialLoadDone, busy, router]);
 
   function openEdit(row: AssistantRow) {
     if (busy) return;
@@ -371,19 +416,26 @@ export function AssistantsManager() {
       )}
 
       {!busy && assistants.length > 0 && (
-        <ConsoleTable>
+        <ConsoleTable className="table-fixed">
+          <colgroup>
+            <col className="w-[4rem]" />
+            <col className="w-[16%]" />
+            <col />
+            <col className="w-[18%]" />
+            <col className="w-[9.5rem]" />
+          </colgroup>
           <ConsoleTableHead>
             <tr>
               <ConsoleTh>Icon</ConsoleTh>
               <ConsoleTh>Name</ConsoleTh>
               <ConsoleTh>Opening message</ConsoleTh>
               <ConsoleTh>Updated</ConsoleTh>
-              <ConsoleTh>Actions</ConsoleTh>
+              <ConsoleTh className={CONSOLE_TABLE_ACTIONS_HEAD_9_5}>Actions</ConsoleTh>
             </tr>
           </ConsoleTableHead>
           <ConsoleTableBody>
             {assistants.map((row) => (
-              <tr key={row.id} className="hover:bg-white/[0.02]">
+              <tr key={row.id} className="group hover:bg-white/[0.02]">
                 <td className="px-4 py-3 text-xl leading-none">
                   {row.icon ?? (
                     <span className="text-sm text-[var(--text-muted)]">—</span>
@@ -395,18 +447,19 @@ export function AssistantsManager() {
                 <td className="max-w-xs px-4 py-3 text-[var(--text-muted)]">
                   {truncate(row.openingMessage, 80)}
                 </td>
-                <td className="whitespace-nowrap px-4 py-3 text-[var(--text-muted)]">
+                <td className={CONSOLE_TABLE_PRE_ACTIONS_CELL} title={formatConversationTimestamp(row.updatedAt)}>
                   {formatConversationTimestamp(row.updatedAt)}
                 </td>
-                <td className="px-4 py-3">
-                  <div className="flex flex-wrap gap-2">
+                <td className={CONSOLE_TABLE_ACTIONS_CELL_9_5}>
+                  <div className={CONSOLE_TABLE_ACTIONS_WRAP_9_5}>
                     <Button
                       variant="ghost"
                       size="sm"
                       disabled={busy}
                       onClick={() => openEdit(row)}
+                      className={CONSOLE_TABLE_ACTION_BUTTON_CLASS}
                     >
-                      <Pencil className="h-4 w-4" />
+                      <Pencil className="h-3.5 w-3.5 shrink-0" />
                       Edit
                     </Button>
                     <Button
@@ -418,9 +471,12 @@ export function AssistantsManager() {
                         setDeleteError(null);
                         setDeleteTarget(row);
                       }}
-                      className="text-red-400 hover:text-red-300"
+                      className={cn(
+                        CONSOLE_TABLE_ACTION_BUTTON_CLASS,
+                        "text-red-400 hover:text-red-300",
+                      )}
                     >
-                      <Trash2 className="h-4 w-4" />
+                      <Trash2 className="h-3.5 w-3.5 shrink-0" />
                       Delete
                     </Button>
                   </div>

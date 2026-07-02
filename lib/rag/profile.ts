@@ -6,6 +6,7 @@ import {
 import {
   DEFAULT_RAG_CONFIDENCE,
   DEFAULT_RAG_EMBEDDING_DIMENSIONS,
+  DEFAULT_RAG_QUERY_OPTIMIZE_ENABLED,
   DEFAULT_RAG_TOP_K,
 } from "@/lib/rag/defaults";
 import { getRagChunkOverlapTokens, getRagChunkSizeTokens } from "@/lib/rag/config";
@@ -15,6 +16,7 @@ import { isPlatformDefaultEmbeddingConfig } from "@/lib/rag/embedding-validation
 export type RagPreferences = {
   confidenceThreshold: number;
   topK: number;
+  queryOptimizeEnabled: boolean;
   embeddingProvider: string;
   embeddingModel: string;
   embeddingDimensions: number;
@@ -69,6 +71,8 @@ export function resolveRagPreferences(
     confidenceThreshold:
       profile?.rag_confidence_threshold ?? DEFAULT_RAG_CONFIDENCE,
     topK: profile?.rag_top_k ?? DEFAULT_RAG_TOP_K,
+    queryOptimizeEnabled:
+      profile?.rag_query_optimize_enabled ?? DEFAULT_RAG_QUERY_OPTIMIZE_ENABLED,
     embeddingProvider,
     embeddingModel,
     embeddingDimensions: dimensions,
@@ -115,7 +119,7 @@ export async function getUserProfileForRag(
   const { data, error } = await supabase
     .from("user_profiles")
     .select(
-      "user_id, nickname, preferred_model_config_id, summarization_enabled, summary_trigger_turns, summary_retain_turns, summary_trigger_tokens, summary_retain_tokens, summary_model_config_id, rag_confidence_threshold, rag_top_k, rag_embedding_provider, rag_embedding_model",
+      "user_id, nickname, preferred_model_config_id, summarization_enabled, summary_trigger_turns, summary_retain_turns, summary_trigger_tokens, summary_retain_tokens, summary_model_config_id, rag_confidence_threshold, rag_top_k, rag_embedding_provider, rag_embedding_model, rag_query_optimize_enabled",
     )
     .eq("user_id", userId)
     .maybeSingle();

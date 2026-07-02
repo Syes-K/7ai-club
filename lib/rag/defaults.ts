@@ -1,5 +1,6 @@
 export const DEFAULT_RAG_CONFIDENCE = 0.65;
 export const DEFAULT_RAG_TOP_K = 3;
+export const DEFAULT_RAG_QUERY_OPTIMIZE_ENABLED = false;
 
 export const DEFAULT_RAG_CHUNK_SIZE = 512;
 export const DEFAULT_RAG_CHUNK_OVERLAP = 64;

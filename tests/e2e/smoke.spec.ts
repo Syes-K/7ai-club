@@ -5,6 +5,8 @@ test.describe("smoke", () => {
     await page.goto("/");
     await expect(page).toHaveTitle(/7AI/i);
     await expect(page.getByRole("main")).toBeVisible();
+    await expect(page.getByText("CRACK THE STACK")).toBeVisible();
+    await expect(page.locator("footer")).toContainText("SYS://local");
   });
 
   test("unauthenticated user can reach login page", async ({ page }) => {

@@ -2,17 +2,16 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, ExternalLink, Loader2, RotateCcw } from "lucide-react";
+import { ArrowLeft, ExternalLink, Loader2, RotateCcw, ScanSearch } from "lucide-react";
 import { Button, buttonVariants } from "@/components/ui/button";
+import { ConsoleFileInput } from "@/components/console/console-file-input";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { ConsolePage } from "@/components/console/console-page";
 import {
-  ConsolePage,
-  ConsoleTable,
-  ConsoleTableBody,
-  ConsoleTableHead,
-  ConsoleTh,
-} from "@/components/console/console-page";
+  KnowledgeBaseRecallTestDialog,
+  type KnowledgeBaseRecallTarget,
+} from "@/components/console/knowledge-base-recall-test-dialog";
 import { usePageBusy } from "@/components/console/use-page-busy";
 import {
   contentEmptyMessage,
@@ -26,17 +25,10 @@ import {
   replaceKnowledgeBaseFileSource,
   replaceKnowledgeBaseTextSource,
   retryKnowledgeBaseIngest,
-  runKnowledgeBaseRecallTest,
   updateKnowledgeBaseMeta,
-  type RecallTestResult,
 } from "@/lib/data/browser/knowledge-bases";
-import { getUserProfile } from "@/lib/data/browser/profile";
 import type { KnowledgeBaseListItem } from "@/lib/data/types";
 import type { KnowledgeBaseRow } from "@/lib/rag/types";
-import {
-  DEFAULT_RAG_CONFIDENCE,
-  DEFAULT_RAG_TOP_K,
-} from "@/lib/rag/defaults";
 import {
   KB_DESCRIPTION_MAX,
   KB_NAME_MAX,
@@ -47,8 +39,6 @@ import { cn } from "@/lib/utils";
 interface KnowledgeBaseDetailProps {
   id: string;
 }
-
-type RecallHit = RecallTestResult["hits"][number];
 
 function statusBadgeClass(status: KnowledgeBaseListItem["status"]): string {
   switch (status) {
@@ -84,17 +74,9 @@ export function KnowledgeBaseDetail({ id }: KnowledgeBaseDetailProps) {
   const [metaError, setMetaError] = useState<string | null>(null);
   const [metaSaved, setMetaSaved] = useState(false);
 
-  const [recallQuery, setRecallQuery] = useState("");
-  const [recallThreshold, setRecallThreshold] = useState(
-    String(DEFAULT_RAG_CONFIDENCE),
-  );
-  const [recallTopK, setRecallTopK] = useState(String(DEFAULT_RAG_TOP_K));
-  const [recallHits, setRecallHits] = useState<RecallHit[]>([]);
-  const [recallMeta, setRecallMeta] = useState<RecallTestResult["meta"] | null>(
+  const [recallTarget, setRecallTarget] = useState<KnowledgeBaseRecallTarget | null>(
     null,
   );
-  const [recallRan, setRecallRan] = useState(false);
-  const [recallError, setRecallError] = useState<string | null>(null);
 
   const [chunkCount, setChunkCount] = useState<number | null>(null);
 
@@ -117,20 +99,6 @@ export function KnowledgeBaseDetail({ id }: KnowledgeBaseDetailProps) {
     setName(typed.name);
     setDescription(typed.description ?? "");
   }
-
-  useEffect(() => {
-    let cancelled = false;
-    void getUserProfile()
-      .then((profile) => {
-        if (cancelled || !profile) return;
-        setRecallThreshold(String(profile.rag_confidence_threshold));
-        setRecallTopK(String(profile.rag_top_k));
-      })
-      .catch(() => {});
-    return () => {
-      cancelled = true;
-    };
-  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -232,9 +200,6 @@ export function KnowledgeBaseDetail({ id }: KnowledgeBaseDetailProps) {
 
     setSourceSaving(true);
     setSourceError(null);
-    setRecallRan(false);
-    setRecallHits([]);
-    setRecallMeta(null);
 
     try {
       await runBusy("Replacing source and re-indexing…", async () => {
@@ -269,46 +234,6 @@ export function KnowledgeBaseDetail({ id }: KnowledgeBaseDetailProps) {
       });
     } catch (err) {
       setLoadError(err instanceof Error ? err.message : "Failed to retry ingestion");
-    }
-  }
-
-  async function handleRecallTest(e: React.FormEvent) {
-    e.preventDefault();
-    setRecallError(null);
-    setRecallRan(false);
-    setRecallMeta(null);
-
-    const query = recallQuery.trim();
-    if (!query) {
-      setRecallError("Query is required");
-      return;
-    }
-
-    const threshold = Number.parseFloat(recallThreshold);
-    if (!Number.isFinite(threshold) || threshold <= 0 || threshold > 1) {
-      setRecallError("Confidence threshold must be between 0 and 1");
-      return;
-    }
-
-    const topK = Number.parseInt(recallTopK, 10);
-    if (!Number.isInteger(topK) || topK < 1 || topK > 50) {
-      setRecallError("Top K must be between 1 and 50");
-      return;
-    }
-
-    try {
-      await runBusy("Running recall test…", async () => {
-        const result = await runKnowledgeBaseRecallTest(id, {
-          query,
-          confidenceThreshold: threshold,
-          topK,
-        });
-        setRecallHits(result.hits);
-        setRecallMeta(result.meta);
-        setRecallRan(true);
-      });
-    } catch (err) {
-      setRecallError(err instanceof Error ? err.message : "Recall test failed");
     }
   }
 
@@ -452,18 +377,36 @@ export function KnowledgeBaseDetail({ id }: KnowledgeBaseDetailProps) {
                 {metaSaved && (
                   <p className="text-[var(--accent-success)]">Saved.</p>
                 )}
-                <Button
-                  type="button"
-                  variant="secondary"
-                  size="sm"
-                  disabled={busy}
-                  onClick={() => {
-                    setMetaSaved(false);
-                    setMetaEditing(true);
-                  }}
-                >
-                  Edit name & description
-                </Button>
+                <div className="flex flex-wrap gap-2 pt-1">
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    size="sm"
+                    disabled={busy}
+                    onClick={() => {
+                      setMetaSaved(false);
+                      setMetaEditing(true);
+                    }}
+                  >
+                    Edit name & description
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    size="sm"
+                    disabled={busy || !isReady}
+                    onClick={() =>
+                      setRecallTarget({
+                        id: kb.id,
+                        name: kb.name,
+                        status: kb.status,
+                      })
+                    }
+                  >
+                    <ScanSearch className="h-4 w-4" />
+                    Recall test
+                  </Button>
+                </div>
               </dl>
             )}
           </section>
@@ -562,12 +505,12 @@ export function KnowledgeBaseDetail({ id }: KnowledgeBaseDetailProps) {
                 ) : (
                   <div className="space-y-2">
                     <Label htmlFor="kb-replace-file">File</Label>
-                    <Input
+                    <ConsoleFileInput
                       id="kb-replace-file"
-                      type="file"
                       accept=".md,.txt,.markdown,.pdf,.docx"
+                      file={sourceFile}
+                      onFileChange={setSourceFile}
                       disabled={sourceSaving || busy}
-                      onChange={(e) => setSourceFile(e.target.files?.[0] ?? null)}
                     />
                     <p className="text-xs text-[var(--text-muted)]">
                       Current file: {kb.source_filename ?? "—"}. Supported: .md,
@@ -597,160 +540,14 @@ export function KnowledgeBaseDetail({ id }: KnowledgeBaseDetailProps) {
               </form>
             )}
           </section>
-
-          <section className="rounded-lg border border-[var(--neon-primary)]/15 p-5">
-            <h2 className="font-mono text-lg font-semibold">Recall test</h2>
-            <p className="mt-1 text-sm text-[var(--text-muted)]">
-              Uses the same pipeline as Chat: query optimization, then vector
-              retrieval. Override confidence and Top K below for testing.
-            </p>
-
-            <form onSubmit={handleRecallTest} className="mt-4 space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="recall-query">Query</Label>
-                <textarea
-                  id="recall-query"
-                  value={recallQuery}
-                  onChange={(e) => setRecallQuery(e.target.value)}
-                  rows={3}
-                  disabled={!isReady || busy}
-                  placeholder="Ask a question to test retrieval"
-                  className="w-full rounded-lg border border-[var(--neon-primary)]/25 bg-[var(--bg-base)] px-3 py-2 text-sm text-[var(--text-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--neon-primary)] disabled:opacity-60"
-                />
-              </div>
-
-              <div className="grid gap-4 sm:grid-cols-2">
-                <div className="space-y-2">
-                  <Label htmlFor="recall-threshold">Confidence threshold</Label>
-                  <Input
-                    id="recall-threshold"
-                    type="number"
-                    min={0.05}
-                    max={1}
-                    step={0.05}
-                    value={recallThreshold}
-                    onChange={(e) => setRecallThreshold(e.target.value)}
-                    disabled={!isReady || busy}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="recall-top-k">Top K</Label>
-                  <Input
-                    id="recall-top-k"
-                    type="number"
-                    min={1}
-                    max={50}
-                    step={1}
-                    value={recallTopK}
-                    onChange={(e) => setRecallTopK(e.target.value)}
-                    disabled={!isReady || busy}
-                  />
-                </div>
-              </div>
-              {!isReady && (
-                <p className="text-sm text-[var(--text-muted)]">
-                  Recall test is available when status is Ready.
-                </p>
-              )}
-              {recallError && <p className="text-sm text-red-400">{recallError}</p>}
-              <Button type="submit" disabled={!isReady || busy}>
-                Run recall test
-              </Button>
-            </form>
-
-            {recallRan && recallMeta && (
-              <div className="mt-4 rounded-lg border border-[var(--neon-primary)]/15 p-3 text-sm">
-                {recallMeta.queryOptimized && (
-                  <p className="text-[var(--text-muted)]">
-                    Original:{" "}
-                    <span className="text-[var(--text-primary)]">
-                      {recallMeta.originalQuery}
-                    </span>
-                  </p>
-                )}
-                <p className={recallMeta.queryOptimized ? "mt-2 text-[var(--text-muted)]" : "text-[var(--text-muted)]"}>
-                  {recallMeta.queryOptimized ? "Optimized query" : "Query used for retrieval"}
-                </p>
-                <p className="mt-1 whitespace-pre-wrap text-[var(--text-primary)]">
-                  {recallMeta.optimizedQuery}
-                </p>
-                <p className="mt-2 text-[var(--text-muted)]">
-                  Threshold{" "}
-                  <span className="font-mono text-[var(--text-primary)]">
-                    {recallMeta.threshold.toFixed(2)}
-                  </span>
-                  {" · "}
-                  Top K{" "}
-                  <span className="font-mono text-[var(--text-primary)]">
-                    {recallMeta.topK}
-                  </span>
-                </p>
-              </div>
-            )}
-
-            {recallRan && recallHits.length === 0 && (
-              <div className="mt-4 space-y-2 text-sm text-[var(--text-muted)]">
-                <p>No results above the confidence threshold.</p>
-                {recallMeta && (
-                  <p>
-                    Current threshold:{" "}
-                    <span className="font-mono text-[var(--text-primary)]">
-                      {recallMeta.threshold.toFixed(2)}
-                    </span>
-                    {recallMeta.bestBelowThreshold && (
-                      <>
-                        {" "}
-                        · Best match scored{" "}
-                        <span className="font-mono text-[var(--text-primary)]">
-                          {recallMeta.bestBelowThreshold.score.toFixed(3)}
-                        </span>
-                      </>
-                    )}
-                  </p>
-                )}
-                {recallMeta?.bestBelowThreshold && (
-                  <p>
-                    Try lowering the confidence threshold above (BGE-M3 often
-                    works well around 0.50–0.55). Profile default:{" "}
-                    <span className="font-mono text-[var(--text-primary)]">
-                      {recallMeta.profileThreshold.toFixed(2)}
-                    </span>
-                    .
-                  </p>
-                )}
-              </div>
-            )}
-
-            {recallHits.length > 0 && (
-              <div className="mt-2">
-              <ConsoleTable>
-                <ConsoleTableHead>
-                  <tr>
-                    <ConsoleTh>Score</ConsoleTh>
-                    <ConsoleTh>Location</ConsoleTh>
-                    <ConsoleTh>Content</ConsoleTh>
-                  </tr>
-                </ConsoleTableHead>
-                <ConsoleTableBody>
-                  {recallHits.map((hit, index) => (
-                    <tr key={`${hit.charStart}-${index}`} className="align-top">
-                      <td className="whitespace-nowrap px-4 py-3 text-[var(--text-primary)]">
-                        {hit.score.toFixed(3)}
-                      </td>
-                      <td className="px-4 py-3 text-[var(--text-muted)]">
-                        {hit.headingPath ?? "—"}
-                      </td>
-                      <td className="max-w-xl px-4 py-3 text-[var(--text-primary)]">
-                        {hit.content}
-                      </td>
-                    </tr>
-                  ))}
-                </ConsoleTableBody>
-              </ConsoleTable>
-              </div>
-            )}
-          </section>
         </div>
+      )}
+
+      {recallTarget && (
+        <KnowledgeBaseRecallTestDialog
+          target={recallTarget}
+          onClose={() => setRecallTarget(null)}
+        />
       )}
     </ConsolePage>
   );

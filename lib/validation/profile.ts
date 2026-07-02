@@ -125,6 +125,7 @@ export type PreferencesPatchFields = {
   ragTopK?: number;
   ragEmbeddingProvider?: string;
   ragEmbeddingModel?: string;
+  ragQueryOptimizeEnabled?: boolean;
 };
 
 export function parsePreferencesPatch(
@@ -140,6 +141,7 @@ export function parsePreferencesPatch(
     ragTopK?: unknown;
     ragEmbeddingProvider?: unknown;
     ragEmbeddingModel?: unknown;
+    ragQueryOptimizeEnabled?: unknown;
   },
   allowedIds: Set<string>,
   allowedEmbeddingKeys: Set<string>,
@@ -158,7 +160,8 @@ export function parsePreferencesPatch(
     "ragConfidenceThreshold" in body ||
     "ragTopK" in body ||
     "ragEmbeddingProvider" in body ||
-    "ragEmbeddingModel" in body;
+    "ragEmbeddingModel" in body ||
+    "ragQueryOptimizeEnabled" in body;
 
   if (!hasAnyField) {
     return { error: "No fields to update" };
@@ -258,6 +261,13 @@ export function parsePreferencesPatch(
     if (parsed.error || !parsed.value) return parsed;
     fields.ragEmbeddingProvider = parsed.value.provider;
     fields.ragEmbeddingModel = parsed.value.model;
+  }
+
+  if ("ragQueryOptimizeEnabled" in body) {
+    if (typeof body.ragQueryOptimizeEnabled !== "boolean") {
+      return { error: "Invalid query optimization setting" };
+    }
+    fields.ragQueryOptimizeEnabled = body.ragQueryOptimizeEnabled;
   }
 
   const triggerTurns = fields.summaryTriggerTurns;

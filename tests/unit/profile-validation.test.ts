@@ -196,6 +196,17 @@ describe("profile validation (iter-09 RAG preferences)", () => {
     expect(result.fields?.ragEmbeddingProvider).toBe("siliconflow");
     expect(result.fields?.ragEmbeddingModel).toBe("BAAI/bge-m3");
   });
+
+  it("AC-94: parsePreferencesPatch accepts query optimization toggle", () => {
+    const result = parsePreferencesPatch(
+      { ragQueryOptimizeEnabled: true },
+      allowed,
+      allowedEmbeddingKeys,
+    );
+
+    expect(result.error).toBeUndefined();
+    expect(result.fields?.ragQueryOptimizeEnabled).toBe(true);
+  });
 });
 
 describe("saveAccount service", () => {

@@ -1,25 +1,49 @@
-export const LANDING_CAPABILITIES = [
+export type LandingCapability = {
+  id: string;
+  title: string;
+  /** Omit for roadmap items (non-clickable, dashed border) */
+  href?: string;
+  accent: string;
+};
+
+/** Ordered by importance / visual weight (01 = primary entry). */
+export const LANDING_CAPABILITIES: LandingCapability[] = [
   {
     id: "01",
     title: "Streaming & models",
-    description: "Real-time chat with switchable LLM providers via environment config.",
+    href: "/chat",
+    accent: "var(--neon-primary)",
   },
   {
     id: "02",
-    title: "Prompts & configs",
-    description: "Server-side assistant prompts and model routing — no pitch deck required.",
+    title: "Knowledge & routing",
+    href: "/console/knowledge",
+    accent: "var(--accent-success)",
   },
   {
     id: "03",
-    title: "Knowledge & routing",
-    description: "Roadmap: RAG and knowledge bases wired into the same chat surface.",
+    title: "Assistant & personas",
+    href: "/console/assistants",
+    accent: "#a855f7",
   },
   {
     id: "04",
-    title: "Assistant & personas",
-    description: "Roadmap: configurable assistants and personas beyond the default seed.",
+    title: "Workflow & steps",
+    href: "/chat",
+    accent: "var(--neon-secondary)",
   },
-] as const;
+  {
+    id: "05",
+    title: "Prompts & configs",
+    href: "/console/models",
+    accent: "#06b6d4",
+  },
+  {
+    id: "06",
+    title: "MCP & tools",
+    accent: "#64748b",
+  },
+];
 
 export const LANDING_COPY = {
   brand: "7AI·CLUB",

@@ -132,6 +132,8 @@ export type RecallTestResult = {
     originalQuery: string;
     optimizedQuery: string;
     queryOptimized: boolean;
+    queryOptimizeEnabled: boolean;
+    profileQueryOptimizeEnabled: boolean;
     threshold: number;
     topK: number;
     profileThreshold: number;
@@ -150,6 +152,7 @@ export async function runKnowledgeBaseRecallTest(
     query: string;
     confidenceThreshold?: number;
     topK?: number;
+    queryOptimize?: boolean;
   },
 ): Promise<RecallTestResult> {
   const response = await fetch(`/api/knowledge/${id}/recall-test`, {

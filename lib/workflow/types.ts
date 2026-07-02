@@ -64,6 +64,7 @@ export type ProfileRow = {
   rag_top_k: number;
   rag_embedding_provider: string;
   rag_embedding_model: string;
+  rag_query_optimize_enabled: boolean;
 };
 
 export type WorkflowContext = {

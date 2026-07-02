@@ -24,6 +24,9 @@ export function AuthForm({ mode, next }: { mode: AuthMode; next?: string }) {
   const [cooldown, setCooldown] = useState(0);
 
   const isLogin = mode === "login";
+  const switchHref = isLogin ? "/register" : "/login";
+  const switchHrefWithNext =
+    next?.startsWith("/") ? `${switchHref}?next=${encodeURIComponent(next)}` : switchHref;
 
   useEffect(() => {
     if (cooldown <= 0) return;
@@ -154,7 +157,7 @@ export function AuthForm({ mode, next }: { mode: AuthMode; next?: string }) {
       <p className="text-center text-sm text-[var(--text-muted)]">
         {isLogin ? "Don't have an account?" : "Already have an account?"}
         <Link
-          href={isLogin ? "/register" : "/login"}
+          href={switchHrefWithNext}
           className="ml-1 text-[var(--neon-primary)] hover:underline cursor-pointer"
         >
           {isLogin ? "Sign up" : "Sign in"}

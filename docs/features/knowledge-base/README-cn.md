@@ -4,12 +4,17 @@
 > **中文:** [README-cn.md](./README-cn.md)
 
 > **Feature slug:** `knowledge-base`  
-> **迭代:** [`iter-09`](../../iterations/iter-09/README-cn.md)（**已发布 · 2026-07-01**）  
+> **迭代:** [`iter-09`](../../iterations/iter-09/README-cn.md)（**已发布 · 2026-07-01**）· [`iter-10`](../../iterations/iter-10/README-cn.md)（**已发布 · 2026-07-03**）  
 > **路线图阶段:** 2 — 知识库
 
 ---
 
 ## 文档地图（Agent 入口）
+
+**iter-10 已发布 — changelog 索引：**
+
+1. [changelog/iter-10-cn.md](./changelog/iter-10-cn.md) — **AC-106–109**
+2. [iter-10/README-cn.md](../../iterations/iter-10/README-cn.md)
 
 **iter-09 已发布 — changelog 为验收与迭代索引：**
 
@@ -40,6 +45,12 @@
 - **Preferences** — confidence（默认 **0.65**）、TopK（默认 **3**）、embedding 模型（Platform default + Passed embedding；**KB 创建时锁定**）  
 - **Assistants** — 多选挂载 KB  
 - **Chat** — 挂载 KB 时插入 `rag_query_optimize` → `rag_retrieve` workflow 节点  
+
+## iter-10 增量（已发布 · 2026-07-03）
+
+- **Query optimization** — Preferences 开关，**默认关**；Chat 按偏好跳过/插入 optimize 节点  
+- **Recall test** — 独立 dialog；空结果 hint 按 KB 锁定 embedding 模型  
+- 详见 [changelog/iter-10-cn.md](./changelog/iter-10-cn.md)
 
 ---
 

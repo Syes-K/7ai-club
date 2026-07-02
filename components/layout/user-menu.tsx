@@ -103,8 +103,10 @@ export function UserMenu({
           className="absolute right-0 top-[calc(100%+0.5rem)] z-50 w-56 overflow-hidden rounded-xl border border-[var(--neon-primary)]/25 bg-[var(--bg-elevated)] shadow-[0_0_24px_rgba(0,128,255,0.15)]"
         >
           <div className="border-b border-[var(--neon-primary)]/15 px-3 py-2.5">
-            <p className="text-xs text-[var(--text-muted)]">Signed in as</p>
-            <p className="mt-0.5 truncate text-sm text-[var(--text-primary)]" title={fullLabel}>
+            <p
+              className="truncate text-sm font-medium text-[var(--text-primary)]"
+              title={fullLabel}
+            >
               {fullLabel}
             </p>
           </div>

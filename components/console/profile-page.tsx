@@ -33,6 +33,7 @@ export function ProfilePage({ profile }: ProfilePageProps) {
           initialRagEmbeddingProvider={profile.ragEmbeddingProvider}
           initialRagEmbeddingModel={profile.ragEmbeddingModel}
           initialRagEmbeddingLabel={profile.ragEmbeddingLabel}
+          initialRagQueryOptimizeEnabled={profile.ragQueryOptimizeEnabled}
           modelOptions={profile.modelOptions}
           embeddingModelOptions={profile.embeddingModelOptions}
         />

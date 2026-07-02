@@ -13,11 +13,12 @@ import {
   DEFAULT_RAG_CONFIDENCE,
   DEFAULT_RAG_EMBEDDING_MODEL,
   DEFAULT_RAG_EMBEDDING_PROVIDER,
+  DEFAULT_RAG_QUERY_OPTIMIZE_ENABLED,
   DEFAULT_RAG_TOP_K,
 } from "@/lib/rag/defaults";
 
 const PROFILE_SELECT =
-  "user_id, nickname, preferred_model_config_id, summarization_enabled, summary_trigger_turns, summary_retain_turns, summary_trigger_tokens, summary_retain_tokens, summary_model_config_id, rag_confidence_threshold, rag_top_k, rag_embedding_provider, rag_embedding_model";
+  "user_id, nickname, preferred_model_config_id, summarization_enabled, summary_trigger_turns, summary_retain_turns, summary_trigger_tokens, summary_retain_tokens, summary_model_config_id, rag_confidence_threshold, rag_top_k, rag_embedding_provider, rag_embedding_model, rag_query_optimize_enabled";
 
 function normalizeProfile(row: Record<string, unknown>): UserProfile {
   return {
@@ -52,6 +53,9 @@ function normalizeProfile(row: Record<string, unknown>): UserProfile {
     rag_embedding_model:
       (row.rag_embedding_model as string | undefined) ??
       DEFAULT_RAG_EMBEDDING_MODEL,
+    rag_query_optimize_enabled:
+      (row.rag_query_optimize_enabled as boolean | undefined) ??
+      DEFAULT_RAG_QUERY_OPTIMIZE_ENABLED,
   };
 }
 
@@ -92,6 +96,7 @@ export async function upsertUserProfile(fields: {
   ragTopK?: number;
   ragEmbeddingProvider?: string;
   ragEmbeddingModel?: string;
+  ragQueryOptimizeEnabled?: boolean;
 }): Promise<UserProfile> {
   const supabase = createClient();
   const {
@@ -141,6 +146,9 @@ export async function upsertUserProfile(fields: {
   }
   if ("ragEmbeddingModel" in fields) {
     row.rag_embedding_model = fields.ragEmbeddingModel;
+  }
+  if ("ragQueryOptimizeEnabled" in fields) {
+    row.rag_query_optimize_enabled = fields.ragQueryOptimizeEnabled;
   }
 
   const { data, error } = await supabase

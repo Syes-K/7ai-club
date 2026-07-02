@@ -58,8 +58,29 @@ Embedding model: Platform default (SiliconFlow — BAAI/bge-m3)
 |------|------|
 | Confidence / TopK | 召回测试；Chat `rag_retrieve` |
 | Embedding model | **仅新建 KB** 的默认锁定模型；已有 KB 不变 |
+| Query optimization（iter-10） | 为 **true** 时 Chat / Recall test 可 LLM 改写 query；默认 **false** |
 
-### 3.4 默认值来源
+### 3.4 iter-10 — Query optimization 开关
+
+| 字段 | 控件 | 默认 | 说明 |
+|------|------|------|------|
+| Query optimization | Checkbox + FieldHint | **Disabled**（`false`） | 开启后用 chat model 将用户消息改写为检索 query 再向量召回 |
+
+**View 示例：** `Query optimization: Disabled`
+
+**DB：** `user_profiles.rag_query_optimize_enabled BOOLEAN NOT NULL DEFAULT false`
+
+**验收：** [changelog/iter-10-cn.md](../changelog/iter-10-cn.md) AC-106–107
+
+### 3.5 作用范围（汇总）
+
+| 参数 | 影响 |
+|------|------|
+| Confidence / TopK | 召回测试；Chat `rag_retrieve` |
+| Embedding model | **仅新建 KB** 的默认锁定模型；已有 KB 不变 |
+| Query optimization | Chat 是否插入 `rag_query_optimize`；Recall test 默认读取 Profile、可临时覆盖 |
+
+### 3.6 默认值来源
 
 未配置时：confidence **0.65**、TopK **3**（代码常量）；embedding 平台默认来自 env `RAG_EMBEDDING_PROVIDER` + `RAG_EMBEDDING_MODEL`（Profile 下拉首项 **Platform default**）。
 
@@ -79,3 +100,4 @@ Embedding model: Platform default (SiliconFlow — BAAI/bge-m3)
 | 2026-06-30 | iter-09 初稿 — 修订 console/profile |
 | 2026-06-30 | 默认值 0.65 / TopK 3；Embedding 下拉来源改为 Platform default + Passed embedding 配置 |
 | 2026-07-01 | §3.2 确认框文案：Retry ingestion 不换 embedding；旧内容需新建 KB |
+| 2026-07-02 | iter-10 §3.4 Query optimization 开关；默认 false |
