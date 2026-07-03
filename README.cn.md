@@ -2,9 +2,13 @@
 
 [English](README.md)
 
-聊天优先、可配置 AI 助理的 Web 平台。用户可创建助理、进行流式对话，并为每个助理配置系统提示词、知识库与 MCP 工具。
+聊天优先、可配置 AI 助理的 Web 平台 — 流式对话、知识库 RAG、Console 管理与 Workflow 可观测性。
 
-**当前状态：** iter-01 MVP 聊天本地迭代已完成；生产部署进行中。详见 [`docs/iterations/iter-01/README-cn.md`](docs/iterations/iter-01/README-cn.md)。
+| | |
+|---|---|
+| **生产站点** | [https://7ai-club.vercel.app](https://7ai-club.vercel.app) |
+| **本地开发** | [http://localhost:3000](http://localhost:3000) |
+| **最新发布** | [iter-11](docs/iterations/iter-11/README-cn.md) — Vercel Analytics & Speed Insights（[en](docs/iterations/iter-11/README.md)） |
 
 ---
 
@@ -13,91 +17,50 @@
 | 层 | 选择 |
 |----|------|
 | 前端 | Next.js App Router + Tailwind |
-| 后台 | shadcn/ui |
+| Console | shadcn/ui |
 | 数据 | Supabase（Auth、PostgreSQL、pgvector、Storage） |
 | 鉴权 | Supabase Auth JWT + `@supabase/ssr` |
-| AI 编排 | Vercel AI SDK（`ToolLoopAgent`、`streamText`） |
-| MCP（运行时） | `@ai-sdk/mcp`（HTTP/SSE） |
+| AI | Vercel AI SDK（`ToolLoopAgent`、`streamText`、RAG workflow） |
+| 可观测性 | Vercel Web Analytics + Speed Insights |
 | 部署 | Vercel |
 
-架构决策详见 [`docs/research/ai-agent-platform-architecture-cn.md`](docs/research/ai-agent-platform-architecture-cn.md)（英文版：[`ai-agent-platform-architecture.md`](docs/research/ai-agent-platform-architecture.md)）。
+架构决策：[`docs/research/ai-agent-platform-architecture-cn.md`](docs/research/ai-agent-platform-architecture-cn.md) · [English](docs/research/ai-agent-platform-architecture.md)
 
 ---
 
-## 仓库结构
-
-```
-docs/
-  research/            # 架构调研（只读参考）
-  features/<slug>/     # 功能 PRD + 技术设计
-  iterations/<id>/     # 迭代计划与发布索引
-
-.cursor/
-  agents/              # 自定义 subagent
-  rules/               # 工作流门禁
-  skills/              # 架构、PRD、UI 等技能与模板
-  mcp.json             # 项目 MCP（Supabase）
-```
-
----
-
-## 文档约定
+## 文档
 
 | 类型 | 路径 |
 |------|------|
-| 文档索引 | `docs/README.md` / `docs/README-cn.md` |
-| PRD | `docs/features/<slug>/01-product-requirements.md` + `01-product-requirements-cn.md` |
-| 技术设计 | `docs/features/<slug>/02-technical-design.md` + `02-technical-design-cn.md` |
-| 迭代索引 | `docs/iterations/<iter-id>/README.md` + `README-cn.md` |
+| 索引 | [`docs/README-cn.md`](docs/README-cn.md) · [English](docs/README.md) |
+| Feature PRD / 设计 | `docs/features/<slug>/` |
+| 迭代发布 | `docs/iterations/<iter-id>/` |
 
-**原则：** Feature 目录存放可长期修订的需求与设计；迭代目录只记录本时间盒的目标与包含的 features。**`docs/` 与 `research/` 相同，中英文成对维护。**
+**原则：** Feature 文档长期维护；迭代目录仅作时间盒发布索引。中英文成对（`*.md` + `*-cn.md`）。
 
----
+### Cursor 工作流
 
-## Cursor 开发工作流
+三阶段 subagent + 门禁：**PRD → 技术设计 → 编码 → 测试验收**。
 
-本项目使用 **三阶段 subagent + 四道人工确认门禁**（PRD → 技术设计 → 编码 → 测试）：
+| 阶段 | Subagent |
+|------|----------|
+| 需求 | `product-analyst` |
+| 设计 + 编码 | `fullstack-developer` |
+| 测试签字 | `qa-engineer` |
 
-| 阶段 | Subagent | 产出 |
-|------|----------|------|
-| 1 | `product-analyst` | PRD |
-| 2a | `fullstack-developer` Phase A | 技术设计 |
-| 2b | `fullstack-developer` Phase B | 编码 |
-| 3 | `qa-engineer` | 测试验收 → 发布 |
-
-**确认话术（固定原文，按顺序使用）：**
-
-| 当前状态 | 用户回复 | 解锁 |
-|----------|----------|------|
-| PRD 已确认 | `PRD 已确认，可进入技术设计` | 技术设计 |
-| 技术设计已确认 | `技术设计已确认，可开始编码` | 编码 |
-| 测试已通过 | `测试已通过，可发布` | 标迭代已发布 |
-
-**注意：** PRD 已确认后应提示进入**技术设计**，**不要**此时使用 `技术设计已确认，可开始编码`。完整状态表见 `.cursor/rules/7ai-club-workflow.mdc`。
-
-**调用示例：**
-
-```
-用 product-analyst 分析 MVP 聊天，slug: mvp-chat，迭代: iter-01
-```
-
-```
-用 fullstack-developer 读取 docs/features/mvp-chat/01-product-requirements.md，先做技术设计
-```
-
-配置说明见 `.cursor/rules/7ai-club-workflow.mdc`。
+门禁话术与完整规则：[`.cursor/rules/7ai-club-workflow.mdc`](.cursor/rules/7ai-club-workflow.mdc)。
 
 ---
 
-## 实施路线图
+## 路线图（阶段）
 
 | 阶段 | 内容 |
 |------|------|
-| 1 — MVP 聊天 | Auth、助理 CRUD、流式聊天 API + UI |
-| 2 — 知识库 | pgvector、文档入库、RAG |
-| 3 — Agent | `ToolLoopAgent`、自定义 tools、对话记忆 |
-| 4 — MCP | 助理绑定 MCP、凭证管理 |
-| 5 — 生产加固 | 限流、RLS 审计、可观测性 |
+| 1 — MVP 聊天 | Auth、助理、流式聊天 |
+| 2 — 知识库 | pgvector、入库、RAG |
+| 3 — Agent | Workflow 步骤、流恢复、记忆 |
+| 4 — MCP | 助理绑定 MCP |
+| 5 — 生产 | Analytics、限流、加固 |
 
 ---
 
@@ -105,68 +68,79 @@ docs/
 
 ```bash
 pnpm install
-cp .env.example .env.local   # 填写 Supabase 与 LLM 提供商密钥
+cp .env.example .env.local
+pnpm dev          # http://localhost:3000
 ```
 
-**Supabase 数据库：** 在 Supabase 项目执行 `supabase/migrations/20260614000000_mvp_chat.sql`（或通过 Supabase CLI `supabase db push`）。
+**数据库：** 执行 `supabase/migrations/` 下迁移（如 `supabase db push`）。
 
-```bash
-pnpm dev     # http://localhost:3000
-pnpm build   # 生产构建验证
-```
+### 常用命令
 
-### 环境变量
+| 命令 | 说明 |
+|------|------|
+| `pnpm dev` | 开发服务器 |
+| `pnpm build` | 生产构建 |
+| `pnpm lint` | ESLint |
+| `pnpm test` | Vitest 单元测试 |
+| `pnpm test:e2e` | Playwright E2E（本地建议 `CI=1`） |
+| `pnpm test:ci` | lint + build + unit + e2e |
+
+### 主要环境变量
 
 | 变量 | 说明 |
 |------|------|
+| `NEXT_PUBLIC_SITE_URL` | 站点 canonical 地址（生产：`https://7ai-club.vercel.app`）。见 `lib/site-url.ts`；本地可省略（回退 `window.location.origin` 或 `VERCEL_URL`）。 |
 | `NEXT_PUBLIC_SUPABASE_URL` | Supabase 项目 URL |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | 匿名公钥 |
-| `LLM_PROVIDER` | `siliconflow`、`nvidia` 或 `bailian`（默认 `siliconflow`；别名：`dashscope`、`aliyun`） |
-| `LLM_MODEL` | 可选，覆盖默认模型 |
-| `SILICONFLOW_API_KEY` | SiliconFlow API Key（`LLM_PROVIDER=siliconflow` 时） |
-| `SILICONFLOW_BASE_URL` | 可选，默认 `https://api.siliconflow.cn/v1` |
-| `NVIDIA_API_KEY` | NVIDIA NIM API Key（`LLM_PROVIDER=nvidia` 时） |
-| `NVIDIA_BASE_URL` | 可选，默认 `https://integrate.api.nvidia.com/v1` |
-| `BAILIAN_API_KEY` | 阿里百炼 API Key（`LLM_PROVIDER=bailian` 时） |
-| `BAILIAN_BASE_URL` | 可选，默认 `https://dashscope.aliyuncs.com/compatible-mode/v1` |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase 匿名公钥 |
+| `SUPABASE_SERVICE_ROLE_KEY` | 仅服务端 — 加密 API Key、管理操作 |
+| `LLM_ENCRYPTION_KEY` | 仅服务端 — 用户 LLM Key 的 AES-256-GCM |
+| `BAILIAN_API_KEY` | 平台默认 LLM（阿里百炼 / DashScope） |
+| `UPSTASH_REDIS_*` | 流式恢复（iter-06+）；本地可选 |
 
-### 部署到 Vercel
+完整列表见 [`.env.example`](.env.example)。
 
-1. **环境变量** — 在 Vercel → Project → Settings → Environment Variables 中，为 **Production**（及 Preview）配置与 `.env.local` 相同的变量：
+**运行时站点 URL：** [`lib/site-url.ts`](lib/site-url.ts)（`getSiteUrl()`、`siteUrl(path)`）。
 
-   | 必填 | 说明 |
-   |------|------|
-   | `NEXT_PUBLIC_SUPABASE_URL` | 与本地相同 |
-   | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | 与本地相同 |
-   | `LLM_PROVIDER` | `nvidia`、`siliconflow` 或 `bailian` |
-   | `NVIDIA_API_KEY` | `LLM_PROVIDER=nvidia` 时必填 |
-   | `SILICONFLOW_API_KEY` | `LLM_PROVIDER=siliconflow` 时必填 |
-   | `BAILIAN_API_KEY` | `LLM_PROVIDER=bailian` 时必填 |
-   | `LLM_MODEL` | 可选（如 `deepseek-ai/deepseek-v4-flash`） |
+---
 
-   服务端密钥（`NVIDIA_API_KEY`、`SILICONFLOW_API_KEY`）**不要**加 `NEXT_PUBLIC_` 前缀。
+## 部署到 Vercel
 
-2. **修改环境变量后必须 Redeploy**（Deployments → … → Redeploy）。
+**生产站点：** [https://7ai-club.vercel.app](https://7ai-club.vercel.app)
 
-3. **Supabase Auth** — 在 Supabase → Authentication → URL Configuration 添加 Vercel 域名：
-   - Site URL: `https://your-app.vercel.app`
-   - Redirect URLs: `https://your-app.vercel.app/**`
+1. **环境变量** — Vercel → Project → Settings → Environment Variables。Production 至少配置：
 
-4. **函数超时** — Hobby 计划 Serverless 函数最长 **10 秒**。大模型（如 `deepseek-v4-pro`）可能超时；可改用 `deepseek-v4-flash` 或升级 Pro（60 秒+）。
+   | 变量 | 生产示例 |
+   |------|----------|
+   | `NEXT_PUBLIC_SITE_URL` | `https://7ai-club.vercel.app` |
+   | `NEXT_PUBLIC_SUPABASE_URL` | 你的 Supabase URL |
+   | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | 匿名公钥 |
+   | `SUPABASE_SERVICE_ROLE_KEY` | Service role（仅服务端） |
+   | `LLM_ENCRYPTION_KEY` | `openssl rand -base64 32` |
+   | `BAILIAN_API_KEY` | 平台 LLM Key |
+   | `UPSTASH_REDIS_REST_URL` / `UPSTASH_REDIS_REST_TOKEN` | 流恢复 |
+
+   密钥**不要**加 `NEXT_PUBLIC_` 前缀。
+
+2. **修改环境变量后 Redeploy**。
+
+3. **Supabase Auth** — Authentication → URL Configuration：
+
+   - **Site URL：** `https://7ai-club.vercel.app`
+   - **Redirect URLs：** `https://7ai-club.vercel.app/**`、`http://localhost:3000/**`
+
+4. **Vercel Analytics**（iter-11）— 项目 Settings 开启 **Web Analytics** 与 **Speed Insights**，然后重新部署。
+
+5. **函数超时** — Chat 使用 `maxDuration`；过慢模型需 Pro 或换更快模型。
 
 ---
 
 ## MCP（Cursor IDE）
 
-项目已配置 [Supabase MCP](https://supabase.com/docs/guides/getting-started/mcp)。复制并填写项目 ID：
-
 ```bash
-cp .cursor/mcp.json.example .cursor/mcp.json
+cp .cursor/mcp.json.example .cursor/mcp.json   # 填写 project_ref
 ```
 
-在 Cursor Settings → MCP 中启用 `supabase` 并完成 OAuth。推荐 URL 带 `project_ref` 与 `read_only=true`。
-
-开发期还可启用：Context7（库文档）、Playwright（E2E）。
+在 Cursor Settings 启用 **Supabase** MCP。可选：Context7、Playwright。
 
 ---
 
