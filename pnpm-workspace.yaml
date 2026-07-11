@@ -1,3 +1,6 @@
-ignoredBuiltDependencies:
-  - sharp
-  - unrs-resolver
+allowBuilds:
+  esbuild: true
+  canvas: true
+  tesseract.js: true
+  sharp: false
+  unrs-resolver: false

@@ -14,10 +14,6 @@ vi.mock("@/lib/data/browser/messages", () => ({
   listMessages: vi.fn(),
 }));
 
-vi.mock("@/lib/services/browser/model-label", () => ({
-  getDisplayModelLabel: () => "qwen3.6-plus (bailian)",
-}));
-
 import { createConversation } from "@/lib/services/browser/conversation-session";
 
 describe("AC-33 create conversation with opening via RPC", () => {

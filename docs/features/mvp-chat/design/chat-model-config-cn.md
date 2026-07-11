@@ -178,11 +178,11 @@ sequenceDiagram
 
 ## 8. 测试计划
 
-| AC | 验证 |
-|----|------|
-| AC-46 | E2E: Profile 改 preference → chat header label 更新 |
+| AC    | 验证　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　 |
+| -------| ------------------------------------------------------------------------|
+| AC-46 | E2E: Profile 改 preference → chat header label 更新　　　　　　　　　　|
 | AC-47 | 单测: platform default uses `BAILIAN_API_KEY`; user uses decrypted key |
-| AC-48 | 单测 + E2E: untested config → chat 502 |
+| AC-48 | 单测 + E2E: untested config → chat 502　　　　　　　　　　　　　　　　 |
 
 ---
 

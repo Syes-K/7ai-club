@@ -30,7 +30,7 @@ test.describe("iter-05 console models", () => {
     ).toBeVisible();
 
     await expect(page.getByText("Platform default")).toBeVisible();
-    await expect(page.getByText("qwen3.6-plus")).toBeVisible();
+    await expect(page.getByText("qwen3.7-max-2026-06-08")).toBeVisible();
     await expect(page.getByRole("button", { name: "Add model" })).toBeVisible();
 
     for (const body of modelApiResponses) {

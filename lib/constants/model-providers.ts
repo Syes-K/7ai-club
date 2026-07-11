@@ -7,7 +7,7 @@ export const PLATFORM_DEFAULT_CONFIG_ID =
 export const SUMMARY_SAME_AS_CHAT_ID = "__same_as_chat__" as const;
 
 export const PLATFORM_DEFAULT_PROVIDER = "bailian" as const;
-export const PLATFORM_DEFAULT_MODEL_NAME = "qwen3.6-plus";
+export const PLATFORM_DEFAULT_MODEL_NAME = "qwen3.7-max-2026-06-08";
 
 export const USER_LLM_PROVIDER_IDS: UserLlmProviderId[] = [
   "bailian",

@@ -43,7 +43,7 @@ describe("model config helpers", () => {
   it("resolvePreferenceLabel falls back to platform default label", () => {
     const options = toPassedModelOptions(mergePlatformDefault([]));
     expect(resolvePreferenceLabel(null, options)).toBe(
-      "Bailian — qwen3.6-plus",
+      "Bailian — qwen3.7-max-2026-06-08",
     );
   });
 });

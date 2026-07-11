@@ -11,7 +11,7 @@ vi.mock("@/lib/data/browser/profile", () => ({
 
 vi.mock("@/lib/services/browser/model-configs", () => ({
   listPassedModelOptions: vi.fn().mockResolvedValue([
-    { id: PLATFORM_DEFAULT_CONFIG_ID, label: "Bailian — qwen3.6-plus" },
+    { id: PLATFORM_DEFAULT_CONFIG_ID, label: "Bailian — qwen3.7-max-2026-06-08" },
     { id: "cfg-1", label: "DeepSeek — deepseek-chat" },
   ]),
 }));
