@@ -1,6 +1,6 @@
 allowBuilds:
   esbuild: true
-  canvas: true
-  tesseract.js: true
+  canvas: false
+  tesseract.js: false
   sharp: false
   unrs-resolver: false
