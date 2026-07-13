@@ -12,10 +12,16 @@ import { cn } from "@/lib/utils";
 interface ConsoleShellProps {
   user: User;
   nickname?: string | null;
+  showAdminLink?: boolean;
   children: React.ReactNode;
 }
 
-export function ConsoleShell({ user, nickname, children }: ConsoleShellProps) {
+export function ConsoleShell({
+  user,
+  nickname,
+  showAdminLink = false,
+  children,
+}: ConsoleShellProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   return (
@@ -25,7 +31,7 @@ export function ConsoleShell({ user, nickname, children }: ConsoleShellProps) {
         user={user}
         nickname={nickname}
         showChatLink
-        showConsoleLink={false}
+        showAdminLink={showAdminLink}
         fullWidth
       />
 

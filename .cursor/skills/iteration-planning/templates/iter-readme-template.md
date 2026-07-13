@@ -35,6 +35,15 @@
 
 路径约定：文档在 `docs/features/<slug>/`，**不在**迭代文件夹内重复存放 PRD/设计。
 
+### 交叉 Changelog（同迭代，若有）
+
+> 跨 feature 迭代时填写。主 AC 在主 feature changelog §5 勾选；交叉 changelog 写回归项与 §5.1。模板：`changelog-cross-iter-template-cn.md`
+
+| Feature | Changelog | 角色 |
+|---------|-----------|------|
+| `<primary>` | [changelog/iter-NN-cn.md](../features/<primary>/changelog/iter-NN-cn.md) | 主验收 |
+| `<affected>` | [changelog/iter-NN-cn.md](../features/<affected>/changelog/iter-NN-cn.md) | 交叉回归 |
+
 ## 4. 迭代验收标准
 
 > **AC 签字：** 仅 **qa-engineer** 勾选 feature `changelog/iter-NN-cn.md` §5。PRD § 验收标准保持 `[ ]` 定义态。
@@ -48,9 +57,10 @@
 
 ### 4.2 用例与手工 QA（qa Phase C0 + C3）
 
-- [ ] changelog **§5.1 Test Matrix** 已填写（C0）
+- [ ] 主 feature changelog **§5.1 Test Matrix** 已填写（C0）
+- [ ] 交叉 feature changelog **§5.1** 已填写或合并入主 changelog（C0）
 - [ ] changelog **§12 Manual Script** 已执行并填证据（C3）
-- [ ] 见 feature changelog §5 / §12
+- [ ] 见各 feature changelog §5 / §12
 
 ### 4.3 发布
 

@@ -431,3 +431,40 @@ app/console/models/page.tsx (RSC: optional platformKeyConfigured flag)
 | 2026-06-17 | iter-05 初稿 |
 | 2026-06-17 | §5.1 补充 `LLM_ENCRYPTION_KEY` 与 `SUPABASE_SERVICE_ROLE_KEY` 分工说明 |
 | 2026-06-17 | §9.3 引用 console-shell §8 busy loading |
+
+---
+
+## 14. iter-12 增量（admin 交叉）
+
+> **主设计：** [admin/design/platform-models-cn.md](../../admin/design/platform-models-cn.md) · [admin/design/integration-cn.md](../../admin/design/integration-cn.md)  
+> **Changelog：** [changelog/iter-12-cn.md](../changelog/iter-12-cn.md)
+
+### 14.1 数据与列表
+
+| 变更 | 说明 |
+|------|------|
+| 新增 `platform_model_configs` | 平台免费模型元数据；authenticated `SELECT`（passed+enabled） |
+| 移除 `mergePlatformDefault()` | 不再注入虚拟 `PLATFORM_DEFAULT_CONFIG_ID` 行 |
+| `listModelConfigsForUser` | 合并用户 BYOK + 平台只读行；平台行 `readOnly: true`、**Platform** 徽章 |
+
+### 14.2 UI / API
+
+| 文件 | 变更 |
+|------|------|
+| `components/console/models-manager.tsx` | 平台行隐藏 Edit/Delete/Test/Update key |
+| `components/console/preferences-card.tsx` | 下拉含平台 UUID；移除哨兵 ID 分支 |
+| `lib/services/browser/profile.ts` | `allowedIds` 含平台 passed 配置 |
+| `/api/models/*` | **不变** — 仍仅操作用户 BYOK |
+
+### 14.3 废弃
+
+- env `BAILIAN_API_KEY`
+- 常量 `PLATFORM_DEFAULT_CONFIG_ID` 在 UI/resolve 中的特殊分支
+
+### 14.4 回归 AC
+
+AC-129、AC-130、AC-133 — 见 [admin/02-technical-design-cn.md](../../admin/02-technical-design-cn.md) §9。
+
+| 日期 | 变更 |
+|------|------|
+| 2026-07-12 | iter-12 交叉增量（admin 平台模型） |

@@ -13,7 +13,10 @@ import {
   updateModelConfigKey,
 } from "@/lib/services/browser/model-configs";
 import { ModelConfigFormDialog } from "@/components/console/model-config-form-dialog";
+import { ModelTestFailureDialog } from "@/components/console/model-test-failure-dialog";
+import { ModelTestStatusCell, MODEL_PILL_CLASS } from "@/components/console/model-test-status";
 import { UpdateApiKeyDialog } from "@/components/console/update-api-key-dialog";
+import { useModelConnectivityTest } from "@/components/console/use-model-connectivity-test";
 import {
   ConsolePage,
   ConsoleTable,
@@ -29,31 +32,6 @@ import {
 } from "@/components/console/console-table-actions";
 import { usePageBusy } from "@/components/console/use-page-busy";
 import { cn } from "@/lib/utils";
-
-function statusBadgeClass(status: ModelConfigDto["testStatus"]): string {
-  switch (status) {
-    case "passed":
-      return "border-[var(--accent-success)]/40 text-[var(--accent-success)]";
-    case "failed":
-      return "border-red-400/40 text-red-400";
-    default:
-      return "border-[var(--text-muted)]/40 text-[var(--text-muted)]";
-  }
-}
-
-function statusLabel(status: ModelConfigDto["testStatus"]): string {
-  switch (status) {
-    case "passed":
-      return "Passed";
-    case "failed":
-      return "Failed";
-    default:
-      return "Untested";
-  }
-}
-
-const MODEL_PILL_CLASS =
-  "inline-flex shrink-0 items-center whitespace-nowrap rounded-full border px-2 py-0.5 text-xs";
 
 interface ModelsManagerProps {
   initialConfigs: ModelConfigDto[];
@@ -78,6 +56,9 @@ export function ModelsManager({ initialConfigs }: ModelsManagerProps) {
     setConfigs(next);
     setListError(null);
   }
+
+  const { testFailure, testFailureOpen, closeTestFailure, handleTest } =
+    useModelConnectivityTest({ busy, runBusy, refreshList });
 
   function openCreate() {
     if (busy) return;
@@ -162,24 +143,6 @@ export function ModelsManager({ initialConfigs }: ModelsManagerProps) {
     }
   }
 
-  async function handleTest(config: ModelConfigDto) {
-    if (busy) return;
-    setListError(null);
-    try {
-      await runBusy("Testing model…", async () => {
-        await testModelConfig(config.id);
-        await refreshList();
-      });
-    } catch (err) {
-      setListError(err instanceof Error ? err.message : "Test failed");
-      try {
-        await refreshList();
-      } catch {
-        // keep prior list
-      }
-    }
-  }
-
   async function handleDelete(config: ModelConfigDto) {
     if (busy) return;
     if (!confirm(`Delete ${config.providerLabel} — ${config.modelName}?`)) {
@@ -259,9 +222,9 @@ export function ModelsManager({ initialConfigs }: ModelsManagerProps) {
                         MODEL_PILL_CLASS,
                         "border-[var(--neon-primary)]/30 text-[var(--neon-primary)]",
                       )}
-                      title="Platform default"
+                      title="Platform-managed model"
                     >
-                      Platform default
+                      Platform
                     </span>
                   ) : (
                     <span className="text-[var(--text-muted)]">Custom</span>
@@ -270,23 +233,7 @@ export function ModelsManager({ initialConfigs }: ModelsManagerProps) {
                 <td className="px-4 py-3 text-[var(--text-muted)]">
                   {config.apiKeySet ? "Configured" : "Not set"}
                 </td>
-                <td className="max-w-[8.5rem] overflow-hidden px-4 py-3">
-                  <div className="space-y-1">
-                    <span
-                      className={cn(
-                        MODEL_PILL_CLASS,
-                        statusBadgeClass(config.testStatus),
-                      )}
-                    >
-                      {statusLabel(config.testStatus)}
-                    </span>
-                    {config.testError && (
-                      <p className="truncate text-xs text-red-400" title={config.testError}>
-                        {config.testError}
-                      </p>
-                    )}
-                  </div>
-                </td>
+                <ModelTestStatusCell config={config} />
                 <td className={CONSOLE_TABLE_ACTIONS_CELL_13}>
                   {config.isPlatformDefault ? (
                     <span className="text-xs text-[var(--text-muted)]">—</span>
@@ -319,7 +266,7 @@ export function ModelsManager({ initialConfigs }: ModelsManagerProps) {
                         variant="ghost"
                         size="sm"
                         disabled={busy}
-                        onClick={() => handleTest(config)}
+                        onClick={() => void handleTest(config, testModelConfig)}
                         className={CONSOLE_TABLE_ACTION_BUTTON_CLASS}
                       >
                         <FlaskConical className="h-3.5 w-3.5 shrink-0" />
@@ -385,6 +332,12 @@ export function ModelsManager({ initialConfigs }: ModelsManagerProps) {
           setKeyDialogOpen(false);
           setKeyTarget(null);
         }}
+      />
+
+      <ModelTestFailureDialog
+        open={testFailureOpen}
+        failure={testFailure}
+        onClose={closeTestFailure}
       />
     </ConsolePage>
   );

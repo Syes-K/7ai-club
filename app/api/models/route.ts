@@ -3,8 +3,8 @@ export const runtime = "nodejs";
 import { rowToModelConfigDto } from "@/lib/console/model-configs";
 import { upsertModelConfigSecret } from "@/lib/llm/secrets";
 import { isUserLlmProviderId } from "@/lib/llm/provider";
-import { createServiceClient, getServiceClientConfigError } from "@/lib/supabase/service";
 import { createClient } from "@/lib/supabase/server";
+import { createServiceClient, getServiceClientConfigError } from "@/lib/supabase/service";
 import { parseCreateModelBody } from "@/lib/validation/model-config";
 
 export async function POST(req: Request) {

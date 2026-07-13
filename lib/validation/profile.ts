@@ -1,6 +1,5 @@
 import {
   normalizePreferredConfigId,
-  PLATFORM_DEFAULT_CONFIG_ID,
   SUMMARY_SAME_AS_CHAT_ID,
 } from "@/lib/constants/model-providers";
 import { formatEmbeddingModelKey } from "@/lib/console/model-configs";
@@ -37,10 +36,6 @@ function parseSummaryModelConfigId(
 
   if (typeof raw !== "string") {
     return { error: "Invalid summary model" };
-  }
-
-  if (raw === PLATFORM_DEFAULT_CONFIG_ID) {
-    return { value: null };
   }
 
   if (!allowedIds.has(raw)) {
@@ -175,8 +170,6 @@ export function parsePreferencesPatch(
       fields.preferredModelConfigId = null;
     } else if (typeof raw !== "string") {
       return { error: "Invalid model preference" };
-    } else if (raw === PLATFORM_DEFAULT_CONFIG_ID) {
-      fields.preferredModelConfigId = null;
     } else if (!allowedIds.has(raw)) {
       return { error: "Selected model is not available" };
     } else {

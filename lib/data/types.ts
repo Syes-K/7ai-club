@@ -57,6 +57,7 @@ export type AssistantOption = {
   id: string;
   icon: string | null;
   name: string;
+  isPlatform?: boolean;
 };
 
 export type UserProfile = {
@@ -103,12 +104,19 @@ export type ModelConfigDto = {
   testedAt: string | null;
   testError: string | null;
   apiKeySet: boolean;
+  /** Platform-managed row (from `platform_model_configs`). */
   isPlatformDefault: boolean;
+  /** Console UI: hide edit/delete/test for platform rows. */
+  readOnly?: boolean;
+  displayName?: string | null;
+  /** Admin UI: platform row enabled flag. */
+  enabled?: boolean;
 };
 
 export type ModelConfigOption = {
   id: string;
   label: string;
+  isPlatform?: boolean;
 };
 
 export type EmbeddingModelOption = {

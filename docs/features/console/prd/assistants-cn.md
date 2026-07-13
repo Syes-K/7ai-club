@@ -53,14 +53,16 @@ iter-03 交付时扩展 **Icon（emoji）** 与 **Opening message**（见 §3.2�
 
 ### 3.4 自动 Seed
 
-用户**零个**助理时（首次进 Console 或首次 New Chat）：
+> **iter-12 起 superseded：** 不再从平台模板复制个人助理。零个人助理时 Console 展示空态；用户通过 New Chat **聚合列表**（后部）选用平台助理。详见 [admin/prd/assistants-cn.md](../../admin/prd/assistants-cn.md) §4.4。
 
-- 服务端从平台模板（`user_id IS NULL`、`is_default = true`）复制 → 用户第一条 `"7ai Assistant"`，含当前 seed prompt
+用户**零个**个人助理时（iter-05 及以前行为，**已废弃**）：
+
+- 服务端从平台模板（`user_id IS NULL`、`is_default = true`）复制 → 用户第一条 `"7ai Assistant"`
 
 ### 3.5 权限
 
-- 用户仅可见/操作 `user_id = auth.uid()` 的行
-- 平台模板不出现在 UI
+- 用户仅可见/操作 `user_id = auth.uid()` 的行（**个人助理**）
+- 平台助理（`is_platform = true`）**不出现在** Console 列表；由 `/admin/assistants` 管理（iter-12）
 
 ---
 
@@ -74,6 +76,10 @@ iter-03 交付时扩展 **Icon（emoji）** 与 **Opening message**（见 §3.2�
 
 - [ ] **AC-95** — 助理表单可多选 Ready 知识库（见 [knowledge-base/changelog/iter-09-cn.md](../../knowledge-base/changelog/iter-09-cn.md)）
 
+### iter-12（交叉修订）
+
+- [ ] **AC-137** — 移除自动 seed；Console 仅管理个人助理（见 [admin/changelog/iter-12-cn.md](../../admin/changelog/iter-12-cn.md)）
+
 ---
 
 ## 5. 修订记录
@@ -83,3 +89,4 @@ iter-03 交付时扩展 **Icon（emoji）** 与 **Opening message**（见 §3.2�
 | 2026-06-16 | 初稿 — 多助理 |
 | 2026-06-16 | 补充 Icon、Opening message；标记 iter-03 已交付 |
 | 2026-06-30 | iter-09 — Knowledge bases 多选绑定 |
+| 2026-07-12 | iter-12 — §3.4 seed superseded；§3.5 区分个人/平台助理 |

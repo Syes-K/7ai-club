@@ -89,3 +89,37 @@ See [models-cn.md](./models-cn.md) §10.
 | 2026-06-17 | iter-05 initial |
 | 2026-06-17 | §5.1 env var roles (`LLM_ENCRYPTION_KEY` vs `SUPABASE_SERVICE_ROLE_KEY`) |
 | 2026-06-17 | §6 — console-shell §8 page-level busy |
+| 2026-07-12 | iter-12 — platform read-only rows; deprecate virtual `PLATFORM_DEFAULT` — see §14 |
+
+---
+
+## 14. iter-12 delta (admin cross)
+
+> **Primary design:** [admin/design/platform-models.md](../../admin/design/platform-models.md) · [admin/design/integration.md](../../admin/design/integration.md)  
+> **Changelog:** [changelog/iter-12.md](../changelog/iter-12.md)
+
+### 14.1 Data & list
+
+| Change | Notes |
+|--------|-------|
+| Add `platform_model_configs` | Platform free model metadata; authenticated `SELECT` (passed+enabled) |
+| Remove `mergePlatformDefault()` | No more virtual `PLATFORM_DEFAULT_CONFIG_ID` row |
+| `listModelConfigsForUser` | Merge user BYOK + read-only platform rows; platform rows `readOnly: true`, **Platform** badge |
+
+### 14.2 UI / API
+
+| File | Change |
+|------|--------|
+| `components/console/models-manager.tsx` | Hide Edit/Delete/Test/Update key on platform rows |
+| `components/console/preferences-card.tsx` | Dropdown includes platform UUIDs; remove sentinel ID branch |
+| `lib/services/browser/profile.ts` | `allowedIds` includes platform passed configs |
+| `/api/models/*` | **Unchanged** — user BYOK only |
+
+### 14.3 Deprecations
+
+- env `BAILIAN_API_KEY`
+- `PLATFORM_DEFAULT_CONFIG_ID` special branches in UI/resolve
+
+### 14.4 Regression AC
+
+AC-129, AC-130, AC-133 — see [admin/02-technical-design.md](../../admin/02-technical-design.md) §9.

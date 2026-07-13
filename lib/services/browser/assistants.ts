@@ -1,14 +1,15 @@
 import {
   createAssistant,
   deleteAssistant,
-  ensureUserAssistants,
-  getPlatformTemplateModel,
+  listPlatformAssistants,
+  listUserAssistants,
   loadAssistantKnowledgeBaseIds,
   saveAssistantKnowledgeBaseIds,
   updateAssistant,
 } from "@/lib/data/browser/assistants";
 import type { AssistantDto, AssistantOption, AssistantRow } from "@/lib/data/types";
 import { mapRpcError } from "@/lib/data/errors";
+import { PLATFORM_DEFAULT_MODEL_NAME } from "@/lib/constants/model-providers";
 import {
   parseAssistantFormBody,
   validateAssistantCreate,
@@ -29,22 +30,30 @@ function toAssistantDto(
   };
 }
 
-function toAssistantOption(row: AssistantRow): AssistantOption {
+function toAssistantOption(row: AssistantRow, isPlatform: boolean): AssistantOption {
   return {
     id: row.id,
     icon: row.icon,
     name: row.name,
+    isPlatform,
   };
 }
 
 export async function listAssistants(): Promise<AssistantDto[]> {
-  const rows = await ensureUserAssistants();
+  const rows = await listUserAssistants();
   return rows.map((row) => toAssistantDto(row));
 }
 
 export async function listAssistantOptions(): Promise<AssistantOption[]> {
-  const rows = await ensureUserAssistants();
-  return rows.map(toAssistantOption);
+  const [personal, platform] = await Promise.all([
+    listUserAssistants(),
+    listPlatformAssistants(),
+  ]);
+
+  return [
+    ...personal.map((row) => toAssistantOption(row, false)),
+    ...platform.map((row) => toAssistantOption(row, true)),
+  ];
 }
 
 export async function createUserAssistant(values: {
@@ -59,13 +68,12 @@ export async function createUserAssistant(values: {
     throw new Error(validationError);
   }
 
-  const model = await getPlatformTemplateModel();
   const row = await createAssistant({
     name: values.name,
     systemPrompt: values.systemPrompt,
     icon: values.icon,
     openingMessage: values.openingMessage,
-    model,
+    model: PLATFORM_DEFAULT_MODEL_NAME,
   });
 
   const kbIds = values.knowledgeBaseIds ?? [];

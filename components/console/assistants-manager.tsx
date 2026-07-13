@@ -119,7 +119,10 @@ function AssistantFormDialog({
             onChange={(e) => setIcon(e.target.value)}
             maxLength={ASSISTANT_ICON_MAX_LENGTH}
             placeholder="Optional emoji"
-            className="max-w-[8rem] text-left text-xl"
+            className={cn(
+              "max-w-[8rem] text-left placeholder:text-sm",
+              icon ? "text-xl" : "text-sm",
+            )}
           />
           <p className="text-xs text-[var(--text-muted)]">
             Optional emoji shown in lists and chat header.

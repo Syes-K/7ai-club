@@ -50,3 +50,39 @@ See [chat-model-config-cn.md](./chat-model-config-cn.md) §7.
 | Date | Change |
 |------|--------|
 | 2026-06-17 | iter-05 initial |
+| 2026-07-12 | iter-12 — platform model resolve from DB; remove `BAILIAN_API_KEY` — see §10 |
+
+---
+
+## 10. iter-12 delta (admin cross)
+
+> **Primary design:** [admin/design/platform-models.md](../../admin/design/platform-models.md) · [admin/design/integration.md](../../admin/design/integration.md) §3  
+> **Changelog:** [changelog/iter-12.md](../changelog/iter-12.md)
+
+### 10.1 Resolution chain
+
+```
+Profile.preferred_model_config_id
+  → user_model_configs (must match user_id + passed)
+  → platform_model_configs (must be passed + enabled)
+  → fallback: first passed+enabled+chat platform model
+```
+
+| File | Change |
+|------|--------|
+| `lib/llm/resolve-user-model.ts` | Platform table resolve + `decrypt`; remove env default branch |
+| `lib/llm/provider.ts` | Remove `buildPlatformDefaultResolved` / `BAILIAN_API_KEY` |
+| `app/chat/layout.tsx` | `modelLabel` from merged config |
+| `lib/workflow/nodes/resolve-model.ts` | No interface change; uses new resolve |
+| `lib/memory/resolve-summary-model.ts` | Fallback chain includes platform models |
+
+### 10.2 Error copy (English, same semantics)
+
+| Scenario | HTTP |
+|----------|------|
+| No passed platform model and no BYOK | 503 |
+| Preference points to untested/failed | 502 |
+
+### 10.3 Regression AC
+
+AC-131, AC-132, AC-139, AC-48 — see [admin/02-technical-design.md](../../admin/02-technical-design.md) §9.

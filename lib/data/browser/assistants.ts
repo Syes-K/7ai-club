@@ -7,7 +7,7 @@ import {
 } from "@/lib/data/browser/knowledge-bases";
 
 const ASSISTANT_COLUMNS =
-  "id, name, icon, opening_message, system_prompt, model, user_id, updated_at";
+  "id, name, icon, opening_message, system_prompt, model, user_id, updated_at, is_platform, enabled";
 
 export async function listUserAssistants(): Promise<AssistantRow[]> {
   const supabase = createClient();
@@ -15,6 +15,19 @@ export async function listUserAssistants(): Promise<AssistantRow[]> {
     .from("assistants")
     .select(ASSISTANT_COLUMNS)
     .not("user_id", "is", null)
+    .order("updated_at", { ascending: false });
+
+  throwIfError(error);
+  return (data ?? []) as AssistantRow[];
+}
+
+export async function listPlatformAssistants(): Promise<AssistantRow[]> {
+  const supabase = createClient();
+  const { data, error } = await supabase
+    .from("assistants")
+    .select(ASSISTANT_COLUMNS)
+    .eq("is_platform", true)
+    .eq("enabled", true)
     .order("updated_at", { ascending: false });
 
   throwIfError(error);

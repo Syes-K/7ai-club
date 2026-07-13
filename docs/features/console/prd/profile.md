@@ -78,9 +78,9 @@ Two vertical **Cards** (English UI):
 
 **Edit mode dropdown:**
 
-- Options: only user configs with `test_status = Passed`
+- Options: only configs with `test_status = Passed` — user BYOK **and** iter-12 platform free models (merged in Console Models list)
 - Format: `{Provider label} — {model name}`
-- Includes platform default Bailian qwen3.6-plus
+- ~~Includes platform default Bailian qwen3.6-plus~~ (**iter-12:** admin **Passed + Enabled** platform rows)
 - No Passed configs: empty state + link to `/console/models`
 
 **Save:** Persists selected config reference; applies to Chat LLM calls (not per-assistant model column).
@@ -142,5 +142,6 @@ See [agent-orchestration/prd/history-summarization.md](../../agent-orchestration
 | 2026-06-16 | Delivered iter-03                                                |
 | 2026-06-17 | iter-05 — dual cards, Preferences bound to Models Passed configs |
 | 2026-06-25 | iter-07 — Conversation memory summarization settings in Preferences |
+| 2026-07-12 | iter-12 — §3.3 platform model dropdown from admin config |
 
 

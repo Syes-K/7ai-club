@@ -16,7 +16,8 @@ description: >
 
 1. `.cursor/skills/7ai-club-superpowers-bridge/SKILL.md` — Superpowers 阶段白名单与冲突覆盖
 2. `.cursor/skills/7ai-club-architecture/reference.md`（默认）
-3. 仅当 reference 不足以决策时，按需 Read `docs/research/ai-agent-platform-architecture-cn.md` 相关章节
+3. `.cursor/skills/iteration-planning/SKILL.md` — 单/跨 feature 迭代、changelog 模板
+4. 仅当 reference 不足以决策时，按需 Read `docs/research/ai-agent-platform-architecture-cn.md` 相关章节
 
 **硬约束摘要：** 方案 B（Vercel AI SDK）、MVP 不用 n8n；PRD 须标明路线图阶段（1–5），避免范围膨胀；不在 MVP PRD 中要求双系统部署。
 
@@ -53,6 +54,7 @@ description: >
 2. 若存在 `docs/iterations/<iter-id>/README.md`，读取以对齐本迭代范围
 3. 若已存在 `docs/features/<slug>/01-product-requirements-cn.md` 或 `01-product-requirements.md`，读取并说明是**修订**还是**新建**
 4. 搜索 `docs/features/` 下其他 PRD，避免功能重复或命名冲突
+5. Read `.cursor/skills/iteration-planning/SKILL.md` — 判断是否**跨 feature 迭代**；若是，列出受影响 slugs（见 Step 5.1）
 
 ### Step 3 — 需求对焦（与用户迭代）
 
@@ -131,6 +133,33 @@ docs/features/<slug>/changelog/iter-NN-cn.md
 - 新建 changelog 使用模板：`.cursor/skills/iteration-planning/templates/changelog-iter-template-cn.md`
 - 详见 `docs/README-cn.md` 三层文档模型
 
+### Step 5.1 — 交叉 Feature 同步（强制）
+
+若 Step 2 / 对焦结论为**跨 feature 迭代**（新 admin 改 Console、废弃 env 改 Chat 等），在 Step 5 主 slug 文档之外**必须**完成：
+
+**5.1.1 影响面表格（写入主 changelog §3 或评审摘要）**
+
+| 受影响 slug | 影响面 | 需更新的 prd / 总纲 |
+|-------------|--------|---------------------|
+| `console` | Models 只读平台行 | `prd/models-cn.md` §7、`01` §2.4 |
+| … | … | … |
+
+**5.1.2 每个受影响 feature（中英文成对）**
+
+1. `01-product-requirements*` — § 全局约定标 **iter-NN superseded / 交叉修订**
+2. 相关 `prd/*` — 新增 § iter-NN 增量，或 §3.x 标 superseded + 链到主 feature PRD
+3. `changelog/iter-NN*` — 用 **交叉模板** `changelog-cross-iter-template-cn.md`（标题：`[本 feature]（[主 slug] 交叉修订）`）
+4. `README*` — 文档地图加入本 iter changelog，链到主 changelog
+
+**5.1.3 迭代索引**
+
+- `docs/iterations/iter-NN/README*` — 「包含的 Features」+ **「交叉 Changelog」** 表（见 iter-readme-template）
+- 主 `changelog/iter-NN*` §2 必读 — 列出所有交叉 changelog 路径
+
+**5.1.4 完成标准**
+
+向用户汇报文档清单时，**必须**列出「主 + 交叉」全部路径；仅报主 slug 视为 PRD 未写完。
+
 **PRD § 验收标准 checkbox：**
 
 - 写入时保持 **`[ ]` 定义态**（表示需求条目，非验收签字）
@@ -161,6 +190,8 @@ docs/features/<slug>/changelog/iter-NN-cn.md
 - 明确 MVP 与后续迭代边界
 - 与方案 B（Vercel AI SDK）一致；不在 MVP PRD 中要求 n8n 或双系统部署
 - **`docs/` 双语：** PRD 写 `01-product-requirements.md` + `01-product-requirements-cn.md`（见 `docs/README.md`）；用户可见 UI 文案在 PRD 中标注为 English
+- **双语对等：** `prd/`、`design/`、`changelog/` 英文与中文须结构对等；**禁止**英文 stub（`See *-cn.md`）；文内链接 en→en、cn→cn（见 `docs/README-cn.md` · `.cursor/rules/7ai-club-workflow.mdc`）
+- **跨 feature 迭代：** 主 slug + 所有受影响 slug 的 PRD / changelog / README 必须同步落盘（见 Step 5.1）；不得仅写主 feature
 - 中文撰写 CN 版（术语可保留英文：MCP、RAG、RLS 等）；同步 English 版
 
 ## 回复风格

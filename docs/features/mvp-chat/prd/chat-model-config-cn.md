@@ -41,8 +41,9 @@ F-15 — Chat 界面展示 Profile Preferences 中的 provider + model；`POST /
 | 数据来源                                            | Profile Preferences 所选 **Passed** 用户模型配置 |
 | 格式（English）                                     | `{model name} ({provider})`              |
 | 示例                                              | `qwen3.6-plus (bailian)`                 |
-| 未设置 Preferences                                 | 回退平台默认 Bailian qwen3.6-plus              |
-| env `LLM_PROVIDER` / `NEXT_PUBLIC_LLM_PROVIDER` | **不再**驱动 Chat 展示（部署 env 仅用于平台默认 Key）     |
+| 未设置 Preferences                                 | 回退第一条 **Passed + Enabled** 平台 chat 模型（iter-12）；见 [admin/prd/models-cn.md](../../admin/prd/models-cn.md) |
+| env `LLM_PROVIDER` / `NEXT_PUBLIC_LLM_PROVIDER` | **不再**驱动 Chat 展示 |
+| env `BAILIAN_API_KEY` | **iter-12 废弃** |
 
 
 **切换 Preferences 后：**
@@ -52,13 +53,13 @@ F-15 — Chat 界面展示 Profile Preferences 中的 provider + model；`POST /
 
 ### 3.2 LLM 调用（`/api/chat`）
 
-**解析顺序（iter-05）：**
+**解析顺序（iter-05；iter-12 修订平台 Key 来源）：**
 
-1. Profile Preferences → 用户模型配置 ID（Passed）
-2. 无有效偏好 → 平台默认 Bailian qwen3.6-plus
+1. Profile Preferences → 模型配置 ID（Passed）— 可为用户 BYOK 或平台模型
+2. 无有效偏好 → 第一条 **Passed + Enabled** 平台 chat 模型
 3. 解析 provider + model name + API Key：
-  - 用户配置 → 解密 DB 中该配置的 Key
-  - 平台默认 → env `BAILIAN_API_KEY`
+  - 用户 BYOK → 解密 DB Key
+  - 平台模型 → 解密平台模型表 Key（**废弃** env `BAILIAN_API_KEY`）
 
 **禁止：**
 
@@ -107,5 +108,6 @@ F-15 — Chat 界面展示 Profile Preferences 中的 provider + model；`POST /
 | 日期         | 变更                   |
 | ---------- | -------------------- |
 | 2026-06-17 | iter-05 初稿 — PRD 已确认 |
+| 2026-07-12 | iter-12 — §3.1/3.2 平台模型与 Key 来源；废弃 `BAILIAN_API_KEY` |
 
 

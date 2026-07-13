@@ -4,32 +4,26 @@
 > **中文:** [README-cn.md](./README-cn.md)
 
 > **Feature slug:** `console`  
-> **Iteration:** [iter-05](../../iterations/iter-05/README.md) (**in progress — PRD confirmed**)
+> **Iteration:** [iter-05](../../iterations/iter-05/README.md) (delivered) · [iter-10](../../iterations/iter-10/README.md) (released) · [iter-12](../../iterations/iter-12/README.md) (admin cross-revision)
 
 ---
 
 ## Document Map (Agent Entry)
 
-**iter-05 in progress — read changelog first, then topic PRDs:**
+**iter-12 (admin cross-impact — in progress):**
 
-1. [01-product-requirements.md](./01-product-requirements.md) — global conventions §2  
-2. [changelog/iter-05.md](./changelog/iter-05.md) — **iter-05 AC-40–48**  
-3. Topic PRDs: [models.md](./prd/models.md) · [profile.md](./prd/profile.md) (revised)
+1. [changelog/iter-12.md](./changelog/iter-12.md) — Console regression index
+2. [admin/changelog/iter-12.md](../admin/changelog/iter-12.md) — primary AC-120–141
 
-| Layer | Index | Topics |
-|-------|-------|--------|
-| Product | [01-product-requirements.md](./01-product-requirements.md) | [prd/](./prd/) |
-| Technical | [02-technical-design.md](./02-technical-design.md) | [design/](./design/) (iter-05 TBD) |
-
-**Past iterations:** [iter-03 changelog](./changelog/iter-03.md) · [iter-04 mvp-chat changelog](../mvp-chat/changelog/iter-04.md)
+**Past iterations:** [iter-05 changelog](./changelog/iter-05.md) · [iter-03 changelog](./changelog/iter-03.md)
 
 ---
 
-## iter-05 Scope Summary
+## iter-12 Cross-Revision Summary
 
-- **Models** — BYOK, encrypted keys, separate Update key, test status, platform Bailian default  
-- **Profile** — Account / Preferences dual cards, Detail/Edit, independent Save  
-- **Chat integration** — see [mvp-chat/prd/chat-model-config.md](../mvp-chat/prd/chat-model-config.md)
+- **Models** — platform free models via `/admin/models`; Console read-only **Platform** rows; deprecates `BAILIAN_API_KEY`
+- **Assistants** — remove auto seed; Console personal assistants only
+- **New Chat** — aggregated picker (personal first, system last)
 
 ---
 

@@ -1,21 +1,22 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { PLATFORM_DEFAULT_MODEL_NAME } from "@/lib/constants/model-providers";
 import type { AssistantRow } from "@/lib/data/types";
 
-const ensureUserAssistants = vi.fn();
+const listUserAssistants = vi.fn();
+const listPlatformAssistants = vi.fn();
 const createAssistant = vi.fn();
-const getPlatformTemplateModel = vi.fn();
 const deleteAssistant = vi.fn();
 
 const saveAssistantKnowledgeBaseIds = vi.fn();
 
 vi.mock("@/lib/data/browser/assistants", () => ({
-  ensureUserAssistants: (...args: unknown[]) => ensureUserAssistants(...args),
+  ensureUserAssistants: vi.fn(),
   createAssistant: (...args: unknown[]) => createAssistant(...args),
   updateAssistant: vi.fn(),
   deleteAssistant: (...args: unknown[]) => deleteAssistant(...args),
-  getPlatformTemplateModel: (...args: unknown[]) =>
-    getPlatformTemplateModel(...args),
-  listUserAssistants: vi.fn(),
+  getPlatformTemplateModel: vi.fn(),
+  listUserAssistants: (...args: unknown[]) => listUserAssistants(...args),
+  listPlatformAssistants: (...args: unknown[]) => listPlatformAssistants(...args),
   getAssistantById: vi.fn(),
   loadAssistantKnowledgeBaseIds: vi.fn().mockResolvedValue([]),
   saveAssistantKnowledgeBaseIds: (...args: unknown[]) =>
@@ -26,6 +27,7 @@ import {
   createUserAssistant,
   deleteUserAssistant,
   listAssistants,
+  listAssistantOptions,
 } from "@/lib/services/browser/assistants";
 
 const assistantRow: AssistantRow = {
@@ -41,22 +43,33 @@ const assistantRow: AssistantRow = {
 
 describe("AC-32 assistants browser layer", () => {
   beforeEach(() => {
-    ensureUserAssistants.mockReset();
+    listUserAssistants.mockReset();
+    listPlatformAssistants.mockReset();
     createAssistant.mockReset();
-    getPlatformTemplateModel.mockReset();
     saveAssistantKnowledgeBaseIds.mockReset();
     saveAssistantKnowledgeBaseIds.mockResolvedValue(undefined);
-    getPlatformTemplateModel.mockResolvedValue("qwen3.6-plus");
   });
 
-  it("listAssistants reads via ensureUserAssistants RPC path", async () => {
-    ensureUserAssistants.mockResolvedValue([assistantRow]);
+  it("listAssistants reads personal assistants only", async () => {
+    listUserAssistants.mockResolvedValue([assistantRow]);
 
     const result = await listAssistants();
 
-    expect(ensureUserAssistants).toHaveBeenCalledOnce();
+    expect(listUserAssistants).toHaveBeenCalledOnce();
     expect(result[0]?.name).toBe("Helper");
     expect(result[0]?.openingMessage).toBe("Hello");
+  });
+
+  it("listAssistantOptions aggregates personal then platform (AC-138)", async () => {
+    listUserAssistants.mockResolvedValue([assistantRow]);
+    listPlatformAssistants.mockResolvedValue([
+      { ...assistantRow, id: "plat-1", name: "System", user_id: null },
+    ]);
+
+    const result = await listAssistantOptions();
+
+    expect(result.map((r) => r.id)).toEqual(["asst-1", "plat-1"]);
+    expect(result[1]?.isPlatform).toBe(true);
   });
 
   it("createUserAssistant validates then inserts via data layer", async () => {
@@ -74,7 +87,7 @@ describe("AC-32 assistants browser layer", () => {
       systemPrompt: "You are helpful.",
       icon: "🤖",
       openingMessage: "Hello",
-      model: "qwen3.6-plus",
+      model: PLATFORM_DEFAULT_MODEL_NAME,
     });
     expect(result.id).toBe("asst-1");
   });

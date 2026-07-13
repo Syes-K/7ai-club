@@ -20,7 +20,6 @@ import {
   listConversationSummaries,
   loadConversationSession,
 } from "@/lib/services/browser/conversation-session";
-import { formatModelConfigLabel, PLATFORM_DEFAULT_MODEL_NAME, PLATFORM_DEFAULT_PROVIDER } from "@/lib/constants/model-providers";
 import { GridBackground } from "@/components/ui/grid-background";
 import { cn } from "@/lib/utils";
 
@@ -36,16 +35,15 @@ interface ChatAppShellProps {
   user: User;
   nickname?: string | null;
   preferredModelLabel?: string;
+  showAdminLink?: boolean;
   children: React.ReactNode;
 }
 
 export function ChatAppShell({
   user,
   nickname,
-  preferredModelLabel = formatModelConfigLabel(
-    PLATFORM_DEFAULT_PROVIDER,
-    PLATFORM_DEFAULT_MODEL_NAME,
-  ),
+  preferredModelLabel = "No model configured",
+  showAdminLink = false,
   children,
 }: ChatAppShellProps) {
   const router = useRouter();
@@ -304,6 +302,7 @@ export function ChatAppShell({
           user={user}
           nickname={nickname}
           showChatLink={false}
+          showAdminLink={showAdminLink}
           fullWidth
         />
 

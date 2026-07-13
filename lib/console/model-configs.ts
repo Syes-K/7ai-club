@@ -1,22 +1,21 @@
 import {
   formatModelConfigLabel,
   getProviderLabel,
-  PLATFORM_DEFAULT_CONFIG_ID,
-  PLATFORM_DEFAULT_MODEL_NAME,
-  PLATFORM_DEFAULT_PROVIDER,
 } from "@/lib/constants/model-providers";
+import { formatPlatformModelLabel } from "@/lib/platform/model-configs";
 import { getModelTypeLabel } from "@/lib/constants/model-types";
 import type {
   EmbeddingModelOption,
   ModelConfigDto,
   ModelConfigRow,
 } from "@/lib/data/types";
-import { getPlatformDefaultApiKey } from "@/lib/llm/provider";
 import { DEFAULT_RAG_EMBEDDING_DIMENSIONS } from "@/lib/rag/defaults";
 import {
   getDefaultEmbeddingConfig,
   getEmbeddingModelLabel,
 } from "@/lib/rag/embedding-models";
+
+export { mergeUserAndPlatformModels } from "@/lib/platform/model-configs";
 
 export function rowToModelConfigDto(row: ModelConfigRow): ModelConfigDto {
   return {
@@ -32,42 +31,22 @@ export function rowToModelConfigDto(row: ModelConfigRow): ModelConfigDto {
     testError: row.test_error,
     apiKeySet: row.api_key_set,
     isPlatformDefault: false,
+    readOnly: false,
   };
-}
-
-export function buildPlatformDefaultDto(): ModelConfigDto {
-  return {
-    id: PLATFORM_DEFAULT_CONFIG_ID,
-    provider: PLATFORM_DEFAULT_PROVIDER,
-    modelName: PLATFORM_DEFAULT_MODEL_NAME,
-    modelType: "chat",
-    embeddingDimensions: null,
-    providerLabel: getProviderLabel(PLATFORM_DEFAULT_PROVIDER),
-    modelTypeLabel: getModelTypeLabel("chat"),
-    testStatus: "passed",
-    testedAt: null,
-    testError: null,
-    apiKeySet: Boolean(getPlatformDefaultApiKey()),
-    isPlatformDefault: true,
-  };
-}
-
-export function mergePlatformDefault(
-  rows: ModelConfigRow[],
-): ModelConfigDto[] {
-  return [buildPlatformDefaultDto(), ...rows.map(rowToModelConfigDto)];
 }
 
 export function toPassedChatModelOptions(configs: ModelConfigDto[]) {
   return configs
     .filter(
       (config) =>
-        config.testStatus === "passed" &&
-        (config.isPlatformDefault || config.modelType === "chat"),
+        config.testStatus === "passed" && config.modelType === "chat",
     )
     .map((config) => ({
       id: config.id,
-      label: formatModelConfigLabel(config.provider, config.modelName),
+      label: config.isPlatformDefault
+        ? formatPlatformModelLabel(config)
+        : formatModelConfigLabel(config.provider, config.modelName),
+      isPlatform: config.isPlatformDefault,
     }));
 }
 
@@ -80,14 +59,15 @@ export function resolvePreferenceLabel(
   preferredConfigId: string | null,
   options: { id: string; label: string }[],
 ): string {
-  const effectiveId = preferredConfigId ?? PLATFORM_DEFAULT_CONFIG_ID;
-  const match = options.find((option) => option.id === effectiveId);
-  if (match) {
-    return match.label;
+  if (preferredConfigId) {
+    const match = options.find((option) => option.id === preferredConfigId);
+    if (match) {
+      return match.label;
+    }
   }
 
-  const platform = buildPlatformDefaultDto();
-  return formatModelConfigLabel(platform.provider, platform.modelName);
+  const first = options[0];
+  return first?.label ?? "No model configured";
 }
 
 export function resolveSummaryModelLabel(
@@ -132,25 +112,63 @@ export function buildPlatformDefaultEmbeddingOption(): EmbeddingModelOption {
   };
 }
 
+function embeddingDtoToOption(
+  config: ModelConfigDto,
+  isPlatform: boolean,
+): EmbeddingModelOption {
+  return {
+    key: formatEmbeddingModelKey(config.provider, config.modelName),
+    provider: config.provider,
+    model: config.modelName,
+    label: isPlatform
+      ? formatPlatformModelLabel(config)
+      : formatModelConfigLabel(config.provider, config.modelName),
+    dimensions: config.embeddingDimensions ?? DEFAULT_RAG_EMBEDDING_DIMENSIONS,
+    isPlatformDefault: isPlatform,
+  };
+}
+
+export function buildEmbeddingModelOptionsFromDtos(
+  platformDtos: ModelConfigDto[],
+  userDtos: ModelConfigDto[],
+): EmbeddingModelOption[] {
+  const platform = platformDtos
+    .filter(
+      (config) =>
+        config.modelType === "embedding" && config.testStatus === "passed",
+    )
+    .map((config) => embeddingDtoToOption(config, true));
+
+  const custom = userDtos
+    .filter(
+      (config) =>
+        config.modelType === "embedding" && config.testStatus === "passed",
+    )
+    .map((config) => embeddingDtoToOption(config, false));
+
+  const seen = new Set<string>();
+  const merged: EmbeddingModelOption[] = [];
+  for (const option of [...platform, ...custom]) {
+    if (seen.has(option.key)) continue;
+    seen.add(option.key);
+    merged.push(option);
+  }
+
+  if (merged.length === 0) {
+    return [buildPlatformDefaultEmbeddingOption()];
+  }
+
+  return merged;
+}
+
+/** @deprecated use buildEmbeddingModelOptionsFromDtos */
 export function buildEmbeddingModelOptions(
   rows: ModelConfigRow[],
 ): EmbeddingModelOption[] {
-  const platformDefault = buildPlatformDefaultEmbeddingOption();
-  const custom = rows
-    .filter(
-      (row) => row.model_type === "embedding" && row.test_status === "passed",
-    )
-    .map((row) => ({
-      key: formatEmbeddingModelKey(row.provider, row.model_name),
-      provider: row.provider,
-      model: row.model_name,
-      label: formatModelConfigLabel(row.provider, row.model_name),
-      dimensions:
-        row.embedding_dimensions ?? DEFAULT_RAG_EMBEDDING_DIMENSIONS,
-      isPlatformDefault: false,
-    }));
-
-  return [platformDefault, ...custom];
+  return buildEmbeddingModelOptionsFromDtos(
+    [],
+    rows.map(rowToModelConfigDto),
+  );
 }
 
 export function buildAllowedEmbeddingKeys(

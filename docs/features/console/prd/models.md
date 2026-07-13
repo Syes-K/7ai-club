@@ -78,8 +78,9 @@ Each row shows at minimum:
 
 ### 3.5 Platform Default Config
 
+> **Superseded by iter-12:** platform models managed in [admin/prd/models.md](../../admin/prd/models.md) at `/admin/models`; Console shows read-only **Platform** rows. Below describes **iter-05 shipped behavior**, replaced by §7 on implementation.
 
-| Item        | Rule                                                                         |
+| Item        | Rule (iter-05)                                                               |
 | ----------- | ---------------------------------------------------------------------------- |
 | Provider    | `bailian`                                                                    |
 | Model name  | `qwen3.6-plus`                                                               |
@@ -190,11 +191,12 @@ Platform default chat rules unchanged. **Embedding platform default** from env (
 
 | Action                 | Who                             | Notes                          |
 | ---------------------- | ------------------------------- | ------------------------------ |
-| View Models page       | Signed-in users                 | Own configs + platform default |
+| View Models page       | Signed-in users                 | Own BYOK + platform rows (iter-12: read-only **Platform**) |
 | CRUD user configs      | Owner                           | RLS                            |
+| CRUD platform models   | **Admins** (`/admin`)           | iter-12; read-only in Console  |
 | View API key plaintext | **Nobody** (including owner UI) | Only Configured / Not set      |
-| Test / Chat key usage  | Server Node                     | Decrypt then call provider     |
-| Platform default key   | Server env                      | `BAILIAN_API_KEY`              |
+| Test / Chat key usage  | Server Node                     | User decrypt; platform from admin table (iter-12) |
+| Platform model keys (iter-12) | Server DB encrypted      | **Deprecates** `BAILIAN_API_KEY` |
 
 
 ---
@@ -216,26 +218,50 @@ Platform default chat rules unchanged. **Embedding platform default** from env (
 - [x] **AC-40** — Models CRUD; no API key in network responses
 - [x] **AC-41** — Separate Update API key flow; editing provider/model name does not overwrite key
 - [x] **AC-42** — Test Passed persisted; Failed shows summary; Untested/Failed not selectable in Profile
-- [x] **AC-47** — Chat uses user key; platform default uses env `BAILIAN_API_KEY`
+- [x] **AC-47** — Chat uses user key; platform default uses env `BAILIAN_API_KEY` (**iter-12:** platform DB key — see §7)
 - [x] **AC-48** — Key / provider / model name change resets status to Untested (except platform default)
 
 ---
 
-## 7. Dependencies & Assumptions
+## 7. iter-12 Cross-Revision (admin)
 
-### 7.1 Dependencies
+> **Iteration:** iter-12 · see [admin/prd/models.md](../../admin/prd/models.md)
+
+### 7.1 Console Models Page Changes
+
+| Item | iter-05 | iter-12 |
+|------|---------|---------|
+| Platform source | Virtual row + `BAILIAN_API_KEY` | Admin DB rows |
+| User visibility | Single **Platform default** | Multiple read-only **Platform** rows |
+| User actions | Read-only | Still read-only |
+| User BYOK | Unchanged | Unchanged |
+
+### 7.2 Profile / Chat Impact
+
+- Preferences dropdown: **Passed BYOK** + **Passed + Enabled** platform chat models
+- Deprecates `PLATFORM_DEFAULT_CONFIG_ID` sentinel and `BAILIAN_API_KEY`
+
+### 7.3 New Acceptance (admin changelog AC-129–133)
+
+Console regression: BYOK CRUD/Test, Profile save, Chat routes intact.
+
+---
+
+## 8. Dependencies & Assumptions
+
+### 8.1 Dependencies
 
 - iter-04 browser layering (Profile CRUD on Supabase)
 - `POST /api/chat` remains Node (LLM keys)
 
-### 7.2 Assumptions
+### 8.2 Assumptions
 
 - All four providers expose OpenAI-compatible chat completions
-- Deployment has `BAILIAN_API_KEY` for platform default
+- ~~Deployment has `BAILIAN_API_KEY` for platform default~~ (**iter-12 deprecated**; admin enters platform keys)
 
 ---
 
-## 8. Open Questions
+## 9. Open Questions
 
 
 | ID    | Question                                               | Status | Resolution                 |
@@ -247,12 +273,13 @@ Platform default chat rules unchanged. **Embedding platform default** from env (
 
 ---
 
-## 9. Revision History
+## 10. Revision History
 
 
 | Date       | Change                          |
 | ---------- | ------------------------------- |
 | 2026-06-17 | iter-05 initial — PRD confirmed |
 | 2026-06-30 | §3.10 iter-09 — model type + embedding test / Profile consumption |
+| 2026-07-12 | §7 iter-12 — platform models via admin; §3.5 superseded |
 
 

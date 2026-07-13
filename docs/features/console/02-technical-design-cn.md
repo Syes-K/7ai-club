@@ -136,7 +136,8 @@
 | 2026-06-16 | v0.1 | iter-03 初稿 |
 | 2026-06-16 | v0.2 | 已交付；icon/opening、ChatAppShell、session API |
 | 2026-06-17 | v0.3 | iter-05 — Models、Profile 重构、Chat 模型路由 |
+| 2026-07-12 | v0.4 | iter-12 — 平台模型只读行、Profile 合并平台 UUID；见 [design/models-cn.md](./design/models-cn.md) §14 · [admin/design/integration-cn.md](../admin/design/integration-cn.md) |
 
 ---
 
-*PRD:* [01-product-requirements-cn.md](./01-product-requirements-cn.md) · *变更:* [changelog/iter-05-cn.md](./changelog/iter-05-cn.md)
+*PRD:* [01-product-requirements-cn.md](./01-product-requirements-cn.md) · *变更:* [changelog/iter-05-cn.md](./changelog/iter-05-cn.md) · [changelog/iter-12-cn.md](./changelog/iter-12-cn.md)

@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ChevronDown, LogOut, Settings } from "lucide-react";
+import { ChevronDown, LogOut, Settings, Shield } from "lucide-react";
 import {
   getUserDisplayLabel,
   getUserInitials,
@@ -17,6 +17,7 @@ interface UserMenuProps {
   className?: string;
   /** Hide short username beside avatar (header stays compact) */
   compact?: boolean;
+  showAdminLink?: boolean;
 }
 
 export function UserMenu({
@@ -24,6 +25,7 @@ export function UserMenu({
   nickname,
   className,
   compact = false,
+  showAdminLink = false,
 }: UserMenuProps) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
@@ -119,6 +121,17 @@ export function UserMenu({
             <Settings className="h-4 w-4" />
             Console
           </Link>
+          {showAdminLink && (
+            <Link
+              href="/admin/users"
+              role="menuitem"
+              onClick={() => setOpen(false)}
+              className="flex w-full cursor-pointer items-center gap-2 px-3 py-2.5 text-sm text-[var(--text-muted)] transition-colors hover:bg-white/5 hover:text-[var(--text-primary)]"
+            >
+              <Shield className="h-4 w-4" />
+              Admin
+            </Link>
+          )}
           <button
             type="button"
             role="menuitem"

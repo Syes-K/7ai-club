@@ -80,10 +80,14 @@ test.describe("iter-05 console profile", () => {
     });
     await preferences.getByRole("button", { name: "Edit" }).click();
 
-    const select = preferences.getByLabel("Preferred chat model");
-    await expect(select).toBeVisible();
+    const trigger = preferences.getByLabel("Preferred chat model");
+    await expect(trigger).toBeVisible();
+    await trigger.click();
 
-    const options = select.locator("option");
+    const listbox = page.getByRole("listbox");
+    await expect(listbox).toBeVisible({ timeout: 10_000 });
+
+    const options = listbox.getByRole("option");
     const count = await options.count();
     expect(count).toBeGreaterThan(0);
 

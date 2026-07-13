@@ -48,7 +48,7 @@ export function isPlatformDefaultConfigId(id: string | null | undefined): boolea
 export function normalizePreferredConfigId(
   id: string | null | undefined,
 ): string | null {
-  if (id == null || id === "" || id === PLATFORM_DEFAULT_CONFIG_ID) {
+  if (id == null || id === "") {
     return null;
   }
   return id;

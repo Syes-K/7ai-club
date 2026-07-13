@@ -12,6 +12,11 @@ import {
   DEFAULT_SUMMARY_TRIGGER_TOKENS,
   DEFAULT_SUMMARY_TRIGGER_TURNS,
 } from "@/lib/memory/defaults";
+import {
+  fetchDefaultPlatformChatModelId,
+  fetchDefaultPlatformEmbedding,
+  isPlatformChatModelAvailable,
+} from "@/lib/platform/profile-defaults";
 
 export type UserProfile = {
   user_id: string;
@@ -92,6 +97,69 @@ export async function getUserProfile(
   return normalizeProfile(data as Record<string, unknown>);
 }
 
+/**
+ * Ensures a profile row exists and seeds platform defaults for new users:
+ * first passed+enabled platform chat model + embedding (admin sort_order).
+ */
+export async function ensureUserProfileDefaults(
+  userId: string,
+  supabase?: SupabaseClient,
+): Promise<UserProfile | null> {
+  const client = supabase ?? (await createClient());
+  const [existing, defaultChatId, defaultEmbedding] = await Promise.all([
+      getUserProfile(userId, client),
+      fetchDefaultPlatformChatModelId(client),
+      fetchDefaultPlatformEmbedding(client),
+    ]);
+
+  const patch: Parameters<typeof upsertUserProfile>[1] = {};
+  let needsWrite = false;
+
+  if (!existing) {
+    needsWrite = true;
+    if (defaultChatId) {
+      patch.preferredModelConfigId = defaultChatId;
+    }
+    if (defaultEmbedding) {
+      patch.ragEmbeddingProvider = defaultEmbedding.provider;
+      patch.ragEmbeddingModel = defaultEmbedding.model;
+    }
+  } else {
+    if (!existing.preferred_model_config_id && defaultChatId) {
+      patch.preferredModelConfigId = defaultChatId;
+      needsWrite = true;
+    } else if (
+      existing.preferred_model_config_id &&
+      defaultChatId &&
+      existing.preferred_model_config_id !== defaultChatId
+    ) {
+      const { data: userOwned } = await client
+        .from("user_model_configs")
+        .select("id")
+        .eq("id", existing.preferred_model_config_id)
+        .eq("user_id", userId)
+        .maybeSingle();
+
+      if (!userOwned) {
+        const platformStillValid = await isPlatformChatModelAvailable(
+          existing.preferred_model_config_id,
+          client,
+        );
+        if (!platformStillValid) {
+          patch.preferredModelConfigId = defaultChatId;
+          needsWrite = true;
+        }
+      }
+    }
+  }
+
+  if (!needsWrite) {
+    return existing;
+  }
+
+  return upsertUserProfile(userId, patch, client);
+}
+
 export async function upsertUserProfile(
   userId: string,
   fields: {
@@ -109,8 +177,9 @@ export async function upsertUserProfile(
     ragEmbeddingModel?: string;
     ragQueryOptimizeEnabled?: boolean;
   },
+  supabase?: SupabaseClient,
 ): Promise<UserProfile> {
-  const supabase = await createClient();
+  const client = supabase ?? (await createClient());
   const row: Record<string, unknown> = { user_id: userId };
 
   if ("nickname" in fields) {
@@ -153,7 +222,7 @@ export async function upsertUserProfile(
     row.rag_query_optimize_enabled = fields.ragQueryOptimizeEnabled;
   }
 
-  const { data, error } = await supabase
+  const { data, error } = await client
     .from("user_profiles")
     .upsert(row, { onConflict: "user_id" })
     .select(PROFILE_SELECT)

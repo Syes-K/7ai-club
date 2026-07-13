@@ -191,3 +191,42 @@ sequenceDiagram
 | 日期 | 变更 |
 |------|------|
 | 2026-06-17 | iter-05 初稿 |
+
+---
+
+## 10. iter-12 增量（admin 交叉）
+
+> **主设计：** [admin/design/platform-models-cn.md](../../admin/design/platform-models-cn.md) · [admin/design/integration-cn.md](../../admin/design/integration-cn.md) §3  
+> **Changelog：** [changelog/iter-12-cn.md](../changelog/iter-12-cn.md)
+
+### 10.1 解析链
+
+```
+Profile.preferred_model_config_id
+  → user_model_configs（须 user_id 匹配 + passed）
+  → platform_model_configs（须 passed + enabled）
+  → 回退：第一条 passed+enabled+chat 平台模型
+```
+
+| 文件 | 变更 |
+|------|------|
+| `lib/llm/resolve-user-model.ts` | 平台表解析 + `decrypt`；删除 env 默认分支 |
+| `lib/llm/provider.ts` | 删除 `buildPlatformDefaultResolved` / `BAILIAN_API_KEY` |
+| `app/chat/layout.tsx` | `modelLabel` 来自合并配置 |
+| `lib/workflow/nodes/resolve-model.ts` | 无接口变更，走新 resolve |
+| `lib/memory/resolve-summary-model.ts` | 回退链含平台模型 |
+
+### 10.2 错误文案（English，不变语义）
+
+| 场景 | HTTP |
+|------|------|
+| 无 passed 平台模型且无 BYOK | 503 |
+| preference 指向 untested/failed | 502 |
+
+### 10.3 回归 AC
+
+AC-131、AC-132、AC-139、AC-48 — 见 [admin/02-technical-design-cn.md](../../admin/02-technical-design-cn.md) §9。
+
+| 日期 | 变更 |
+|------|------|
+| 2026-07-12 | iter-12 交叉增量（平台模型 resolve） |

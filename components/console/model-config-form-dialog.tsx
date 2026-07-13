@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
+import { ConsoleSelect } from "@/components/console/console-select";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -81,6 +82,15 @@ export function ModelConfigFormDialog({
     });
   }
 
+  const modelTypeOptions = MODEL_TYPE_IDS.map((id) => ({
+    value: id,
+    label: getModelTypeLabel(id),
+  }));
+  const providerOptions = USER_LLM_PROVIDER_IDS.map((id) => ({
+    value: id,
+    label: getProviderLabel(id),
+  }));
+
   return (
     <dialog
       ref={dialogRef}
@@ -98,19 +108,13 @@ export function ModelConfigFormDialog({
       <form onSubmit={handleSubmit} className="mt-4 space-y-4">
         <div className="space-y-2">
           <Label htmlFor="model-type">Model type</Label>
-          <select
+          <ConsoleSelect
             id="model-type"
             value={modelType}
-            onChange={(e) => setModelType(e.target.value as ModelTypeId)}
+            onChange={(value) => setModelType(value as ModelTypeId)}
             disabled={mode === "edit"}
-            className="flex h-10 w-full rounded-lg border border-[var(--neon-primary)]/25 bg-[var(--bg-base)] px-3 text-sm text-[var(--text-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--neon-primary)] disabled:opacity-60"
-          >
-            {MODEL_TYPE_IDS.map((id) => (
-              <option key={id} value={id}>
-                {getModelTypeLabel(id)}
-              </option>
-            ))}
-          </select>
+            options={modelTypeOptions}
+          />
           {mode === "edit" && (
             <p className="text-xs text-[var(--text-muted)]">
               Model type cannot be changed after creation.
@@ -120,18 +124,12 @@ export function ModelConfigFormDialog({
 
         <div className="space-y-2">
           <Label htmlFor="model-provider">Provider</Label>
-          <select
+          <ConsoleSelect
             id="model-provider"
             value={provider}
-            onChange={(e) => setProvider(e.target.value as UserLlmProviderId)}
-            className="flex h-10 w-full rounded-lg border border-[var(--neon-primary)]/25 bg-[var(--bg-base)] px-3 text-sm text-[var(--text-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--neon-primary)]"
-          >
-            {USER_LLM_PROVIDER_IDS.map((id) => (
-              <option key={id} value={id}>
-                {getProviderLabel(id)}
-              </option>
-            ))}
-          </select>
+            onChange={(value) => setProvider(value as UserLlmProviderId)}
+            options={providerOptions}
+          />
         </div>
 
         <div className="space-y-2">

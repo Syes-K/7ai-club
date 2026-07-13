@@ -8,10 +8,13 @@ import { FieldHint } from "@/components/ui/field-hint";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ConsoleSection } from "@/components/console/console-section";
+import {
+  ConsoleSelect,
+  type ConsoleSelectGroup,
+} from "@/components/console/console-select";
 import type { EmbeddingModelOption, ModelConfigOption } from "@/lib/data/types";
 import { parseEmbeddingModelKey } from "@/lib/console/model-configs";
 import {
-  PLATFORM_DEFAULT_CONFIG_ID,
   SUMMARY_SAME_AS_CHAT_ID,
 } from "@/lib/constants/model-providers";
 import {
@@ -22,6 +25,69 @@ import {
 
 const EMBEDDING_CHANGE_MESSAGE =
   "Changing the embedding model affects new knowledge bases only. Existing knowledge bases keep their original model and remain searchable. To use a new embedding model with existing content, create a new knowledge base after saving. Retry ingestion does not change an existing knowledge base's embedding model.";
+
+function splitPlatformOptions<T extends { isPlatform?: boolean; isPlatformDefault?: boolean }>(
+  options: T[],
+): { platform: T[]; custom: T[] } {
+  return {
+    platform: options.filter(
+      (option) => option.isPlatform === true || option.isPlatformDefault === true,
+    ),
+    custom: options.filter(
+      (option) => option.isPlatform !== true && option.isPlatformDefault !== true,
+    ),
+  };
+}
+
+function buildModelSelectGroups(options: ModelConfigOption[]): ConsoleSelectGroup[] {
+  const { platform, custom } = splitPlatformOptions(options);
+  const groups: ConsoleSelectGroup[] = [];
+  if (platform.length > 0) {
+    groups.push({
+      label: "Platform models",
+      options: platform.map((option) => ({
+        value: option.id,
+        label: option.label,
+      })),
+    });
+  }
+  if (custom.length > 0) {
+    groups.push({
+      label: "Your models",
+      options: custom.map((option) => ({
+        value: option.id,
+        label: option.label,
+      })),
+    });
+  }
+  return groups;
+}
+
+function buildEmbeddingSelectGroups(
+  options: EmbeddingModelOption[],
+): ConsoleSelectGroup[] {
+  const { platform, custom } = splitPlatformOptions(options);
+  const groups: ConsoleSelectGroup[] = [];
+  if (platform.length > 0) {
+    groups.push({
+      label: "Platform models",
+      options: platform.map((option) => ({
+        value: option.key,
+        label: option.label,
+      })),
+    });
+  }
+  if (custom.length > 0) {
+    groups.push({
+      label: "Your models",
+      options: custom.map((option) => ({
+        value: option.key,
+        label: option.label,
+      })),
+    });
+  }
+  return groups;
+}
 
 interface PreferencesCardProps {
   initialPreferredConfigId: string | null;
@@ -67,7 +133,10 @@ export function PreferencesCard({
   embeddingModelOptions,
 }: PreferencesCardProps) {
   const router = useRouter();
-  const initialUiId = toUiPreferredConfigId(initialPreferredConfigId);
+  const initialUiId = toUiPreferredConfigId(
+    initialPreferredConfigId,
+    modelOptions[0]?.id,
+  );
   const initialSummaryUiId = toUiSummaryModelConfigId(initialSummaryModelConfigId);
   const [editing, setEditing] = useState(false);
   const [preferredConfigId, setPreferredConfigId] = useState(initialUiId);
@@ -103,14 +172,6 @@ export function PreferencesCard({
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const summaryModelOptions = [
-    ...SUMMARY_MODEL_OPTIONS,
-    ...modelOptions.map((option) => ({
-      id: option.id,
-      label: option.label,
-    })),
-  ];
-
   function resetForm() {
     setPreferredConfigId(initialUiId);
     setSummarizationEnabled(initialSummarizationEnabled);
@@ -141,10 +202,7 @@ export function PreferencesCard({
   async function persistPreferences() {
     const embedding = parseEmbeddingKey(ragEmbeddingKey);
     await savePreferences({
-      preferredModelConfigId:
-        preferredConfigId === PLATFORM_DEFAULT_CONFIG_ID
-          ? null
-          : preferredConfigId,
+      preferredModelConfigId: preferredConfigId || null,
       summarizationEnabled,
       summaryTriggerTurns: Number(summaryTriggerTurns),
       summaryRetainTurns: Number(summaryRetainTurns),
@@ -236,6 +294,12 @@ export function PreferencesCard({
   }
 
   const memoryDisabled = !summarizationEnabled;
+  const modelSelectGroups = buildModelSelectGroups(modelOptions);
+  const embeddingSelectGroups = buildEmbeddingSelectGroups(embeddingModelOptions);
+  const summaryLeadingOptions = SUMMARY_MODEL_OPTIONS.map((option) => ({
+    value: option.id,
+    label: option.label,
+  }));
 
   return (
     <ConsoleSection busy={saving} busyLabel="Saving preferences…">
@@ -261,7 +325,13 @@ export function PreferencesCard({
 
       {modelOptions.length === 0 ? (
         <div className="mt-6 text-sm text-[var(--text-muted)]">
-          <p>No tested models available.</p>
+          <p>No tested chat models available.</p>
+          <p className="mt-2">
+            Platform models must be tested in Admin → Platform models before they
+            appear under <span className="font-medium">Platform models</span> here.
+            You can also add and test your own models under{" "}
+            <span className="font-medium">Your models</span>.
+          </p>
           <Link
             href="/console/models"
             className="mt-2 inline-block text-[var(--neon-primary)] hover:underline"
@@ -273,19 +343,13 @@ export function PreferencesCard({
         <form onSubmit={handleSave} className="mt-6 space-y-6">
           <div className="space-y-2">
             <Label htmlFor="preferred-model">Preferred chat model</Label>
-            <select
+            <ConsoleSelect
               id="preferred-model"
               value={preferredConfigId}
-              onChange={(e) => setPreferredConfigId(e.target.value)}
+              onChange={setPreferredConfigId}
               disabled={saving}
-              className="flex h-10 w-full rounded-lg border border-[var(--neon-primary)]/25 bg-[var(--bg-base)] px-3 text-sm text-[var(--text-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--neon-primary)] disabled:opacity-60"
-            >
-              {modelOptions.map((option) => (
-                <option key={option.id} value={option.id}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
+              groups={modelSelectGroups}
+            />
           </div>
 
           <div className="space-y-4 border-t border-[var(--neon-primary)]/15 pt-6">
@@ -363,19 +427,14 @@ export function PreferencesCard({
 
             <div className="space-y-2">
               <Label htmlFor="summary-model">Summary model</Label>
-              <select
+              <ConsoleSelect
                 id="summary-model"
                 value={summaryModelConfigId}
-                onChange={(e) => setSummaryModelConfigId(e.target.value)}
+                onChange={setSummaryModelConfigId}
                 disabled={saving || memoryDisabled}
-                className="flex h-10 w-full rounded-lg border border-[var(--neon-primary)]/25 bg-[var(--bg-base)] px-3 text-sm text-[var(--text-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--neon-primary)] disabled:opacity-60"
-              >
-                {summaryModelOptions.map((option) => (
-                  <option key={option.id} value={option.id}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
+                leadingOptions={summaryLeadingOptions}
+                groups={modelSelectGroups}
+              />
             </div>
           </div>
 
@@ -435,19 +494,13 @@ export function PreferencesCard({
 
             <div className="space-y-2">
               <Label htmlFor="rag-embedding-model">Embedding model</Label>
-              <select
+              <ConsoleSelect
                 id="rag-embedding-model"
                 value={ragEmbeddingKey}
-                onChange={(e) => setRagEmbeddingKey(e.target.value)}
+                onChange={setRagEmbeddingKey}
                 disabled={saving}
-                className="flex h-10 w-full rounded-lg border border-[var(--neon-primary)]/25 bg-[var(--bg-base)] px-3 text-sm text-[var(--text-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--neon-primary)] disabled:opacity-60"
-              >
-                {embeddingModelOptions.map((option) => (
-                  <option key={option.key} value={option.key}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
+                groups={embeddingSelectGroups}
+              />
             </div>
           </div>
 

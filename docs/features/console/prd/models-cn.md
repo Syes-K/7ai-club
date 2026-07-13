@@ -78,8 +78,9 @@ F-24 — `/console/models`：用户 BYOK 模型配置、加密 API Key、连通�
 
 ### 3.5 平台默认配置
 
+> **iter-12 起 superseded：** 平台模型改由 [admin/prd/models-cn.md](../../admin/prd/models-cn.md) 在 `/admin/models` 管理；Console 仅**只读**展示 **Platform** 行。以下规则描述 **iter-05 已交付行为**，实现迁移时替换为 §7。
 
-| 项           | 规则                                         |
+| 项           | 规则（iter-05）                                |
 | ----------- | ------------------------------------------ |
 | Provider    | `bailian`                                  |
 | Model name  | `qwen3.6-plus`                             |
@@ -199,11 +200,12 @@ F-24 — `/console/models`：用户 BYOK 模型配置、加密 API Key、连通�
 
 | 操作               | 谁可以            | 备注                     |
 | ---------------- | -------------- | ---------------------- |
-| 查看 Models 页      | 已登录用户          | 仅本人配置 + 平台默认           |
+| 查看 Models 页      | 已登录用户          | 本人 BYOK + 平台模型（iter-12：**Platform** 只读行） |
 | CRUD 用户配置        | 本人             | RLS                    |
+| CRUD 平台模型        | **管理员**（`/admin`） | iter-12；Console 用户只读      |
 | 查看 API Key 明文    | **无人**（含本人 UI） | 仅 Configured / Not set |
-| 测试 / Chat 使用 Key | 服务端 Node       | 解密后调用 provider         |
-| 平台默认 Key         | 服务端 env        | `BAILIAN_API_KEY`      |
+| 测试 / Chat 使用 Key | 服务端 Node       | 用户 Key 解密；平台 Key 由 admin 表解密（iter-12） |
+| 平台模型 Key（iter-12） | 服务端 DB 加密     | **废弃** `BAILIAN_API_KEY`      |
 
 
 ---
@@ -225,26 +227,53 @@ F-24 — `/console/models`：用户 BYOK 模型配置、加密 API Key、连通�
 - [x] **AC-40** — Models 页 CRUD；Network 响应中无 API Key 明文或密文
 - [x] **AC-41** — Update API key 独立流程；编辑 provider/model name 不覆盖 Key
 - [x] **AC-42** — Test Passed 持久化；Failed 展示错误摘要；Untested/Failed 不可被 Profile 选中
-- [x] **AC-47** — Chat 使用用户 Key；平台默认使用 env `BAILIAN_API_KEY`
+- [x] **AC-47** — Chat 使用用户 Key；平台默认使用 env `BAILIAN_API_KEY`（**iter-12 起**改为平台 DB 模型解密 Key — 见 §7）
 - [x] **AC-48** — 修改 Key / provider / model name 后 status 重置为 Untested（平台默认除外）
 
 ---
 
-## 7. 依赖与假设
+## 7. iter-12 交叉修订（admin）
 
-### 7.1 依赖
+> **迭代：** iter-12 · 详见 [admin/prd/models-cn.md](../../admin/prd/models-cn.md)
+
+### 7.1 Console Models 页行为变更
+
+| 项 | iter-05 | iter-12 |
+|----|---------|---------|
+| 平台模型来源 | 虚拟行 + `BAILIAN_API_KEY` | Admin 配置的 DB 行（`platform_model_configs` — 技术设计定名） |
+| 用户可见 | 单条 **Platform default** | 多条 **Platform** 行（`Enabled` + admin `Passed`） |
+| 用户操作 | 只读；无 Edit/Delete/Test | **仍只读**；无 Edit/Delete/Update key |
+| 用户 BYOK | 不变 | 不变 |
+| 空态文案 | 「除平台默认外无自定义」 | 「No custom models yet…」；Platform 区独立展示 |
+
+### 7.2 Profile / Chat 影响
+
+- Preferences 下拉：**Passed 用户 BYOK** + **Passed + Enabled 平台 chat 模型**
+- `preferred_model_config_id` 可引用平台模型 ID（技术设计定 FK / 联合查询）
+- **废弃** `PLATFORM_DEFAULT_CONFIG_ID` 哨兵与 `BAILIAN_API_KEY`
+- 无可用平台模型且无 Passed BYOK 时：空态 + 链到 `/console/models` 添加 BYOK
+
+### 7.3 新验收（归属 admin changelog AC-129–133）
+
+Console 侧回归：BYOK CRUD/Test、Profile 保存、Chat 路由不受破坏。
+
+---
+
+## 8. 依赖与假设
+
+### 8.1 依赖
 
 - iter-04 浏览器分层（Profile CRUD 已迁 Supabase）
 - `POST /api/chat` 保留 Node（LLM 密钥）
 
-### 7.2 假设
+### 8.2 假设
 
 - 四 provider 均提供 OpenAI-compatible chat completions（与现有 `lib/llm` 一致）
-- 部署环境已配置 `BAILIAN_API_KEY` 作为平台默认
+- ~~部署环境已配置 `BAILIAN_API_KEY` 作为平台默认~~（**iter-12 废弃**；改由 Admin 录入平台模型 Key）
 
 ---
 
-## 8. 开放问题
+## 9. 开放问题
 
 
 | ID    | 问题                           | 状态  | 决议             |
@@ -256,12 +285,13 @@ F-24 — `/console/models`：用户 BYOK 模型配置、加密 API Key、连通�
 
 ---
 
-## 9. 修订记录
+## 10. 修订记录
 
 
 | 日期         | 变更                   |
 | ---------- | -------------------- |
 | 2026-06-17 | iter-05 初稿 — PRD 已确认 |
 | 2026-06-30 | §3.10 iter-09 — model type + embedding test / Profile 消费规则 |
+| 2026-07-12 | §7 iter-12 — 平台模型改 admin 管理；§3.5 标 superseded |
 
 

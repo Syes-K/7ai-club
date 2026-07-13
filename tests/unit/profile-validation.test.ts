@@ -1,6 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
-  PLATFORM_DEFAULT_CONFIG_ID,
   SUMMARY_SAME_AS_CHAT_ID,
 } from "@/lib/constants/model-providers";
 
@@ -11,7 +10,7 @@ vi.mock("@/lib/data/browser/profile", () => ({
 
 vi.mock("@/lib/services/browser/model-configs", () => ({
   listPassedModelOptions: vi.fn().mockResolvedValue([
-    { id: PLATFORM_DEFAULT_CONFIG_ID, label: "Bailian — qwen3.7-max-2026-06-08" },
+    { id: "platform-1", label: "Platform Bailian" },
     { id: "cfg-1", label: "DeepSeek — deepseek-chat" },
   ]),
 }));
@@ -55,7 +54,7 @@ const mockProfile = {
 };
 
 describe("profile validation (iter-05)", () => {
-  const allowed = new Set([PLATFORM_DEFAULT_CONFIG_ID, "cfg-1"]);
+  const allowed = new Set(["platform-1", "cfg-1"]);
 
   it("validateNickname rejects overlong nickname", () => {
     expect(validateNickname("x".repeat(33))).toMatch(/32 characters or fewer/);
@@ -67,14 +66,14 @@ describe("profile validation (iter-05)", () => {
     expect(result.fields?.nickname).toBe("Angela");
   });
 
-  it("parsePreferencesPatch accepts platform default sentinel", () => {
+  it("parsePreferencesPatch accepts platform model uuid", () => {
     const result = parsePreferencesPatch(
-      { preferredModelConfigId: PLATFORM_DEFAULT_CONFIG_ID },
+      { preferredModelConfigId: "platform-1" },
       allowed,
       allowedEmbeddingKeys,
     );
     expect(result.error).toBeUndefined();
-    expect(result.fields?.preferredModelConfigId).toBeNull();
+    expect(result.fields?.preferredModelConfigId).toBe("platform-1");
   });
 
   it("parsePreferencesPatch rejects unknown config id", () => {
@@ -97,7 +96,7 @@ describe("profile validation (iter-05)", () => {
 });
 
 describe("profile validation (iter-07 memory)", () => {
-  const allowed = new Set([PLATFORM_DEFAULT_CONFIG_ID, "cfg-1"]);
+  const allowed = new Set(["platform-1", "cfg-1"]);
 
   it("parsePreferencesPatch accepts memory fields", () => {
     const result = parsePreferencesPatch(
@@ -145,7 +144,7 @@ describe("profile validation (iter-07 memory)", () => {
 });
 
 describe("profile validation (iter-09 RAG preferences)", () => {
-  const allowed = new Set([PLATFORM_DEFAULT_CONFIG_ID, "cfg-1"]);
+  const allowed = new Set(["platform-1", "cfg-1"]);
   const allowedEmbeddingKeys = new Set(["siliconflow:BAAI/bge-m3"]);
 
   it("AC-94: parsePreferencesPatch accepts RAG confidence and TopK", () => {

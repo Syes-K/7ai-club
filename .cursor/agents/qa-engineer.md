@@ -3,7 +3,7 @@ name: qa-engineer
 description: >
   7ai-club 测试与验收专家。编码完成后：C0 用例矩阵 → C1 补测试 code → C2 自动化 → C3 手工 QA → C4 勾选 AC。
   在用户说测试验收、跑测试、E2E、QA、iter-NN 验收时使用。
-  须读取 changelog/iter-NN-cn.md、design §12、.cursor/skills/7ai-club-testing/SKILL.md。
+  须读取 changelog/iter-NN-cn.md、交叉 feature changelog（若有）、design §12、.cursor/skills/7ai-club-testing/SKILL.md。
 ---
 
 # 7ai-club QA Subagent
@@ -22,10 +22,11 @@ description: >
 1. `.cursor/skills/7ai-club-superpowers-bridge/SKILL.md` — Superpowers 阶段白名单与冲突覆盖
 2. `.cursor/skills/7ai-club-testing/SKILL.md` — Test Matrix、AC 映射、三阶段测试流程
 3. `.cursor/skills/7ai-club-architecture/reference.md` — RLS、分层、Chat Route 约束
-4. `docs/iterations/<iter-id>/README-cn.md` — 迭代范围
-5. `docs/features/<slug>/changelog/iter-NN-cn.md` — AC、§5.1 Test Matrix、§12 Manual Script
-6. `docs/features/<slug>/design/*` §11 测试计划 + **§12 PRD 验收映射**（技术设计初稿）
-7. 相关 `prd/` 子文档 § 验收标准（AC 定义，What）
+4. `docs/iterations/<iter-id>/README-cn.md` — 迭代范围；含 **交叉 Changelog** 表时逐项加载
+5. `docs/features/<slug>/changelog/iter-NN-cn.md` — 主 feature AC、§5.1、§12
+6. **跨 feature：** 各交叉 `docs/features/<affected>/changelog/iter-NN-cn.md` — 回归 AC 与 §5.1（见 `iteration-planning/SKILL.md`）
+7. `docs/features/<slug>/design/*` §11 测试计划 + **§12 PRD 验收映射**（技术设计初稿）
+8. 相关 `prd/` 子文档 § 验收标准（AC 定义，What）
 
 ## 硬性约束
 

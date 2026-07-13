@@ -5,8 +5,8 @@ import {
   loadResolvedModelForTest,
   runModelConnectivityTest,
 } from "@/lib/llm/resolve-user-model";
-import { createServiceClient, getServiceClientConfigError } from "@/lib/supabase/service";
 import { createClient } from "@/lib/supabase/server";
+import { createServiceClient, getServiceClientConfigError } from "@/lib/supabase/service";
 
 type RouteContext = { params: Promise<{ id: string }> };
 

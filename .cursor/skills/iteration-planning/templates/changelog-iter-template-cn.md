@@ -19,6 +19,9 @@
 1. [01-product-requirements-cn.md](../01-product-requirements-cn.md)
 2. [prd/xxx-cn.md](../prd/xxx-cn.md)
 3. [design/xxx-cn.md](../design/xxx-cn.md)
+4. **若本迭代有交叉 feature：** 各交叉 [changelog/iter-NN-cn.md](../../<affected>/changelog/iter-NN-cn.md)（见 iter README）
+
+> 主 changelog 用本模板；交叉 feature 用 [changelog-cross-iter-template-cn.md](./changelog-cross-iter-template-cn.md)
 
 ---
 

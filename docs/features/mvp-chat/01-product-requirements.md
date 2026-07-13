@@ -69,6 +69,7 @@ Assistant CRUD UI, RAG, MCP, in-app model switcher, OAuth, soft delete, Console 
 | [prd/data-access.md](./prd/data-access.md) | Browser CRUD, BFF consolidation |
 | [changelog/iter-02.md](./changelog/iter-02.md) | iter-02 delta, AC-10–20 |
 | [changelog/iter-04.md](./changelog/iter-04.md) | iter-04 hybrid access, AC-30–34 |
+| [changelog/iter-12.md](./changelog/iter-12.md) | iter-12 admin cross-revision — Chat model keys, system assistants |
 
 Technical index: [02-technical-design.md](./02-technical-design.md) · iter-01 detail: [design/core-chat.md](./design/core-chat.md)
 

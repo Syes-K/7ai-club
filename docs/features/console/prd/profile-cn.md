@@ -87,10 +87,10 @@ F-21 — `/console/profile`：Account 信息 + Preferences（对话模型偏好�
 
 **Edit 模式 — 下拉：**
 
-- 选项来源：**仅**当前用户 Models 列表中 `test_status = Passed` 的配置
+- 选项来源：**仅** Passed 配置 — 含用户 BYOK **与** iter-12 平台免费模型（Console Models 列表合并展示）
 - 选项格式：`{Provider label} — {model name}`
-- 含平台默认 Bailian qwen3.6-plus（始终 Passed）
-- **无** Passed 配置时（极端：平台 Key 未配置）：空态 + 链到 `/console/models`
+- ~~含平台默认 Bailian qwen3.6-plus（始终 Passed）~~（**iter-12：** 改为 Admin 配置的 Passed + Enabled 平台行）
+- **无** Passed 配置时：空态 + 链到 `/console/models`
 
 **保存：**
 
@@ -177,5 +177,6 @@ Preferences 内新增 **RAG retrieval** 区块（English UI），**独立 Save**
 | 2026-06-17 | iter-05 — 双 Card、Preferences 绑定 Models Passed 配置 |
 | 2026-06-25 | iter-07 — Preferences 增加 Conversation memory 摘要配置 |
 | 2026-06-30 | iter-09 — Preferences 增加 RAG retrieval 配置 |
+| 2026-07-12 | iter-12 — §3.3 平台模型下拉改自 admin 配置；废弃虚拟默认 |
 
 

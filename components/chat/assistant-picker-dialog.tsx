@@ -114,14 +114,26 @@ export function AssistantPickerDialog({
         )}
         {!loading && !error && assistants.length === 0 && (
           <p className="text-sm text-[var(--text-muted)]">
-            No assistants yet.{" "}
+            No assistants available.{" "}
             <Link
               href="/console/assistants?create=1"
               className="text-[var(--neon-primary)] hover:underline"
             >
-              Create your first assistant
+              Create a personal assistant
             </Link>
             .
+          </p>
+        )}
+        {!loading && !error && assistants.length > 0 && assistants.every((a) => a.isPlatform) && (
+          <p className="mb-3 text-sm text-[var(--text-muted)]">
+            No personal assistants yet.{" "}
+            <Link
+              href="/console/assistants?create=1"
+              className="text-[var(--neon-primary)] hover:underline"
+            >
+              Create one
+            </Link>
+            , or choose a platform assistant below.
           </p>
         )}
         {!loading && !error && assistants.length > 0 && (
@@ -145,7 +157,16 @@ export function AssistantPickerDialog({
                       {assistant.icon}
                     </span>
                   ) : null}
-                  <span>{assistant.name}</span>
+                  <span className="flex-1">{assistant.name}</span>
+                  {assistant.isPlatform ? (
+                    <span
+                      className={cn(
+                        "rounded-full border border-[var(--neon-primary)]/30 px-2 py-0.5 text-xs text-[var(--neon-primary)]",
+                      )}
+                    >
+                      Platform
+                    </span>
+                  ) : null}
                 </button>
               </li>
             ))}

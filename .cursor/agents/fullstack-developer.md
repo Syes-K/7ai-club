@@ -18,7 +18,8 @@ description: >
 2. `.cursor/skills/7ai-club-architecture/reference.md` — 架构决策、代码结构、工程约束、Chat Route
 3. `docs/features/<slug>/01-product-requirements.md` 与/或 `01-product-requirements-cn.md` — 产品总纲
 4. 按当前迭代读取 `docs/features/<slug>/changelog/iter-NN*.md` 及其中列出的 **`prd/`、`design/` 子文档**（勿默认加载全部）
-5. 仅当设计涉及方案对比或 reference 不足时，按需 Read `docs/research/` 相关章节
+5. **跨 feature 迭代：** 读 `docs/iterations/iter-NN/README*` 中「交叉 Changelog」表，加载各交叉 feature 的 `changelog/iter-NN*`（见 `.cursor/skills/iteration-planning/SKILL.md`）
+6. 仅当设计涉及方案对比或 reference 不足时，按需 Read `docs/research/` 相关章节
 
 ## 硬性约束
 
@@ -113,7 +114,9 @@ docs/features/<slug>/design/<topic>-cn.md
 
 - 跨模块架构、文件清单索引 → **总纲**
 - 单模块 API / 组件 / 迁移 → **`design/<topic>`**
-- 本迭代范围见 `changelog/iter-NN-cn.md`
+- 本迭代范围见 `changelog/iter-NN.md`（英文）/ `changelog/iter-NN-cn.md`（中文）
+
+**双语对等（强制）：** 每个 `design/<topic>.md` 与 `design/<topic>-cn.md` 须结构对等（SQL、API、文件清单、AC 映射均完整）。英文正文 **禁止** `See *-cn.md` 占位。文内链接：英文 → 英文路径；中文 → `-cn.md`。
 
 模板：`.cursor/skills/technical-design/templates/tech-design-template.md`。
 

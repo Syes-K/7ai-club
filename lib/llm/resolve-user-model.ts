@@ -6,11 +6,14 @@ import {
   formatModelConfigLabel,
 } from "@/lib/constants/model-providers";
 import {
-  buildPlatformDefaultResolved,
   type ResolvedUserModel,
   type UserLlmProviderId,
 } from "@/lib/llm/provider";
 import { classifyLlmError, toUserFacingLlmMessage } from "@/lib/llm/errors";
+import {
+  resolveDefaultPlatformChatModel,
+  resolvePlatformModelById,
+} from "@/lib/platform/resolve";
 import { createClient } from "@/lib/supabase/server";
 import { createServiceClient } from "@/lib/supabase/service";
 
@@ -37,11 +40,12 @@ export async function resolveUserModelForChat(
   preferredConfigId: string | null,
   supabase?: SupabaseClient,
 ): Promise<ResolvedUserModel | null> {
+  const client = supabase ?? (await createClient());
+
   if (!preferredConfigId) {
-    return buildPlatformDefaultResolved();
+    return resolveDefaultPlatformChatModel(client);
   }
 
-  const client = supabase ?? (await createClient());
   const { data, error } = await client
     .from("user_model_configs")
     .select("id, user_id, provider, model_name, model_type, test_status, api_key_set")
@@ -53,12 +57,21 @@ export async function resolveUserModelForChat(
     throw new Error(error.message);
   }
 
-  if (!data) {
-    return buildPlatformDefaultResolved();
+  if (data) {
+    return resolveUserOwnedModel(data as ModelConfigRow);
   }
 
-  const row = data as ModelConfigRow;
+  const platform = await resolvePlatformModelById(preferredConfigId, client);
+  if (platform) {
+    return platform;
+  }
 
+  return resolveDefaultPlatformChatModel(client);
+}
+
+async function resolveUserOwnedModel(
+  row: ModelConfigRow,
+): Promise<ResolvedUserModel> {
   if (row.test_status !== "passed") {
     throw new ModelNotReadyError(
       "Selected model is not ready. Test it in Console → Models.",

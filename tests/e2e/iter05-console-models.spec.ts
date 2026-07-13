@@ -9,7 +9,7 @@ test.describe("iter-05 console models", () => {
     await login(page);
   });
 
-  test("AC-40: models page lists platform default without exposing keys", async ({
+  test("AC-40: models page lists platform models without exposing keys", async ({
     page,
   }) => {
     const modelApiResponses: string[] = [];
@@ -29,8 +29,7 @@ test.describe("iter-05 console models", () => {
       page.getByRole("heading", { name: "Model management" }),
     ).toBeVisible();
 
-    await expect(page.getByText("Platform default")).toBeVisible();
-    await expect(page.getByText("qwen3.7-max-2026-06-08")).toBeVisible();
+    await expect(page.getByText("Platform", { exact: true }).first()).toBeVisible();
     await expect(page.getByRole("button", { name: "Add model" })).toBeVisible();
 
     for (const body of modelApiResponses) {
@@ -41,7 +40,6 @@ test.describe("iter-05 console models", () => {
 
   test("AC-41: update key dialog opens from row action", async ({ page }) => {
     await page.goto("/console/models");
-    await expect(page.getByText("Platform default")).toBeVisible();
 
     const customRow = page
       .locator("tr")

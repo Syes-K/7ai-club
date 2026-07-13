@@ -23,6 +23,7 @@
     "@ai-sdk/openai": "^3.0.71",
     "@ai-sdk/openai-compatible": "^2.0.50",
     "@ai-sdk/react": "^3.0.207",
+    "@base-ui/react": "^1.6.0",
     "@supabase/ssr": "^0.12.0",
     "@supabase/supabase-js": "^2.108.1",
     "@upstash/redis": "^1.38.0",

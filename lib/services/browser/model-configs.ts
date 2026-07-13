@@ -6,10 +6,11 @@ import {
 } from "@/lib/data/browser/model-configs";
 import type { ModelConfigDto } from "@/lib/data/types";
 import {
-  mergePlatformDefault,
+  mergeUserAndPlatformModels,
   rowToModelConfigDto,
   toPassedModelOptions,
 } from "@/lib/console/model-configs";
+import { listPlatformModelConfigsForUser } from "@/lib/platform/model-configs";
 import {
   parseCreateModelBody,
   parseUpdateModelKeyBody,
@@ -23,8 +24,14 @@ async function readErrorMessage(response: Response): Promise<string> {
 }
 
 export async function listModelConfigs(): Promise<ModelConfigDto[]> {
-  const rows = await listUserModelConfigRows();
-  return mergePlatformDefault(rows);
+  const [rows, platformRows] = await Promise.all([
+    listUserModelConfigRows(),
+    listPlatformModelConfigsForUser(),
+  ]);
+  return mergeUserAndPlatformModels(
+    rows.map(rowToModelConfigDto),
+    platformRows,
+  );
 }
 
 export async function listPassedModelOptions() {

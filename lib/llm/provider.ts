@@ -1,10 +1,6 @@
 import { createOpenAICompatible } from "@ai-sdk/openai-compatible";
 import type { LanguageModel } from "ai";
-import {
-  formatModelConfigLabel,
-  PLATFORM_DEFAULT_MODEL_NAME,
-  PLATFORM_DEFAULT_PROVIDER,
-} from "@/lib/constants/model-providers";
+import { PLATFORM_DEFAULT_MODEL_NAME } from "@/lib/constants/model-providers";
 import { createTimeoutFetch, getLlmTimeoutMs } from "./timeout";
 
 export type UserLlmProviderId =
@@ -151,26 +147,12 @@ export function getChatModelForResolvedConfig(
 }
 
 export function getPlatformDefaultApiKey(): string | null {
-  const key = process.env.BAILIAN_API_KEY?.trim();
-  return key || null;
+  return null;
 }
 
+/** @deprecated iter-12 — platform models resolved from DB */
 export function buildPlatformDefaultResolved(): ResolvedUserModel | null {
-  const apiKey = getPlatformDefaultApiKey();
-  if (!apiKey) {
-    return null;
-  }
-
-  return {
-    configId: null,
-    provider: PLATFORM_DEFAULT_PROVIDER,
-    modelName: PLATFORM_DEFAULT_MODEL_NAME,
-    apiKey,
-    label: formatModelConfigLabel(
-      PLATFORM_DEFAULT_PROVIDER,
-      PLATFORM_DEFAULT_MODEL_NAME,
-    ),
-  };
+  return null;
 }
 
 /** Returns a user-facing message when chat cannot run (Supabase / platform key). */

@@ -37,7 +37,35 @@ export async function resolveEmbeddingDimensionsForUser(
     }) ||
     (provider === defaults.provider && model === defaults.model)
   ) {
+    const { data: platformRow } = await supabase
+      .from("platform_model_configs")
+      .select("embedding_dimensions")
+      .eq("provider", provider)
+      .eq("model_name", model)
+      .eq("model_type", "embedding")
+      .eq("enabled", true)
+      .eq("test_status", "passed")
+      .maybeSingle();
+
+    if (platformRow?.embedding_dimensions) {
+      return platformRow.embedding_dimensions;
+    }
+
     return defaults.dimensions;
+  }
+
+  const { data: platformRow } = await supabase
+    .from("platform_model_configs")
+    .select("embedding_dimensions")
+    .eq("provider", provider)
+    .eq("model_name", model)
+    .eq("model_type", "embedding")
+    .eq("enabled", true)
+    .eq("test_status", "passed")
+    .maybeSingle();
+
+  if (platformRow?.embedding_dimensions) {
+    return platformRow.embedding_dimensions;
   }
 
   const { data, error } = await supabase

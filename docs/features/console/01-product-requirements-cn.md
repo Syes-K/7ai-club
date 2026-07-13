@@ -48,15 +48,21 @@
 | 编辑个人 Profile | 本人 |
 | CRUD 自己的 Assistants | 本人 |
 | 删除有绑定对话的助理 | 禁止 |
-| 平台模板助理（`user_id` 为空） | UI 不可见；仅服务端 seed |
+| 平台助理（`is_platform = true`） | Console **不可见、不可编辑**；New Chat **聚合列表**选用（排在个人之后）（iter-12） |
+| CRUD 个人助理 | 本人；仅 `user_id = auth.uid()`（iter-12 起不再自动 seed） |
 | LLM API Key | 仅服务端；用户 Key 加密存 DB（iter-05） |
 | CRUD 用户 Model 配置 | 本人（iter-05） |
+| CRUD 平台免费模型 | **仅管理员**（`/admin/models` · iter-12） |
 
 ### 2.4 模型解析（聊天）
 
-**iter-05：** Profile Preferences → **Passed** 用户模型配置（provider + model + Key）→ 平台默认 Bailian `qwen3.6-plus`（env `BAILIAN_API_KEY`）。**不支持**按助理单独选模型。
+**iter-12（admin 交叉修订）：** Profile Preferences → **Passed** 用户 BYOK 配置 **或** Admin 配置的 **Passed + Enabled 平台免费模型**（DB 只读展示于 Console Models，标记 **Platform**）。**废弃** env `BAILIAN_API_KEY` 与虚拟 `PLATFORM_DEFAULT` 行。详见 [admin/prd/models-cn.md](../admin/prd/models-cn.md)。
+
+**iter-05（iter-12 起 superseded）：** 平台默认为虚拟 Bailian 行 + `BAILIAN_API_KEY`。
 
 **iter-03（已 superseded）：** `preferred_model` 字符串 + env `LLM_PROVIDER` 静态列表。
+
+**不支持**按助理单独选模型（全阶段不变）。
 
 ### 2.5 非目标（全 feature）
 
@@ -91,6 +97,8 @@
 | [prd/placeholders-cn.md](./prd/placeholders-cn.md) | KB、MCP 占位（Models 已迁 F-24） |
 | [changelog/iter-03-cn.md](./changelog/iter-03-cn.md) | iter-03 增量、AC-01–12 |
 | [changelog/iter-05-cn.md](./changelog/iter-05-cn.md) | iter-05 增量、AC-40–48 |
+| [changelog/iter-12-cn.md](./changelog/iter-12-cn.md) | iter-12 admin 交叉修订、Console 回归 AC |
+| [admin/changelog/iter-12-cn.md](../admin/changelog/iter-12-cn.md) | iter-12 主验收 AC-120–141 |
 
 技术总纲：[02-technical-design-cn.md](./02-technical-design-cn.md)
 
@@ -103,7 +111,8 @@
 | 2026-06-16 | v0.1 | iter-03 初稿 |
 | 2026-06-16 | v0.2 | Icon/Opening message；标记 iter-03 已交付 |
 | 2026-06-17 | v0.3 | iter-05 — F-24 Models、Profile Preferences 重构 |
+| 2026-07-12 | v0.4 | iter-12 交叉修订 — 平台模型/助理改由 admin 管理；见 §2.3–2.4 |
 
 ---
 
-*概览：[README-cn.md](./README-cn.md)* · *迭代：[iter-05](../../iterations/iter-05/README-cn.md)*
+*概览：[README-cn.md](./README-cn.md)* · *迭代：[iter-12](../../iterations/iter-12/README-cn.md)（admin 对 Console 的交叉影响）*

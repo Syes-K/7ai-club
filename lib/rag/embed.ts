@@ -20,13 +20,48 @@ type EmbeddingResponse = {
   error?: { message?: string };
 };
 
-function getPlatformEmbeddingApiKey(provider: UserLlmProviderId): string {
+function getLegacyPlatformEmbeddingApiKey(provider: UserLlmProviderId): string {
   const config = getProviderRuntimeConfig(provider);
   const apiKey = process.env[config.apiKeyEnv]?.trim();
   if (!apiKey) {
     throw new Error(`${config.apiKeyEnv} is not set`);
   }
   return apiKey;
+}
+
+async function getPlatformEmbeddingApiKeyFromDb(
+  config: EmbeddingConfig,
+): Promise<string | null> {
+  const service = createServiceClient();
+  const { data: row, error } = await service
+    .from("platform_model_configs")
+    .select("id, api_key_set")
+    .eq("provider", config.provider)
+    .eq("model_name", config.model)
+    .eq("model_type", "embedding")
+    .eq("enabled", true)
+    .eq("test_status", "passed")
+    .maybeSingle();
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  if (!row?.api_key_set) {
+    return null;
+  }
+
+  const { data: secret, error: secretError } = await service
+    .from("platform_model_config_secrets")
+    .select("api_key_ciphertext")
+    .eq("config_id", row.id)
+    .maybeSingle();
+
+  if (secretError || !secret?.api_key_ciphertext) {
+    return null;
+  }
+
+  return decryptApiKey(secret.api_key_ciphertext);
 }
 
 async function getUserEmbeddingApiKey(
@@ -70,8 +105,13 @@ async function resolveEmbeddingApiKey(
   config: EmbeddingConfig,
   auth?: EmbeddingAuthContext,
 ): Promise<string> {
+  const platformKey = await getPlatformEmbeddingApiKeyFromDb(config);
+  if (platformKey) {
+    return platformKey;
+  }
+
   if (isPlatformDefaultEmbeddingConfig(config)) {
-    return getPlatformEmbeddingApiKey(config.provider);
+    return getLegacyPlatformEmbeddingApiKey(config.provider);
   }
 
   if (!auth?.userId) {

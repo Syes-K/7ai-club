@@ -38,7 +38,7 @@ export function ConsolePage({
           </div>
         )}
       </div>
-      <div className={cn("relative", busy && "min-h-[12rem]")}>
+      <div className={cn("relative mt-6", busy && "min-h-[12rem]")}>
         <div className={cn(busy && "pointer-events-none select-none opacity-60")}>
           {children}
         </div>

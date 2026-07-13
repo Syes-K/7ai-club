@@ -1,6 +1,6 @@
 import Link from "next/link";
 import type { User } from "@supabase/supabase-js";
-import { LogIn, MessageSquare, Settings } from "lucide-react";
+import { LogIn, MessageSquare } from "lucide-react";
 import { landingContainerClass } from "@/lib/constants/landing-layout";
 import { LANDING_COPY } from "@/lib/constants/landing";
 import { UserMenu } from "@/components/layout/user-menu";
@@ -12,8 +12,8 @@ interface SiteHeaderProps {
   className?: string;
   /** Hide Chat link when already on chat routes */
   showChatLink?: boolean;
-  /** Show Console in nav bar (default: UserMenu only) */
-  showConsoleLink?: boolean;
+  /** Show Admin in user menu for allowlisted users */
+  showAdminLink?: boolean;
   /** Full-width bar for app shell (chat / console) */
   fullWidth?: boolean;
   /** Avatar-only user menu (landing) */
@@ -25,7 +25,7 @@ export function SiteHeader({
   nickname,
   className,
   showChatLink = true,
-  showConsoleLink = false,
+  showAdminLink = false,
   fullWidth = false,
   compactUserMenu = false,
 }: SiteHeaderProps) {
@@ -60,21 +60,12 @@ export function SiteHeader({
             </Link>
           )}
 
-          {user && showConsoleLink && (
-            <Link
-              href="/console"
-              className="flex items-center gap-1.5 text-sm text-[var(--text-muted)] hover:text-[var(--neon-primary)] transition-colors cursor-pointer"
-            >
-              <Settings className="h-4 w-4 shrink-0" aria-hidden />
-              Console
-            </Link>
-          )}
-
           {user ? (
             <UserMenu
               email={user.email ?? "user"}
               nickname={nickname}
               compact={compactUserMenu}
+              showAdminLink={showAdminLink}
             />
           ) : (
             <Link

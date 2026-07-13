@@ -1,11 +1,16 @@
 import {
   buildAllowedEmbeddingKeys,
-  buildEmbeddingModelOptions,
-  mergePlatformDefault,
+  buildEmbeddingModelOptionsFromDtos,
+  mergeUserAndPlatformModels,
   resolveEmbeddingDimensions,
   resolveEmbeddingLabel,
+  rowToModelConfigDto,
   toPassedChatModelOptions,
 } from "@/lib/console/model-configs";
+import {
+  listPlatformModelConfigsServer,
+} from "@/lib/platform/model-configs-server";
+import { platformRowToDto } from "@/lib/platform/model-configs";
 import type { EmbeddingModelOption, ModelConfigRow } from "@/lib/data/types";
 import { createClient } from "@/lib/supabase/server";
 
@@ -14,17 +19,25 @@ const MODEL_CONFIG_COLUMNS =
 
 export async function listModelConfigsForUser(userId: string) {
   const supabase = await createClient();
-  const { data, error } = await supabase
-    .from("user_model_configs")
-    .select(MODEL_CONFIG_COLUMNS)
-    .eq("user_id", userId)
-    .order("created_at", { ascending: true });
+  const [userResult, platformRows] = await Promise.all([
+    supabase
+      .from("user_model_configs")
+      .select(MODEL_CONFIG_COLUMNS)
+      .eq("user_id", userId)
+      .order("created_at", { ascending: true }),
+    listPlatformModelConfigsServer(),
+  ]);
 
-  if (error) {
-    throw new Error(error.message);
+  if (userResult.error) {
+    throw new Error(userResult.error.message);
   }
 
-  return mergePlatformDefault((data ?? []) as ModelConfigRow[]);
+  const userDtos = ((userResult.data ?? []) as ModelConfigRow[]).map(
+    rowToModelConfigDto,
+  );
+  const platformDtos = platformRows.map(platformRowToDto);
+
+  return mergeUserAndPlatformModels(userDtos, platformDtos);
 }
 
 export async function listPassedModelOptionsForUser(userId: string) {
@@ -36,18 +49,26 @@ export async function listEmbeddingModelOptionsForUser(
   userId: string,
 ): Promise<EmbeddingModelOption[]> {
   const supabase = await createClient();
-  const { data, error } = await supabase
-    .from("user_model_configs")
-    .select(MODEL_CONFIG_COLUMNS)
-    .eq("user_id", userId)
-    .eq("model_type", "embedding")
-    .order("created_at", { ascending: true });
+  const [userResult, platformRows] = await Promise.all([
+    supabase
+      .from("user_model_configs")
+      .select(MODEL_CONFIG_COLUMNS)
+      .eq("user_id", userId)
+      .eq("model_type", "embedding")
+      .order("created_at", { ascending: true }),
+    listPlatformModelConfigsServer(),
+  ]);
 
-  if (error) {
-    throw new Error(error.message);
+  if (userResult.error) {
+    throw new Error(userResult.error.message);
   }
 
-  return buildEmbeddingModelOptions((data ?? []) as ModelConfigRow[]);
+  const userDtos = ((userResult.data ?? []) as ModelConfigRow[]).map(
+    rowToModelConfigDto,
+  );
+  const platformDtos = platformRows.map(platformRowToDto);
+
+  return buildEmbeddingModelOptionsFromDtos(platformDtos, userDtos);
 }
 
 export {

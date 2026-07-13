@@ -1,3 +1,5 @@
+import { ACCOUNT_DISABLED_MESSAGE } from "@/lib/auth/ban";
+
 type AuthErrorLike = {
   message?: string;
   code?: string;
@@ -17,6 +19,8 @@ export function getAuthErrorMessage(error: AuthErrorLike): string {
       return "Incorrect email or password. Please try again.";
     case "email_not_confirmed":
       return "Email not confirmed yet. Check your inbox for the confirmation link.";
+    case "user_banned":
+      return ACCOUNT_DISABLED_MESSAGE;
     default:
       return error.message ?? "Something went wrong. Please try again.";
   }

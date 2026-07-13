@@ -83,6 +83,7 @@
 |------|------|
 | [changelog/iter-02-cn.md](./changelog/iter-02-cn.md) | iter-02 增量、验收 AC-10~20 |
 | [changelog/iter-04-cn.md](./changelog/iter-04-cn.md) | iter-04 混合数据访问、AC-30~34 |
+| [changelog/iter-12-cn.md](./changelog/iter-12-cn.md) | iter-12 admin 交叉修订 — Chat 模型 Key、系统助理（AC-131–132 等） |
 
 ### 3.3 技术设计
 
@@ -98,6 +99,7 @@
 | AC-09（多提供商，已替代 AC-09 v0.1） | [prd/llm-reliability-cn.md](./prd/llm-reliability-cn.md) |
 | AC-10 – AC-20（iter-02） | 各子 PRD + [changelog/iter-02-cn.md](./changelog/iter-02-cn.md) |
 | AC-30 – AC-34（iter-04） | [prd/data-access-cn.md](./prd/data-access-cn.md) + [changelog/iter-04-cn.md](./changelog/iter-04-cn.md) |
+| AC-131 – AC-132、AC-136、AC-139（iter-12） | [prd/chat-model-config-cn.md](./prd/chat-model-config-cn.md) + [changelog/iter-12-cn.md](./changelog/iter-12-cn.md) |
 
 ---
 

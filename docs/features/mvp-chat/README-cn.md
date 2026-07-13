@@ -4,12 +4,18 @@
 > **中文：** [README-cn.md](./README-cn.md)
 
 > **Feature slug：** `mvp-chat`  
-> **迭代：** [`iter-01`](../../iterations/iter-01/README-cn.md)（已交付）… [`iter-04`](../../iterations/iter-04/README-cn.md)（已交付）· [`iter-10`](../../iterations/iter-10/README-cn.md)（**已发布 · 2026-07-03**）  
+> **迭代：** [`iter-01`](../../iterations/iter-01/README-cn.md)（已交付）… [`iter-10`](../../iterations/iter-10/README-cn.md)（**已发布**）· [`iter-12`](../../iterations/iter-12/README-cn.md)（admin 交叉修订 · 进行中）  
 > **路线图阶段：** 1 — MVP 聊天
 
 ---
 
 ## 文档地图（Agent 入口）
+
+**iter-12（admin 交叉修订 · 进行中）：**
+
+1. [changelog/iter-12-cn.md](./changelog/iter-12-cn.md) — Chat 模型解析 / 对话创建
+2. [admin/changelog/iter-12-cn.md](../admin/changelog/iter-12-cn.md) — **主验收 AC-120–141**
+3. [console/changelog/iter-12-cn.md](../console/changelog/iter-12-cn.md) — 选择器聚合列表
 
 **iter-04（已交付）：**
 
@@ -49,6 +55,12 @@
 
 - CRUD 迁浏览器 Supabase；`app/api/` 仅余 `POST /api/chat`
 - 详见 [iter-04 README-cn.md](../../iterations/iter-04/README-cn.md)、[changelog/iter-04-cn.md](./changelog/iter-04-cn.md)
+
+## iter-12（admin 交叉修订 · 进行中）
+
+- Chat 平台模型 Key 改 DB 解密；废弃 `BAILIAN_API_KEY`
+- New Chat 系统助理 + 聚合列表（见 console changelog）
+- 详见 [changelog/iter-12-cn.md](./changelog/iter-12-cn.md)、[prd/chat-model-config-cn.md](./prd/chat-model-config-cn.md)
 
 ## iter-10（已发布 — 发布后 UX）
 

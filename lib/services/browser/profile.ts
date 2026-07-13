@@ -8,7 +8,6 @@ import { listEmbeddingModelOptions } from "@/lib/services/browser/embedding-mode
 import { buildAllowedEmbeddingKeys } from "@/lib/console/model-configs";
 import {
   normalizePreferredConfigId,
-  PLATFORM_DEFAULT_CONFIG_ID,
   SUMMARY_SAME_AS_CHAT_ID,
 } from "@/lib/constants/model-providers";
 
@@ -81,7 +80,7 @@ export async function savePreferences(body: {
 
   const stored = profile.preferred_model_config_id;
   return {
-    preferredModelConfigId: stored ?? PLATFORM_DEFAULT_CONFIG_ID,
+    preferredModelConfigId: stored,
     summarizationEnabled: profile.summarization_enabled,
     summaryTriggerTurns: profile.summary_trigger_turns,
     summaryRetainTurns: profile.summary_retain_turns,
@@ -98,8 +97,9 @@ export async function savePreferences(body: {
 
 export function toUiPreferredConfigId(
   storedId: string | null | undefined,
+  fallbackId?: string | null,
 ): string {
-  return storedId ?? PLATFORM_DEFAULT_CONFIG_ID;
+  return storedId ?? fallbackId ?? "";
 }
 
 export function toUiSummaryModelConfigId(

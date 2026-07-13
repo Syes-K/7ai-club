@@ -13,13 +13,21 @@ import { Label } from "@/components/ui/label";
 
 type AuthMode = "login" | "register";
 
-export function AuthForm({ mode, next }: { mode: AuthMode; next?: string }) {
+export function AuthForm({
+  mode,
+  next,
+  initialError = null,
+}: {
+  mode: AuthMode;
+  next?: string;
+  initialError?: string | null;
+}) {
   const router = useRouter();
   const redirectTo = next?.startsWith("/") ? next : "/chat";
   const submittingRef = useRef(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(initialError);
   const [info, setInfo] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [cooldown, setCooldown] = useState(0);

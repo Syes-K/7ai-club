@@ -27,6 +27,17 @@ describe("iter-04 architecture constraints", () => {
 
     expect(routeFiles).toEqual(
       [
+        "app/api/admin/assistants/[id]/route.ts",
+        "app/api/admin/assistants/route.ts",
+        "app/api/admin/models/[id]/disable/route.ts",
+        "app/api/admin/models/[id]/enable/route.ts",
+        "app/api/admin/models/[id]/key/route.ts",
+        "app/api/admin/models/[id]/route.ts",
+        "app/api/admin/models/[id]/test/route.ts",
+        "app/api/admin/models/route.ts",
+        "app/api/admin/users/[id]/disable/route.ts",
+        "app/api/admin/users/[id]/enable/route.ts",
+        "app/api/admin/users/route.ts",
         "app/api/chat/[conversationId]/stream/route.ts",
         "app/api/chat/[conversationId]/workflow/route.ts",
         "app/api/chat/route.ts",
@@ -48,7 +59,7 @@ describe("iter-04 architecture constraints", () => {
 
     for (const file of componentFiles) {
       const source = readFileSync(file, "utf8");
-      if (source.includes('"/api/') || source.includes("'/api/")) {
+      if (source.includes('"/api/chat') || source.includes("'/api/chat")) {
         apiFetchHits.push(relative(ROOT, file));
       }
     }

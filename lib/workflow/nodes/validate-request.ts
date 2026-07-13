@@ -3,7 +3,7 @@ import {
   getConversationForUser,
   loadMessages,
 } from "@/lib/chat/conversations";
-import { getUserProfile } from "@/lib/console/profile";
+import { ensureUserProfileDefaults } from "@/lib/console/profile";
 import { loadDbMessagesWithArchive } from "@/lib/memory/persistence";
 import { buildLlmUiMessages } from "@/lib/memory/assemble-llm-messages";
 import { loadAssistantKnowledgeBaseBindings } from "@/lib/rag/bindings";
@@ -64,7 +64,7 @@ export const loadContextNode: WorkflowNode = {
       loadMessages(ctx.conversationId, ctx.supabase),
       loadDbMessagesWithArchive(ctx.conversationId, ctx.supabase),
       getAssistantForConversation(ctx.conversationId, ctx.supabase),
-      getUserProfile(ctx.userId, ctx.supabase),
+      ensureUserProfileDefaults(ctx.userId, ctx.supabase),
     ]);
 
     ctx.dbMessages = dbMessages;

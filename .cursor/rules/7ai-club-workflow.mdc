@@ -22,6 +22,28 @@ alwaysApply: true
 | English | `{name}.md` |
 | 中文 | `{name}-cn.md` |
 
+### 双语对等规则（强制）
+
+**成对维护 = 结构对等 + 链接同语言**，不是「英文 stub + 中文全文」。
+
+| 文档类型 | 对等要求 | 允许例外 |
+|----------|----------|----------|
+| `prd/<topic>*` | 章节结构、AC、表格与中文版一致 | 无「See *-cn.md」正文占位 |
+| `design/<topic>*` | SQL、API、文件清单、AC 映射须完整双语 | 无 |
+| `changelog/iter-NN*` | §5 AC 一览、§3 交付表、§12 脚本须双语完整 | §5.1 矩阵可由 qa 后填 |
+| `01` / `02` 总纲 | 索引 + **§12 AC 映射** 双语均有（不可 EN 仅链到 CN） | 总纲可比子文档略薄 |
+
+**链接映射（Agent / 人工均须遵守）：**
+
+| 正在阅读的文档 | 文内链接目标 |
+|----------------|--------------|
+| `*.md`（English） | 同路径 `*.md`（如 `prd/users.md` → `design/users.md`） |
+| `*-cn.md`（中文） | 同路径 `*-cn.md` |
+
+**仅允许**在文首双语互链块中出现对方语言文件名（`> **中文:** …-cn.md`）。
+
+**禁止：** 英文 `design/*.md` 正文写 `See *-cn.md for full spec`；英文 `changelog` §5 写 `See *-cn.md §5`。
+
 **PRD / 技术设计** 放在 feature 目录，采用 **总纲 + 子文档** 分层（跨迭代修订，不按迭代号复制整份正文）：
 
 ```
@@ -60,10 +82,36 @@ docs/iterations/<iter-id>/
 |------|----------|------|
 | 迭代（时间盒） | `docs/iterations/iter-01/README.md` | 本 sprint 交付什么 |
 | Feature（能力） | `docs/features/mvp-chat/` | 长期存在的功能文档 |
+| 跨迭代待办 | `docs/todoList/backlog-cn.md` | 未排期、待用户确认纳入新 iter 的条目 |
 | 路线图阶段 | PRD frontmatter `phase: 1` | 架构路线图 1–5 |
 
 模板：`.cursor/skills/iteration-planning/templates/iter-readme-template.md`  
-Changelog 模板：`.cursor/skills/iteration-planning/templates/changelog-iter-template-cn.md`
+Changelog 模板：`.cursor/skills/iteration-planning/templates/changelog-iter-template-cn.md`（主 feature）  
+交叉 Changelog 模板：`.cursor/skills/iteration-planning/templates/changelog-cross-iter-template-cn.md`  
+迭代规划 skill：`.cursor/skills/iteration-planning/SKILL.md`
+
+### 新迭代与 todoList（强制）
+
+开启 `docs/iterations/iter-NN/` 前：
+
+1. 阅读 [`docs/todoList/backlog-cn.md`](../../docs/todoList/backlog-cn.md)
+2. 向用户列出相关 **open** 条目
+3. **请用户确认**哪些纳入本 iter 范围（未确认不得写入 PRD / iter README）
+4. 从 iter 砍掉的能力 → 记入 backlog（见 [`docs/todoList/README-cn.md`](../../docs/todoList/README-cn.md)）
+
+### 跨 Feature 迭代（强制）
+
+当单次迭代**主交付**在一个 feature，但**改动已有 feature** 的行为（废弃 env、改 Console/Chat 页面、移除 seed 等）：
+
+| 角色 | 位置 | 内容 |
+|------|------|------|
+| **主 feature** | `docs/features/<primary>/changelog/iter-NN*` | 完整 AC、§5.1、§12、计划交付 |
+| **交叉 feature** | `docs/features/<affected>/changelog/iter-NN*` | 标题含「交叉修订」；链到主 changelog；本 feature 回归 AC |
+
+**PRD 落盘完成** = 主 feature 文档 + **所有**交叉 feature 的 `01` / `prd/*` / `changelog/iter-NN*` / `README` 已同步。  
+`docs/iterations/iter-NN/README*` 须含「交叉 Changelog」表。  
+先例：iter-07（`agent-orchestration` + `console`）、iter-12（`admin` + `console` + `mvp-chat`）。  
+详见 `.cursor/skills/iteration-planning/SKILL.md`。
 
 ## 门禁规则
 
@@ -137,7 +185,7 @@ Superpowers（obra/superpowers）提供 TDD、调试、计划拆分等**战术�
 | 层级 | 职责 | 位置 |
 |------|------|------|
 | Subagent | 阶段编排 + 门禁（谁做 / 何时做） | `.cursor/agents/*.md` |
-| 7ai-club skills | 项目约定（架构、PRD、测试、UI） | `.cursor/skills/` |
+| 7ai-club skills | 项目约定（架构、PRD、测试、UI、**迭代规划**） | `.cursor/skills/` |
 | Superpowers | 阶段内方法论（怎么做） | `.agents/skills/`（CLI 安装） |
 | Bridge | 白名单 + 冲突覆盖 | `.cursor/skills/7ai-club-superpowers-bridge/SKILL.md` |
 

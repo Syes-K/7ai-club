@@ -48,15 +48,21 @@ Details live in topic PRDs — see [§3 Document map](#3-document-map).
 | Edit own profile | Owner |
 | CRUD own assistants | Owner |
 | Delete assistant with bound conversations | Blocked |
-| Platform template assistants (`user_id` null) | Not visible in UI; server seed only |
+| Platform assistants (`is_platform = true`) | Not visible in Console; selectable in New Chat **aggregated list** (after personal) (iter-12) |
+| CRUD personal assistants | Owner only; `user_id = auth.uid()` (no auto seed from iter-12) |
 | LLM API keys | Server only; user keys encrypted in DB (iter-05) |
 | CRUD own model configs | Owner (iter-05) |
+| CRUD platform free models | **Admins only** (`/admin/models` · iter-12) |
 
 ### 2.4 Model Resolution (chat)
 
-**iter-05:** Profile Preferences → **Passed** user model config (provider + model + key) → platform default Bailian `qwen3.6-plus` (env `BAILIAN_API_KEY`). Per-assistant model column **not** user-editable.
+**iter-12 (admin cross-revision):** Profile Preferences → **Passed** user BYOK **or** admin **Passed + Enabled** platform free models (read-only **Platform** rows on Console Models). **Deprecates** `BAILIAN_API_KEY` and virtual `PLATFORM_DEFAULT`. See [admin/prd/models.md](../admin/prd/models.md).
+
+**iter-05 (superseded by iter-12):** virtual Bailian row + `BAILIAN_API_KEY`.
 
 **iter-03 (superseded):** `preferred_model` string + env `LLM_PROVIDER` static list.
+
+Per-assistant model column **not** user-editable (unchanged).
 
 ### 2.5 Out of Scope (feature-wide)
 
@@ -91,6 +97,8 @@ Knowledge Base upload/RAG, MCP connections, Anthropic/Azure/custom OpenAI-compat
 | [prd/placeholders.md](./prd/placeholders.md) | KB, MCP stubs (Models moved to F-24) |
 | [changelog/iter-03.md](./changelog/iter-03.md) | iter-03 delta, AC-01–12 |
 | [changelog/iter-05.md](./changelog/iter-05.md) | iter-05 delta, AC-40–48 |
+| [changelog/iter-12.md](./changelog/iter-12.md) | iter-12 admin cross-revision, Console regression AC |
+| [admin/changelog/iter-12.md](../admin/changelog/iter-12.md) | iter-12 primary AC-120–141 |
 
 Technical index: [02-technical-design.md](./02-technical-design.md)
 
@@ -102,7 +110,8 @@ Technical index: [02-technical-design.md](./02-technical-design.md)
 |------|---------|--------|
 | 2026-06-16 | v0.1 | Initial PRD — iter-03 |
 | 2026-06-17 | v0.2 | iter-05 — F-24 Models, Profile Preferences refactor |
+| 2026-07-12 | v0.3 | iter-12 cross-revision — platform models/assistants via admin; see §2.3–2.4 |
 
 ---
 
-*Overview: [README.md](./README.md)* · *Iteration: [iter-05](../../iterations/iter-05/README.md)*
+*Overview: [README.md](./README.md)* · *Iteration: [iter-12](../../iterations/iter-12/README.md) (admin cross-impact on Console)*

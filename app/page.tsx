@@ -7,6 +7,7 @@ import { LandingFooter } from "@/components/landing/landing-footer";
 import { LandingHero } from "@/components/landing/landing-hero";
 import { landingMainContentClass } from "@/lib/constants/landing-layout";
 import { getUserProfile } from "@/lib/console/profile";
+import { isAdminEmail } from "@/lib/admin/auth";
 import { createClient } from "@/lib/supabase/server";
 
 export default async function HomePage() {
@@ -27,6 +28,7 @@ export default async function HomePage() {
         nickname={profile?.nickname}
         compactUserMenu
         showChatLink={false}
+        showAdminLink={user ? isAdminEmail(user.email) : false}
         fullWidth
       />
       <main className="flex flex-1 flex-col">

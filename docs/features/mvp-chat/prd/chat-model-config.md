@@ -39,7 +39,8 @@ F-15 — Chat UI shows provider + model from Profile Preferences; `POST /api/cha
 | Source                                          | Profile Preferences → **Passed** user model config |
 | Format (English)                                | `{model name} ({provider})`                        |
 | Example                                         | `qwen3.6-plus (bailian)`                           |
-| No preference set                               | Fall back to platform default Bailian qwen3.6-plus |
+| No preference set                               | Fall back to first **Passed + Enabled** platform chat model (iter-12); see [admin/prd/models.md](../../admin/prd/models.md) |
+| `BAILIAN_API_KEY` env | **Deprecated iter-12** |
 | env `LLM_PROVIDER` / `NEXT_PUBLIC_LLM_PROVIDER` | **No longer** drives Chat display                  |
 
 
@@ -47,11 +48,13 @@ After Preferences change: refresh or layout injection updates label; new message
 
 ### 3.2 LLM Call (`/api/chat`)
 
-**Resolution (iter-05):**
+**Resolution order (iter-05; iter-12 revises platform key source):**
 
-1. Profile Preferences → user model config ID (Passed)
-2. No valid preference → platform default Bailian qwen3.6-plus
-3. Resolve provider + model name + API key (user decrypt vs env `BAILIAN_API_KEY`)
+1. Profile Preferences → config ID (Passed) — user BYOK or platform model
+2. No valid preference → first **Passed + Enabled** platform chat model
+3. Resolve provider + model name + API key:
+  - User BYOK → decrypt user key
+  - Platform model → decrypt platform table key (**deprecates** env `BAILIAN_API_KEY`)
 
 **Blocked:** Untested / Failed configs (server-side validation).
 
@@ -74,7 +77,7 @@ After Preferences change: refresh or layout injection updates label; new message
 ## 4. Acceptance Criteria
 
 - [x] **AC-46** — Chat modelLabel matches Profile Preferences
-- [x] **AC-47** — Chat uses user key; platform default uses env `BAILIAN_API_KEY`
+- [x] **AC-47** — Chat uses user key; platform model uses decrypted DB key (**iter-12**; supersedes env `BAILIAN_API_KEY`)
 - [x] **AC-48** — Untested/Failed configs rejected server-side
 
 ---
@@ -93,5 +96,6 @@ After Preferences change: refresh or layout injection updates label; new message
 | Date       | Change                          |
 | ---------- | ------------------------------- |
 | 2026-06-17 | iter-05 initial — PRD confirmed |
+| 2026-07-12 | iter-12 — platform model key source; deprecates `BAILIAN_API_KEY` |
 
 

@@ -2,8 +2,8 @@ export const runtime = "nodejs";
 
 import { rowToModelConfigDto } from "@/lib/console/model-configs";
 import { upsertModelConfigSecret } from "@/lib/llm/secrets";
-import { createServiceClient, getServiceClientConfigError } from "@/lib/supabase/service";
 import { createClient } from "@/lib/supabase/server";
+import { createServiceClient, getServiceClientConfigError } from "@/lib/supabase/service";
 import { parseUpdateModelKeyBody } from "@/lib/validation/model-config";
 
 type RouteContext = { params: Promise<{ id: string }> };
